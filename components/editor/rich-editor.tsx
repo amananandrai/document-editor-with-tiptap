@@ -31,6 +31,8 @@ export function RichEditor() {
       IndentExtension,
       LineHeightExtension,
     ],
+    // Prevent immediate DOM rendering on initial (server) render to avoid hydration mismatch
+    immediatelyRender: false,
     editorProps: {
       attributes: {
         class:
