@@ -1,23 +1,23 @@
 import EditorClient from "./editor-client";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function EditorPage() {
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
-      <header className="mb-6 flex items-center gap-4">
-        <div>
-          <h1 className="text-balance text-2xl font-semibold">Document Editor</h1>
-          <p className="text-sm text-muted-foreground">
-            A Tiptap-based rich text editor with Google Docs–like features.
+    <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900 dark:to-gray-900">
+      <div className="mx-auto max-w-7xl px-4 py-8">
+        <header className="mb-8 text-center">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+            Professional Document Editor
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Create, edit, and format documents with professional-grade tools. 
+            Export to PDF and Word formats with ease.
           </p>
-        </div>
-        <div className="ml-auto">
-          <ThemeToggle />
-        </div>
-      </header>
-      <section>
-        <EditorClient />
-      </section>
-    </main>
+        </header>
+        
+        <section className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <EditorClient />
+        </section>
+      </div>
+    </div>
   );
 }
