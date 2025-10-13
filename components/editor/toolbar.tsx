@@ -52,9 +52,18 @@ export function EditorToolbar({ editor }: Props) {
 
   // Font family options
   const fontFamilies: Record<string, string> = {
-    "System Sans": `system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif`,
-    Serif: `Georgia, Cambria, "Times New Roman", Times, serif`,
-    Monospace: `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`,
+  "System Sans": `system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif`,
+  Serif: `Georgia, Cambria, "Times New Roman", Times, serif`,
+  Monospace: `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`,
+  Cursive: `cursive, system-ui, sans-serif`,
+  Arial: "Arial, Helvetica, sans-serif",
+  Verdana: "Verdana, Geneva, sans-serif",
+  Tahoma: "Tahoma, Geneva, sans-serif",
+  "Trebuchet MS": "'Trebuchet MS', Helvetica, sans-serif",
+  "Times New Roman": "'Times New Roman', Times, serif",
+  "Courier New": "'Courier New', Courier, monospace",
+  "Lucida Console": "'Lucida Console', Monaco, monospace",
+  "Palatino Linotype": "'Palatino Linotype', 'Book Antiqua', Palatino, serif",
   }
 
   // Line height options
