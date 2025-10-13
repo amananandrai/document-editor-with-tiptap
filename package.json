@@ -56,6 +56,8 @@
     "embla-carousel-react": "8.5.1",
     "geist": "latest",
     "html-to-docx": "1.8.0",
+    "html2canvas-pro": "^1.5.12",
+    "jspdf-html2canvas-pro": "^1.5.221",
     "html2pdf.js": "latest",
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
