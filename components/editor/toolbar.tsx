@@ -1,6 +1,8 @@
 "use client"
 import type { Editor } from "@tiptap/react"
 import { Button } from "@/components/ui/button"
+import html2canvas from 'html2canvas-pro';
+import html2PDF from 'jspdf-html2canvas-pro';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -240,14 +242,27 @@ export function EditorToolbar({ editor }: Props) {
     try {
       const element = editor.view.dom as HTMLElement
       const opt = {
-        margin: 0.5,
-        filename: "document.pdf",
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
-      }
-      const { default: html2pdf } = await import("html2pdf.js")
-      await html2pdf().set(opt).from(element).save()
+          output: "document.pdf",
+          imageType: "image/jpeg",      
+          imageQuality: 0.98,           
+          margin: { 
+              top: 0.5, 
+              right: 0.5, 
+              bottom: 0.5, 
+              left: 0.5 
+          },
+          html2canvas: { 
+              scale: 2, 
+              useCORS: true 
+          },
+          jsPDF: { 
+              unit: "in", 
+              format: "letter", 
+              orientation: "portrait" 
+          },
+      };
+      const { default: html2PDF } = await import("jspdf-html2canvas-pro")
+      await html2PDF(element, opt);
     } catch (err) {
       console.error("[v0] Export PDF error:", err)
     }
