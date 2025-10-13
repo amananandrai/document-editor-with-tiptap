@@ -17,6 +17,7 @@ import { TableHeader } from "@tiptap/extension-table-header"
 import { TableCell } from "@tiptap/extension-table-cell"
 import { cn } from "@/lib/utils"
 import { EditorToolbar } from "./toolbar"
+import { StatusBar } from "./status-bar"
 import { IndentExtension, LineHeightExtension } from "./tiptap-extensions"
 
 export function RichEditor() {
@@ -102,6 +103,9 @@ export function RichEditor() {
           <EditorContent editor={editor} />
         </div>
       </div>
+      {/* Status bar */}
+      <StatusBar editor={editor} />
+      
       {/* Help text */}
       <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-8 py-4">
         <p className="text-sm text-muted-foreground text-center">
