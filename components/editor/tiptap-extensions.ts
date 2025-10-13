@@ -1,3 +1,21 @@
+import { TextStyle } from "@tiptap/extension-text-style"
+
+// Extensão customizada para fontFamily
+export const FontFamilyExtension = TextStyle.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      fontFamily: {
+        default: null,
+        parseHTML: (element) => element.style.fontFamily?.replace(/['"]/g, "") || null,
+        renderHTML: (attributes) => {
+          if (!attributes.fontFamily) return {}
+          return { style: `font-family: ${attributes.fontFamily}` }
+        },
+      },
+    }
+  },
+})
 import { Extension } from "@tiptap/core"
 
 export const IndentExtension = Extension.create({

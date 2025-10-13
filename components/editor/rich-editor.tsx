@@ -18,7 +18,7 @@ import { TableCell } from "@tiptap/extension-table-cell"
 import { cn } from "@/lib/utils"
 import { EditorToolbar } from "./toolbar"
 import { StatusBar } from "./status-bar"
-import { IndentExtension, LineHeightExtension } from "./tiptap-extensions"
+import { IndentExtension, LineHeightExtension, FontFamilyExtension } from "./tiptap-extensions"
 
 export function RichEditor() {
   const editor = useEditor({
@@ -54,6 +54,10 @@ export function RichEditor() {
       Highlight.configure({ multicolor: true }), // background color
       Superscript,
       Subscript,
+  // Custom attributes
+  IndentExtension,
+  LineHeightExtension,
+  FontFamilyExtension,
       // Content blocks
       Blockquote,
       CodeBlock,
