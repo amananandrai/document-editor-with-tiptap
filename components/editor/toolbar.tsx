@@ -29,6 +29,13 @@ import {
   HighlighterIcon,
   FileDown,
   FileText,
+  Quote,
+  Code,
+  Link,
+  Table,
+  Plus,
+  Minus,
+  MoreHorizontal,
 } from "lucide-react"
 
 type Props = {
@@ -140,6 +147,93 @@ export function EditorToolbar({ editor }: Props) {
 
   const setBackgroundColor = (color: string) => {
     editor.chain().focus().toggleHighlight({ color }).run()
+  }
+
+  // Blockquote functionality
+  const toggleBlockquote = () => {
+    editor.chain().focus().toggleBlockquote().run()
+  }
+
+  // Code functionality
+  const toggleCode = () => {
+    editor.chain().focus().toggleCode().run()
+  }
+
+  const toggleCodeBlock = () => {
+    editor.chain().focus().toggleCodeBlock().run()
+  }
+
+  // Link functionality
+  const setLink = () => {
+    const previousUrl = editor.getAttributes('link').href
+    const url = window.prompt('URL', previousUrl)
+
+    // cancelled
+    if (url === null) {
+      return
+    }
+
+    // empty
+    if (url === '') {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run()
+      return
+    }
+
+    // update link
+    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
+  }
+
+  // Table functionality
+  const insertTable = () => {
+    editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+  }
+
+  const addColumnBefore = () => {
+    editor.chain().focus().addColumnBefore().run()
+  }
+
+  const addColumnAfter = () => {
+    editor.chain().focus().addColumnAfter().run()
+  }
+
+  const deleteColumn = () => {
+    editor.chain().focus().deleteColumn().run()
+  }
+
+  const addRowBefore = () => {
+    editor.chain().focus().addRowBefore().run()
+  }
+
+  const addRowAfter = () => {
+    editor.chain().focus().addRowAfter().run()
+  }
+
+  const deleteRow = () => {
+    editor.chain().focus().deleteRow().run()
+  }
+
+  const deleteTable = () => {
+    editor.chain().focus().deleteTable().run()
+  }
+
+  const mergeCells = () => {
+    editor.chain().focus().mergeCells().run()
+  }
+
+  const splitCell = () => {
+    editor.chain().focus().splitCell().run()
+  }
+
+  const toggleHeaderColumn = () => {
+    editor.chain().focus().toggleHeaderColumn().run()
+  }
+
+  const toggleHeaderRow = () => {
+    editor.chain().focus().toggleHeaderRow().run()
+  }
+
+  const toggleHeaderCell = () => {
+    editor.chain().focus().toggleHeaderCell().run()
   }
 
   const handleExportPDF = async () => {
@@ -350,6 +444,50 @@ export function EditorToolbar({ editor }: Props) {
         </Button>
       </div>
 
+      {/* Content blocks */}
+      <div className="flex items-center gap-1">
+        <Button
+          size="sm"
+          variant={editor.isActive("blockquote") ? "default" : "secondary"}
+          onClick={toggleBlockquote}
+          aria-pressed={editor.isActive("blockquote")}
+          aria-label="Blockquote"
+          title="Blockquote"
+        >
+          <Quote className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant={editor.isActive("code") ? "default" : "secondary"}
+          onClick={toggleCode}
+          aria-pressed={editor.isActive("code")}
+          aria-label="Inline code"
+          title="Inline code"
+        >
+          <Code className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant={editor.isActive("codeBlock") ? "default" : "secondary"}
+          onClick={toggleCodeBlock}
+          aria-pressed={editor.isActive("codeBlock")}
+          aria-label="Code block"
+          title="Code block"
+        >
+          <Code className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant={editor.isActive("link") ? "default" : "secondary"}
+          onClick={setLink}
+          aria-pressed={editor.isActive("link")}
+          aria-label="Link"
+          title="Add/Edit link"
+        >
+          <Link className="h-4 w-4" />
+        </Button>
+      </div>
+
       {/* Lists */}
       <div className="flex items-center gap-1">
         <Button
@@ -382,6 +520,90 @@ export function EditorToolbar({ editor }: Props) {
         <Button size="sm" variant="secondary" onClick={outdent} aria-label="Decrease indent" title="Decrease indent">
           <IndentDecrease className="h-4 w-4" />
         </Button>
+      </div>
+
+      {/* Tables */}
+      <div className="flex items-center gap-1">
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={insertTable}
+          aria-label="Insert table"
+          title="Insert table"
+        >
+          <Table className="h-4 w-4" />
+        </Button>
+        
+        {/* Table controls dropdown */}
+        {editor.isActive("table") && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="secondary" size="sm" aria-label="Table options" title="Table options">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuLabel>Table Options</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuLabel>Columns</DropdownMenuLabel>
+              <DropdownMenuItem onClick={addColumnBefore}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Column Before
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={addColumnAfter}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Column After
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={deleteColumn}>
+                <Minus className="h-4 w-4 mr-2" />
+                Delete Column
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Rows</DropdownMenuLabel>
+              <DropdownMenuItem onClick={addRowBefore}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Row Before
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={addRowAfter}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Row After
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={deleteRow}>
+                <Minus className="h-4 w-4 mr-2" />
+                Delete Row
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Cells</DropdownMenuLabel>
+              <DropdownMenuItem onClick={mergeCells}>
+                Merge Cells
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={splitCell}>
+                Split Cell
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Headers</DropdownMenuLabel>
+              <DropdownMenuItem onClick={toggleHeaderRow}>
+                Toggle Header Row
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={toggleHeaderColumn}>
+                Toggle Header Column
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={toggleHeaderCell}>
+                Toggle Header Cell
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={deleteTable} className="text-red-600">
+                <Minus className="h-4 w-4 mr-2" />
+                Delete Table
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       {/* Colors */}
