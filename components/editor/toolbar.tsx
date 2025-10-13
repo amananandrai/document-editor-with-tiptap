@@ -202,7 +202,7 @@ export function EditorToolbar({ editor }: Props) {
 
   return (
     <div
-      className="flex flex-wrap items-center gap-2 rounded-md border bg-card p-2"
+      className="flex flex-wrap items-center gap-3 p-4 bg-white dark:bg-slate-800"
       role="toolbar"
       aria-label="Editor toolbar"
     >
@@ -413,24 +413,28 @@ export function EditorToolbar({ editor }: Props) {
       </div>
 
       {/* Export actions: PDF and Word */}
-      <div className="ml-auto flex items-center gap-1">
+      <div className="ml-auto flex items-center gap-2 pl-4 border-l border-gray-200 dark:border-gray-700">
         <Button
           size="sm"
-          variant="secondary"
+          variant="outline"
           onClick={handleExportPDF}
           aria-label="Export as PDF"
           title="Export as PDF"
+          className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:text-red-400 dark:border-red-800"
         >
-          <FileDown className="h-4 w-4" />
+          <FileDown className="h-4 w-4 mr-2" />
+          PDF
         </Button>
         <Button
           size="sm"
-          variant="secondary"
+          variant="outline"
           onClick={handleExportWord}
           aria-label="Export as Word (.doc)"
           title="Export as Word (.doc)"
+          className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800"
         >
-          <FileText className="h-4 w-4" />
+          <FileText className="h-4 w-4 mr-2" />
+          Word
         </Button>
       </div>
     </div>

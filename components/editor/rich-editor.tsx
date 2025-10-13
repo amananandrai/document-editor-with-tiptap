@@ -38,8 +38,9 @@ export function RichEditor() {
         class:
           // Keep styles semantic and token-based
           cn(
-            "min-h-[320px] rounded-md border bg-card p-4 text-foreground",
-            "prose prose-sm max-w-none dark:prose-invert",
+            "min-h-[600px] rounded-lg bg-card p-8 text-foreground focus:outline-none",
+            "prose prose-lg max-w-none dark:prose-invert prose-headings:font-bold",
+            "prose-p:leading-relaxed prose-headings:leading-tight",
             // If the project doesn't include Typography plugin, this still renders fine
           ),
       },
@@ -48,13 +49,23 @@ export function RichEditor() {
   })
 
   return (
-    <div className="flex flex-col gap-2">
-      <EditorToolbar editor={editor} />
-      <div className="rounded-md border">
-        <EditorContent editor={editor} />
+    <div className="flex flex-col">
+      <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+        <EditorToolbar editor={editor} />
       </div>
-      {/* Small help text */}
-      <p className="text-xs text-muted-foreground">Tip: Use Ctrl/Cmd + B/I/U for quick bold/italic/underline.</p>
+      <div className="p-8">
+        <div className="min-h-[600px] max-w-5xl mx-auto">
+          <EditorContent editor={editor} />
+        </div>
+      </div>
+      {/* Help text */}
+      <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-8 py-4">
+        <p className="text-sm text-muted-foreground text-center">
+          💡 <strong>Pro Tips:</strong> Use Ctrl/Cmd + B/I/U for quick formatting • 
+          Ctrl/Cmd + S to save • Right-click for context menu • 
+          Use Tab/Shift+Tab for indentation
+        </p>
+      </div>
     </div>
   )
 }
