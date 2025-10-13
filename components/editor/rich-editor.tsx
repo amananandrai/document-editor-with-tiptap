@@ -9,7 +9,7 @@ import Superscript from "@tiptap/extension-superscript"
 import Subscript from "@tiptap/extension-subscript"
 import { cn } from "@/lib/utils"
 import { EditorToolbar } from "./toolbar"
-import { IndentExtension, LineHeightExtension } from "./tiptap-extensions"
+import { IndentExtension, LineHeightExtension, FontFamilyExtension } from "./tiptap-extensions"
 
 export function RichEditor() {
   const editor = useEditor({
@@ -27,9 +27,10 @@ export function RichEditor() {
       Highlight.configure({ multicolor: true }), // background color
       Superscript,
       Subscript,
-      // Custom attributes
-      IndentExtension,
-      LineHeightExtension,
+  // Custom attributes
+  IndentExtension,
+  LineHeightExtension,
+  FontFamilyExtension,
     ],
     // Prevent immediate DOM rendering on initial (server) render to avoid hydration mismatch
     immediatelyRender: false,
