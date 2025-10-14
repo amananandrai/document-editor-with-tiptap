@@ -53,6 +53,7 @@
     "@tiptap/extension-table-cell": "^3.6.6",
     "@tiptap/extension-table-header": "^3.6.6",
     "@tiptap/extension-table-row": "^3.6.6",
+    "@tiptap/extension-text-align": "^3.7.0",
     "@tiptap/extension-text-style": "latest",
     "@tiptap/extension-underline": "latest",
     "@tiptap/pm": "latest",

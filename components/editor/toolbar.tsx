@@ -30,6 +30,8 @@ import {
   HeadingIcon,
   TextIcon,
   TypeIcon,
+  Type,
+  Hash,
   BetweenVerticalStart,
   PaletteIcon,
   HighlighterIcon,
@@ -45,6 +47,10 @@ import {
   Image,
   Upload,
   Search,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
 } from "lucide-react";
 
 type Props = {
@@ -181,6 +187,11 @@ export function EditorToolbar({ editor }: Props) {
 
   const setBackgroundColor = (color: string) => {
     editor.chain().focus().toggleHighlight({ color }).run();
+  };
+
+  // Text alignment functions
+  const setTextAlign = (alignment: "left" | "center" | "right" | "justify") => {
+    editor.chain().focus().setTextAlign(alignment).run();
   };
 
   // Blockquote functionality
@@ -430,7 +441,7 @@ export function EditorToolbar({ editor }: Props) {
             aria-label="Font size"
             title="Font size"
           >
-            <TextIcon className="h-4 w-4" />
+            <Hash className="h-4 w-4" />
             <span className="sr-only">Font Size</span>
           </Button>
         </DropdownMenuTrigger>
@@ -509,6 +520,41 @@ export function EditorToolbar({ editor }: Props) {
               {lh}
             </DropdownMenuItem>
           ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Text Alignment */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="secondary"
+            size="sm"
+            aria-label="Text alignment"
+            title="Text alignment"
+          >
+            <AlignLeft className="h-4 w-4" />
+            <span className="sr-only">Text Alignment</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuLabel>Text Alignment</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setTextAlign("left")}>
+            <AlignLeft className="h-4 w-4 mr-2" />
+            Left
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setTextAlign("center")}>
+            <AlignCenter className="h-4 w-4 mr-2" />
+            Center
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setTextAlign("right")}>
+            <AlignRight className="h-4 w-4 mr-2" />
+            Right
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setTextAlign("justify")}>
+            <AlignJustify className="h-4 w-4 mr-2" />
+            Justify
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
