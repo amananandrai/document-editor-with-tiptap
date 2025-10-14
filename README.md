@@ -38,7 +38,7 @@ A powerful, feature-rich document editor built with modern web technologies. Cre
 
 ### Prerequisites
 - Node.js 18+ 
-- npm, yarn, or pnpm
+- bun
 
 ### Installation
 
@@ -50,20 +50,12 @@ A powerful, feature-rich document editor built with modern web technologies. Cre
 
 2. **Install dependencies**
    ```bash
-   npm install
-   # or
-   yarn install
-   # or
-   pnpm install
+   bun install
    ```
 
 3. **Run the development server**
    ```bash
-   npm run dev
-   # or
-   yarn dev
-   # or
-   pnpm dev
+   bun run dev
    ```
 
 4. **Open your browser**
@@ -195,7 +187,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 - 📧 Email: support@docueditpro.com
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/document-editor-with-tip-mukutap/issues)
+- 🐛 Issues: [GitHub Issues](https://github.com/amananandrai/document-editor-with-tiptap/issues)
 - 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/document-editor-with-tip-mukutap/discussions)
 
 ---
