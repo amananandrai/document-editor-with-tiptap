@@ -1,6 +1,8 @@
 "use client"
 import type { Editor } from "@tiptap/react"
 import { Button } from "@/components/ui/button"
+import html2canvas from 'html2canvas-pro';
+import html2PDF from 'jspdf-html2canvas-pro';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,9 +54,18 @@ export function EditorToolbar({ editor }: Props) {
 
   // Font family options
   const fontFamilies: Record<string, string> = {
-    "System Sans": `system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif`,
-    Serif: `Georgia, Cambria, "Times New Roman", Times, serif`,
-    Monospace: `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`,
+  "System Sans": `system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif`,
+  Serif: `Georgia, Cambria, "Times New Roman", Times, serif`,
+  Monospace: `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`,
+  Cursive: `cursive, system-ui, sans-serif`,
+  Arial: "Arial, Helvetica, sans-serif",
+  Verdana: "Verdana, Geneva, sans-serif",
+  Tahoma: "Tahoma, Geneva, sans-serif",
+  "Trebuchet MS": "'Trebuchet MS', Helvetica, sans-serif",
+  "Times New Roman": "'Times New Roman', Times, serif",
+  "Courier New": "'Courier New', Courier, monospace",
+  "Lucida Console": "'Lucida Console', Monaco, monospace",
+  "Palatino Linotype": "'Palatino Linotype', 'Book Antiqua', Palatino, serif",
   }
 
   // Line height options
@@ -281,14 +292,27 @@ export function EditorToolbar({ editor }: Props) {
     try {
       const element = editor.view.dom as HTMLElement
       const opt = {
-        margin: 0.5,
-        filename: "document.pdf",
-        image: { type: "jpeg" as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: "in" as const, format: "letter" as const, orientation: "portrait" as const },
-      }
-      const { default: html2pdf } = await import("html2pdf.js")
-      await html2pdf().set(opt).from(element).save()
+          output: "document.pdf",
+          imageType: "image/jpeg",      
+          imageQuality: 0.98,           
+          margin: { 
+              top: 0.5, 
+              right: 0.5, 
+              bottom: 0.5, 
+              left: 0.5 
+          },
+          html2canvas: { 
+              scale: 2, 
+              useCORS: true 
+          },
+          jsPDF: { 
+              unit: "in", 
+              format: "letter", 
+              orientation: "portrait" 
+          },
+      };
+      const { default: html2PDF } = await import("jspdf-html2canvas-pro")
+      await html2PDF(element, opt);
     } catch (err) {
       console.error("[v0] Export PDF error:", err)
     }
