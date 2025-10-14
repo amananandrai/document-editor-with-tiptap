@@ -49,18 +49,29 @@ export function FindReplaceModal({ editor, isOpen, onClose }: FindReplaceModalPr
     }
 
     const findMatches = () => {
-      const text = editor.getText()
+      const { doc } = editor.state
       const searchRegex = createSearchRegex(searchText, caseSensitive, wholeWord)
       const newMatches: Array<{ from: number; to: number }> = []
-      
-      let match
-      while ((match = searchRegex.exec(text)) !== null) {
-        newMatches.push({
-          from: match.index,
-          to: match.index + match[0].length
-        })
-      }
-      
+
+      // Walk all text nodes and find matches per node so we can
+      // compute exact ProseMirror positions (avoids off-by-one issues)
+      doc.descendants((node, pos) => {
+        if (!node.isText || !node.text) return true
+
+        // Reset regex state for each node
+        const regex = new RegExp(searchRegex.source, searchRegex.flags)
+        let local
+        while ((local = regex.exec(node.text)) !== null) {
+          const fromPos = pos + local.index
+          const toPos = fromPos + local[0].length
+          newMatches.push({ from: fromPos, to: toPos })
+          // Prevent zero-length match infinite loops
+          if (local.index === regex.lastIndex) regex.lastIndex++
+        }
+
+        return true
+      })
+
       setMatches(newMatches)
       setTotalMatches(newMatches.length)
       setCurrentMatch(0)
