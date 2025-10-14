@@ -1,4 +1,7 @@
 "use client"
+import { useState } from 'react'
+import { Picker } from 'emoji-mart'
+import 'emoji-mart/css/emoji-mart.css'
 import type { Editor } from "@tiptap/react"
 import { Button } from "@/components/ui/button"
 import html2canvas from 'html2canvas-pro';
@@ -46,6 +49,14 @@ type Props = {
 
 export function EditorToolbar({ editor }: Props) {
   if (!editor) return null
+    // Emoji picker state
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+
+  const addEmoji = (emoji: any) => {
+    editor.chain().focus().insertContent(emoji.native).run()
+    setShowEmojiPicker(false)
+  }
+
 
   // Font size options in px
   const fontSizes = ["12", "14", "16", "18", "20", "24", "32", "48"]
@@ -65,6 +76,25 @@ export function EditorToolbar({ editor }: Props) {
   "Lucida Console": "'Lucida Console', Monaco, monospace",
   "Palatino Linotype": "'Palatino Linotype', 'Book Antiqua', Palatino, serif",
   }
+        {/* Emoji Picker */}
+      <div className="relative">
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+          aria-label="Emoji Picker"
+          title="Emoji Picker"
+        >
+          😊
+        </Button>
+
+        {showEmojiPicker && (
+          <div className="absolute z-50 top-10 left-0">
+            <Picker onSelect={addEmoji} />
+          </div>
+        )}
+      </div>
+
 
   // Line height options
   const lineHeights = ["1", "1.15", "1.5", "2"]

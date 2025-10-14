@@ -1,3 +1,18 @@
+import Mention from '@tiptap/extension-mention'
+export const MentionExtension = Mention.configure({
+  HTMLAttributes: {
+    class: 'mention',
+  },
+  suggestion: {
+    items: (query: string) => {
+      return ['sunidhi', 'aman', 'harshit', 'amananandrai']
+        .filter(item => item.toLowerCase().startsWith(query.toLowerCase()))
+        .slice(0, 5)
+    },
+  },
+})
+
+
 import { TextStyle } from "@tiptap/extension-text-style"
 
 // Extensão customizada para fontFamily
