@@ -16,9 +16,11 @@ import { Table } from "@tiptap/extension-table"
 import { TableRow } from "@tiptap/extension-table-row"
 import { TableHeader } from "@tiptap/extension-table-header"
 import { TableCell } from "@tiptap/extension-table-cell"
+import { ImageResize } from "./image-extension"
 import { cn } from "@/lib/utils"
 import { EditorToolbar } from "./toolbar"
 import { StatusBar } from "./status-bar"
+import { useImageUpload } from "./use-image-upload"
 import { IndentExtension, LineHeightExtension, FontFamilyExtension } from "./tiptap-extensions"
 const editor = useEditor({
   extensions: [
@@ -84,6 +86,14 @@ export function RichEditor() {
       TableRow,
       TableHeader,
       TableCell,
+      // Images
+      ImageResize.configure({
+        inline: true,
+        allowBase64: true,
+        HTMLAttributes: {
+          class: 'max-w-full h-auto rounded-lg shadow-sm',
+        },
+      }),
       // Custom attributes
       IndentExtension,
       LineHeightExtension,
@@ -105,13 +115,22 @@ export function RichEditor() {
     content: `<h1>Welcome</h1><p>Start typing…</p>`,
   })
 
+  // Image upload functionality
+  const { handleDrop, handleDragOver, handleDragLeave, handlePaste } = useImageUpload(editor)
+
   return (
     <div className="flex flex-col">
       <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
         <EditorToolbar editor={editor} />
       </div>
       <div className="p-8">
-        <div className="min-h-[600px] max-w-5xl mx-auto">
+        <div 
+          className="min-h-[600px] max-w-5xl mx-auto"
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onPaste={handlePaste}
+        >
           <EditorContent editor={editor} />
         </div>
       </div>
@@ -124,7 +143,9 @@ export function RichEditor() {
           💡 <strong>Pro Tips:</strong> Use Ctrl/Cmd + B/I/U for quick formatting • 
           Ctrl/Cmd + S to save • Right-click for context menu • 
           Use Tab/Shift+Tab for indentation • Insert tables, blockquotes, code blocks, and links • 
-          Create multilevel nested lists with proper indentation
+          Create multilevel nested lists with proper indentation • 
+          Drag & drop images or use the image button to upload • 
+          Click images to resize with corner handles or remove them
         </p>
       </div>
     </div>
