@@ -1,4 +1,5 @@
 "use client"
+import React, { useState } from "react"
 import { useState } from 'react'
 import { Picker } from 'emoji-mart'
 import 'emoji-mart/css/emoji-mart.css'
@@ -16,6 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { FindReplaceModal } from "./find-replace-modal"
 import {
   BoldIcon,
   ItalicIcon,
@@ -43,6 +45,7 @@ import {
   MoreHorizontal,
   Image,
   Upload,
+  Search,
 } from "lucide-react"
 
 type Props = {
@@ -50,6 +53,8 @@ type Props = {
 }
 
 export function EditorToolbar({ editor }: Props) {
+  const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false)
+  
   if (!editor) return null
     // Emoji picker state
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
@@ -754,6 +759,19 @@ export function EditorToolbar({ editor }: Props) {
         />
       </div>
 
+      {/* Find & Replace */}
+      <div className="flex items-center gap-1">
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => setIsFindReplaceOpen(true)}
+          aria-label="Find and Replace"
+          title="Find and Replace"
+        >
+          <Search className="h-4 w-4" />
+        </Button>
+      </div>
+
       {/* Export actions: PDF and Word */}
       <div className="ml-auto flex items-center gap-2 pl-4 border-l border-gray-200 dark:border-gray-700">
         <Button
@@ -779,6 +797,13 @@ export function EditorToolbar({ editor }: Props) {
           Word
         </Button>
       </div>
+
+      {/* Find & Replace Modal */}
+      <FindReplaceModal
+        editor={editor}
+        isOpen={isFindReplaceOpen}
+        onClose={() => setIsFindReplaceOpen(false)}
+      />
     </div>
   )
 }
