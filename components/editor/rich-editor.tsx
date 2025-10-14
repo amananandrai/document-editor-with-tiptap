@@ -1,6 +1,5 @@
 "use client"
 import { useEditor, EditorContent } from "@tiptap/react"
-import { MentionExtension } from './tiptap-extensions'
 import StarterKit from "@tiptap/starter-kit"
 import Underline from "@tiptap/extension-underline"
 import Color from "@tiptap/extension-color"
@@ -22,14 +21,6 @@ import { EditorToolbar } from "./toolbar"
 import { StatusBar } from "./status-bar"
 import { useImageUpload } from "./use-image-upload"
 import { IndentExtension, LineHeightExtension, FontFamilyExtension } from "./tiptap-extensions"
-const editor = useEditor({
-  extensions: [
-    StarterKit,
-    MentionExtension,
-    // ...other extensions
-  ],
-  content: '<p>Type @ to mention someone...</p>',
-})
 export function RichEditor() {
   const editor = useEditor({
     extensions: [

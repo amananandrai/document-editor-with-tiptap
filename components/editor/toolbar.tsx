@@ -53,10 +53,9 @@ type Props = {
 
 export function EditorToolbar({ editor }: Props) {
   const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false)
-  
-  if (!editor) return null
-    // Emoji picker state
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+
+  if (!editor) return null
 
   const addEmoji = (emoji: any) => {
     editor.chain().focus().insertContent(emoji.native).run()
@@ -82,26 +81,6 @@ export function EditorToolbar({ editor }: Props) {
   "Lucida Console": "'Lucida Console', Monaco, monospace",
   "Palatino Linotype": "'Palatino Linotype', 'Book Antiqua', Palatino, serif",
   }
-        {/* Emoji Picker */}
-      <div className="relative">
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={() => setShowEmojiPicker(v => !v)}
-          aria-label="Emoji Picker"
-          title="Emoji Picker"
-        >
-          😊
-        </Button>
-
-        {showEmojiPicker && (
-    <div className="absolute z-50 top-10 left-0">
-      <Picker data={data} onEmojiSelect={addEmoji} />
-    </div>
-  )}
-      </div>
-
-
   // Line height options
   const lineHeights = ["1", "1.15", "1.5", "2"]
 
