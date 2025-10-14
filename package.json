@@ -9,6 +9,8 @@
     "start": "next start"
   },
   "dependencies": {
+    "@emoji-mart/data": "^1.2.1",
+    "@emoji-mart/react": "^1.1.1",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
@@ -63,7 +65,6 @@
     "cmdk": "1.0.4",
     "date-fns": "4.1.0",
     "embla-carousel-react": "8.5.1",
-    "emoji-mart": "^5.6.0",
     "geist": "latest",
     "html-to-docx": "1.8.0",
     "html2canvas-pro": "^1.5.12",

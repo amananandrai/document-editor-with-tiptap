@@ -1,8 +1,7 @@
 "use client"
 import React, { useState } from "react"
-import { useState } from 'react'
-import { Picker } from 'emoji-mart'
-import 'emoji-mart/css/emoji-mart.css'
+import data from "@emoji-mart/data"
+import Picker from "@emoji-mart/react"
 import type { Editor } from "@tiptap/react"
 import { Button } from "@/components/ui/button"
 import html2canvas from 'html2canvas-pro';
@@ -88,7 +87,7 @@ export function EditorToolbar({ editor }: Props) {
         <Button
           size="sm"
           variant="secondary"
-          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+          onClick={() => setShowEmojiPicker(v => !v)}
           aria-label="Emoji Picker"
           title="Emoji Picker"
         >
@@ -96,10 +95,10 @@ export function EditorToolbar({ editor }: Props) {
         </Button>
 
         {showEmojiPicker && (
-          <div className="absolute z-50 top-10 left-0">
-            <Picker onSelect={addEmoji} />
-          </div>
-        )}
+    <div className="absolute z-50 top-10 left-0">
+      <Picker data={data} onEmojiSelect={addEmoji} />
+    </div>
+  )}
       </div>
 
 

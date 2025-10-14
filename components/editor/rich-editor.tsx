@@ -1,6 +1,6 @@
 "use client"
 import { useEditor, EditorContent } from "@tiptap/react"
-import { MentionExtension } from './tiptap-extension'
+import { MentionExtension } from './tiptap-extensions'
 import StarterKit from "@tiptap/starter-kit"
 import Underline from "@tiptap/extension-underline"
 import Color from "@tiptap/extension-color"
