@@ -340,9 +340,9 @@ export function EditorToolbar({ editor }: Props) {
               useCORS: true 
           },
           jsPDF: { 
-              unit: "in", 
-              format: "letter", 
-              orientation: "portrait" 
+              unit: "in" as const,
+        format: "letter" as const,
+        orientation: "portrait" as const,
           },
       };
       const { default: html2PDF } = await import("jspdf-html2canvas-pro")
