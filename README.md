@@ -188,8 +188,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - 📧 Email: support@docueditpro.com
 - 🐛 Issues: [GitHub Issues](https://github.com/amananandrai/document-editor-with-tiptap/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/document-editor-with-tip-mukutap/discussions)
-
+- 💬 Discussions: [GitHub Discussions](https://github.com/amananandrai/document-editor-with-tiptap/discussions)
 ---
 
 <div align="center">
