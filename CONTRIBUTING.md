@@ -374,7 +374,7 @@ Contributors will be recognized in:
 
 - 📧 Email: contributors@docueditpro.com
 - 💬 Discord: [Join our community](https://discord.gg/docueditpro)
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/document-editor-with-tip-mukutap/issues)
+- 🐛 Issues: [GitHub Issues](https://github.com/amananandrai/document-editor-with-tiptap/issues)
 
 ---
 
