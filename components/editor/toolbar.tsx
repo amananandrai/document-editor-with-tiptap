@@ -401,7 +401,7 @@ export function EditorToolbar({ editor }: Props) {
 
   return (
     <div
-      className="flex flex-wrap items-center gap-3 p-4 bg-white dark:bg-slate-800"
+      className="flex flex-wrap items-center gap-2 p-4 bg-white dark:bg-slate-800"
       role="toolbar"
       aria-label="Editor toolbar"
     >
