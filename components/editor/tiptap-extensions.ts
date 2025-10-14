@@ -1,19 +1,18 @@
-import Mention from '@tiptap/extension-mention'
+import Mention from "@tiptap/extension-mention";
 export const MentionExtension = Mention.configure({
   HTMLAttributes: {
-    class: 'mention',
+    class: "mention",
   },
   suggestion: {
-    items: (query: string) => {
-      return ['sunidhi', 'aman', 'harshit', 'amananandrai']
-        .filter(item => item.toLowerCase().startsWith(query.toLowerCase()))
-        .slice(0, 5)
+    items: ({ query }: { query: string }) => {
+      return ["sunidhi", "aman", "harshit", "amananandrai"]
+        .filter((item) => item.toLowerCase().startsWith(query.toLowerCase()))
+        .slice(0, 5);
     },
   },
-})
+});
 
-
-import { TextStyle } from "@tiptap/extension-text-style"
+import { TextStyle } from "@tiptap/extension-text-style";
 
 // Extensão customizada para fontFamily
 export const FontFamilyExtension = TextStyle.extend({
@@ -22,16 +21,17 @@ export const FontFamilyExtension = TextStyle.extend({
       ...this.parent?.(),
       fontFamily: {
         default: null,
-        parseHTML: (element) => element.style.fontFamily?.replace(/['"]/g, "") || null,
+        parseHTML: (element) =>
+          element.style.fontFamily?.replace(/['"]/g, "") || null,
         renderHTML: (attributes) => {
-          if (!attributes.fontFamily) return {}
-          return { style: `font-family: ${attributes.fontFamily}` }
+          if (!attributes.fontFamily) return {};
+          return { style: `font-family: ${attributes.fontFamily}` };
         },
       },
-    }
+    };
   },
-})
-import { Extension } from "@tiptap/core"
+});
+import { Extension } from "@tiptap/core";
 
 export const IndentExtension = Extension.create({
   name: "indent",
@@ -43,24 +43,24 @@ export const IndentExtension = Extension.create({
           indent: {
             default: 0,
             parseHTML: (element) => {
-              const v = element.getAttribute("data-indent")
-              return v ? Number.parseInt(v, 10) || 0 : 0
+              const v = element.getAttribute("data-indent");
+              return v ? Number.parseInt(v, 10) || 0 : 0;
             },
             renderHTML: (attributes) => {
-              const level = attributes.indent ?? 0
-              if (!level) return {}
+              const level = attributes.indent ?? 0;
+              if (!level) return {};
               // 24px per level behaves nicely
               return {
                 "data-indent": String(level),
                 style: `margin-left: ${level * 24}px;`,
-              }
+              };
             },
           },
         },
       },
-    ]
+    ];
   },
-})
+});
 
 export const LineHeightExtension = Extension.create({
   name: "lineHeight",
@@ -73,13 +73,13 @@ export const LineHeightExtension = Extension.create({
             default: null,
             parseHTML: (element) => element.style.lineHeight || null,
             renderHTML: (attributes) => {
-              const lh = attributes.lineHeight
-              if (!lh) return {}
-              return { style: `line-height: ${lh};` }
+              const lh = attributes.lineHeight;
+              if (!lh) return {};
+              return { style: `line-height: ${lh};` };
             },
           },
         },
       },
-    ]
+    ];
   },
-})
+});
