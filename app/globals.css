@@ -264,4 +264,218 @@
     background-color: #374151;
     color: #f472b6;
   }
+
+  /* Image styles */
+  .ProseMirror img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .ProseMirror img:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transform: scale(1.02);
+  }
+
+  .ProseMirror img.selected {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+
+  /* Drag and drop styles */
+  .drag-over {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+    border: 2px dashed #3b82f6 !important;
+    border-radius: 0.5rem;
+  }
+
+  .drag-over::after {
+    content: "Drop image here";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(59, 130, 246, 0.9);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  /* Image upload area */
+  .image-upload-area {
+    position: relative;
+    min-height: 200px;
+    border: 2px dashed #d1d5db;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f9fafb;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .image-upload-area:hover {
+    border-color: #3b82f6;
+    background-color: #eff6ff;
+  }
+
+  .image-upload-area.drag-over {
+    border-color: #3b82f6;
+    background-color: #dbeafe;
+  }
+
+  /* Dark mode image styles */
+  .dark .ProseMirror img {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  .dark .ProseMirror img:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  }
+
+  .dark .image-upload-area {
+    border-color: #4b5563;
+    background-color: #1f2937;
+  }
+
+  .dark .image-upload-area:hover {
+    border-color: #3b82f6;
+    background-color: #1e3a8a;
+  }
+
+  .dark .image-upload-area.drag-over {
+    border-color: #3b82f6;
+    background-color: #1e40af;
+  }
+
+  /* Image resize functionality */
+  .image-wrapper {
+    position: relative;
+    display: inline-block;
+    margin: 0.5rem 0;
+  }
+
+  .image-wrapper.selected {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+    border-radius: 0.5rem;
+  }
+
+  .image-container {
+    position: relative;
+    display: inline-block;
+  }
+
+  /* Resize handles */
+  .resize-handle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #3b82f6;
+    border: 2px solid white;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .resize-handle:hover {
+    background: #1d4ed8;
+    transform: scale(1.2);
+  }
+
+  .resize-se {
+    bottom: -4px;
+    right: -4px;
+    cursor: se-resize;
+  }
+
+  .resize-sw {
+    bottom: -4px;
+    left: -4px;
+    cursor: sw-resize;
+  }
+
+  .resize-ne {
+    top: -4px;
+    right: -4px;
+    cursor: ne-resize;
+  }
+
+  .resize-nw {
+    top: -4px;
+    left: -4px;
+    cursor: nw-resize;
+  }
+
+  /* Image controls */
+  .image-controls {
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 6px;
+    padding: 4px;
+    z-index: 20;
+  }
+
+  .image-control-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .image-control-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .remove-btn:hover {
+    background: rgba(239, 68, 68, 0.8);
+    color: white;
+  }
+
+  .reset-btn:hover {
+    background: rgba(59, 130, 246, 0.8);
+    color: white;
+  }
+
+  /* Resizing state */
+  .image-wrapper.resizing {
+    user-select: none;
+  }
+
+  .image-wrapper.resizing .resize-handle {
+    background: #1d4ed8;
+  }
+
+  /* Dark mode image controls */
+  .dark .image-controls {
+    background: rgba(0, 0, 0, 0.9);
+  }
+
+  .dark .resize-handle {
+    background: #60a5fa;
+    border-color: #1f2937;
+  }
+
+  .dark .resize-handle:hover {
+    background: #3b82f6;
+  }
 }

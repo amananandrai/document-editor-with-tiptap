@@ -36,6 +36,8 @@ import {
   Plus,
   Minus,
   MoreHorizontal,
+  Image,
+  Upload,
 } from "lucide-react"
 
 type Props = {
@@ -72,7 +74,7 @@ export function EditorToolbar({ editor }: Props) {
     if (lvl === "paragraph") {
       chain.setParagraph().run()
     } else {
-      chain.toggleHeading({ level: lvl }).run()
+      chain.toggleHeading({ level: lvl as 1 | 2 | 3 | 4 }).run()
     }
   }
 
@@ -236,15 +238,54 @@ export function EditorToolbar({ editor }: Props) {
     editor.chain().focus().toggleHeaderCell().run()
   }
 
+  // Image functionality
+  const handleImageUpload = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/*'
+    input.multiple = false
+    
+    input.onchange = (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0]
+      if (file) {
+        // Check file size (max 5MB)
+        const maxSize = 5 * 1024 * 1024 // 5MB
+        if (file.size > maxSize) {
+          alert('File size too large. Maximum size is 5MB')
+          return
+        }
+
+        // Create a FileReader to convert image to base64
+        const reader = new FileReader()
+        
+        reader.onload = (event) => {
+          const result = event.target?.result as string
+          if (result) {
+            // Insert image into editor
+            editor.chain().focus().setImage({ src: result }).run()
+          }
+        }
+        
+        reader.readAsDataURL(file)
+      }
+    }
+    
+    input.click()
+  }
+
+  const removeImage = () => {
+    editor.chain().focus().deleteSelection().run()
+  }
+
   const handleExportPDF = async () => {
     try {
       const element = editor.view.dom as HTMLElement
       const opt = {
         margin: 0.5,
         filename: "document.pdf",
-        image: { type: "jpeg", quality: 0.98 },
+        image: { type: "jpeg" as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+        jsPDF: { unit: "in" as const, format: "letter" as const, orientation: "portrait" as const },
       }
       const { default: html2pdf } = await import("html2pdf.js")
       await html2pdf().set(opt).from(element).save()
@@ -486,6 +527,31 @@ export function EditorToolbar({ editor }: Props) {
         >
           <Link className="h-4 w-4" />
         </Button>
+      </div>
+
+      {/* Images */}
+      <div className="flex items-center gap-1">
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={handleImageUpload}
+          aria-label="Insert image"
+          title="Insert image"
+        >
+          <Image className="h-4 w-4" />
+        </Button>
+        {editor.isActive("image") && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={removeImage}
+            aria-label="Remove image"
+            title="Remove image"
+            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          >
+            <Minus className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       {/* Lists */}
