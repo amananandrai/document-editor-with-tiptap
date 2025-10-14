@@ -11,17 +11,30 @@ interface StatusBarProps {
 export function StatusBar({ editor }: StatusBarProps) {
   const [wordCount, setWordCount] = useState(0)
   const [characterCount, setCharacterCount] = useState(0)
+  const [characterCountWhiteSpaces, setCharacterCountWhiteSpaces] = useState(0)
   const [selectedText, setSelectedText] = useState('')
   const [selectedWordCount, setSelectedWordCount] = useState(0)
   const [selectedCharacterCount, setSelectedCharacterCount] = useState(0)
+  const [lineNumber, setLineNumber] = useState(1)
 
   useEffect(() => {
     if (!editor) return
+
+      //Update line number
+      const updateLineNumber = ()=>{
+        const pos = editor.state.selection.anchor;
+        const textBeforeCursor = editor.state.doc.textBetween(0, pos, '\n');
+        const currentLine = textBeforeCursor.split('\n').length;
+        setLineNumber(currentLine);
+      }
 
     const updateCounts = () => {
       // Get the full text content
       const fullText = editor.getText()
       const fullTextWithoutSpaces = fullText.replace(/\s/g, '')
+      setCharacterCountWhiteSpaces(fullTextWithoutSpaces.length)
+
+      editor.on('transaction', updateLineNumber);
       
       // Count words (split by whitespace and filter out empty strings)
       const words = fullText.split(/\s+/).filter(word => word.length > 0)
@@ -56,6 +69,7 @@ export function StatusBar({ editor }: StatusBarProps) {
     return () => {
       editor.off('update', updateCounts)
       editor.off('selectionUpdate', updateCounts)
+      editor.off('transaction', updateLineNumber);
     }
   }, [editor])
 
@@ -71,7 +85,9 @@ export function StatusBar({ editor }: StatusBarProps) {
         </div>
         <div className="flex items-center gap-3">
           <span>{wordCount} words</span>
-          <span>{characterCount} characters</span>
+          {/* offset of -2 */}
+          <span>{characterCount-2} characters</span>
+          <span>{characterCountWhiteSpaces} characters excluding spaces</span>
         </div>
       </div>
 
@@ -93,7 +109,7 @@ export function StatusBar({ editor }: StatusBarProps) {
         {/* Cursor position indicator */}
         <div className="flex items-center gap-1">
           <Type className="h-4 w-4" />
-          <span>Line {editor.state.selection.anchor + 1}</span>
+          <span>Line {lineNumber}</span>
         </div>
       </div>
     </div>
