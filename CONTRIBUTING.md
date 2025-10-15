@@ -371,9 +371,10 @@ Contributors will be recognized in:
 - Project documentation
 
 ## 📞 Contact
-
+ <!--  
 - 📧 Email: contributors@docueditpro.com
 - 💬 Discord: [Join our community](https://discord.gg/docueditpro)
+-->
 - 🐛 Issues: [GitHub Issues](https://github.com/amananandrai/document-editor-with-tiptap/issues)
 
 ---
