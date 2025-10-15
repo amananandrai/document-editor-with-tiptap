@@ -190,6 +190,11 @@ export function EditorToolbar({ editor }: Props) {
     editor.chain().focus().toggleHighlight({ color }).run();
   };
 
+  // Function to REMOVE the highlight
+  const removeBackgroundColor = () => {
+    editor.chain().focus().unsetHighlight().run();
+  };
+
   // Text alignment functions
   const setTextAlign = (alignment: "left" | "center" | "right" | "justify") => {
     editor.chain().focus().setTextAlign(alignment).run();
@@ -826,6 +831,7 @@ export function EditorToolbar({ editor }: Props) {
       </div>
 
       {/* Colors */}
+      {/* Colors */}
       <div className="flex items-center gap-2 pl-1">
         <label
           className="text-xs text-muted-foreground flex items-center gap-1"
@@ -852,12 +858,26 @@ export function EditorToolbar({ editor }: Props) {
         <input
           id="bg-color"
           type="color"
+          defaultValue="#FFFF00"
           onChange={(e) => setBackgroundColor(e.currentTarget.value)}
           className="h-8 w-8 cursor-pointer rounded border bg-background p-1"
           aria-label="Background color"
           title="Background color"
         />
+
+        {/* ✨ ADD THIS BUTTON */}
+        <button
+          type="button"
+          onClick={removeBackgroundColor}
+          className="p-1.5 rounded border"
+          aria-label="Remove highlight"
+          title="Remove highlight"
+        >
+          {/* You can replace this emoji with an icon component */}
+          🚫
+        </button>
       </div>
+
 
       {/* Find & Replace */}
       <div className="flex items-center gap-1">
