@@ -47,6 +47,7 @@ import {
   Image,
   Upload,
   Search,
+  Eraser,
   AlignLeft,
   AlignCenter,
   AlignRight,
@@ -397,6 +398,14 @@ export function EditorToolbar({ editor }: Props) {
     } catch (err) {
       console.error("[v0] Export Word (.doc) error:", err);
     }
+  };
+
+  const handleClear = () => {
+    const confirmed = window.confirm(
+      "Clear all content from the document? You can undo with Ctrl+Z."
+    );
+    if (!confirmed) return;
+    editor.chain().focus().clearContent().run();
   };
 
   return (
@@ -860,6 +869,20 @@ export function EditorToolbar({ editor }: Props) {
           title="Find and Replace"
         >
           <Search className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Clear content */}
+      <div className="flex items-center gap-1">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleClear}
+          aria-label="Clear content"
+          title="Clear content"
+          className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 dark:text-red-400 dark:hover:bg-red-900/30 dark:border-red-800"
+        >
+          <Eraser className="h-4 w-4" />
         </Button>
       </div>
 
