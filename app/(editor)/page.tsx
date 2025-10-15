@@ -14,7 +14,7 @@ export default function EditorPage() {
           </p>
         </header>
         
-        <section className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <section className="bg-white rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <EditorClient />
         </section>
       </div>

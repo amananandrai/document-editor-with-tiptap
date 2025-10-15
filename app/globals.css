@@ -239,8 +239,8 @@
     flex: 1 1 auto;
   }
 
-  /* Dark mode styles */
-  .dark .ProseMirror table th {
+  /* Dark mode styles - disabled for editor to keep it white */
+  /* .dark .ProseMirror table th {
     background-color: #374151;
     border-color: #4b5563;
   }
@@ -263,7 +263,7 @@
   .dark .ProseMirror code {
     background-color: #374151;
     color: #f472b6;
-  }
+  } */
 
   /* Image styles */
   .ProseMirror img {
@@ -330,8 +330,8 @@
     background-color: #dbeafe;
   }
 
-  /* Dark mode image styles */
-  .dark .ProseMirror img {
+  /* Dark mode image styles - disabled for editor to keep it white */
+  /* .dark .ProseMirror img {
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
   }
 
@@ -352,7 +352,7 @@
   .dark .image-upload-area.drag-over {
     border-color: #3b82f6;
     background-color: #1e40af;
-  }
+  } */
 
   /* Image resize functionality */
   .image-wrapper {
@@ -465,8 +465,8 @@
     background: #1d4ed8;
   }
 
-  /* Dark mode image controls */
-  .dark .image-controls {
+  /* Dark mode image controls - disabled for editor to keep it white */
+  /* .dark .image-controls {
     background: rgba(0, 0, 0, 0.9);
   }
 
@@ -477,5 +477,5 @@
 
   .dark .resize-handle:hover {
     background: #3b82f6;
-  }
+  } */
 }
