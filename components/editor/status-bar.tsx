@@ -76,7 +76,7 @@ export function StatusBar({ editor }: StatusBarProps) {
   if (!editor) return null
 
   return (
-    <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 text-sm text-muted-foreground">
+    <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-300">
       {/* Left side - Document stats */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-1">

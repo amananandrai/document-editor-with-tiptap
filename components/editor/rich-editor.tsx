@@ -105,8 +105,8 @@ export function RichEditor() {
         class:
           // Keep styles semantic and token-based
           cn(
-            "min-h-[600px] rounded-lg bg-card p-8 text-foreground focus:outline-none",
-            "prose prose-lg max-w-none dark:prose-invert prose-headings:font-bold",
+            "min-h-[600px] rounded-lg bg-white p-8 text-gray-900 focus:outline-none",
+            "prose prose-lg max-w-none prose-headings:font-bold",
             "prose-p:leading-relaxed prose-headings:leading-tight"
             // If the project doesn't include Typography plugin, this still renders fine
           ),
@@ -121,12 +121,12 @@ export function RichEditor() {
 
   return (
     <div className="flex flex-col">
-      <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+      <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
         <EditorToolbar editor={editor} />
       </div>
       <div className="p-8">
         <div
-          className="min-h-[600px] max-w-5xl mx-auto"
+          className="min-h-[600px] max-w-5xl mx-auto bg-white"
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -139,8 +139,8 @@ export function RichEditor() {
       <StatusBar editor={editor} />
 
       {/* Help text */}
-      <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-8 py-4">
-        <p className="text-sm text-muted-foreground text-center">
+      <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-8 py-4">
+        <p className="text-sm text-gray-600 dark:text-gray-300 text-center">
           💡 <strong>Pro Tips:</strong> Use Ctrl/Cmd + B/I/U for quick
           formatting • Ctrl/Cmd + S to save • Right-click for context menu • Use
           Tab/Shift+Tab for indentation • Insert tables, blockquotes, code
