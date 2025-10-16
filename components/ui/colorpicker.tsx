@@ -78,7 +78,7 @@ export default function CustomColorPicker({ value, onChange }: CustomColorPicker
             }
             <button
             onClick={toggleMode}
-            className="text-xs border px-2 py-1 rounded border-gray-200 dark:border-gray-700 hover:bg-gray-600"
+            className="text-xs border px-2 py-1 rounded border-gray-200 dark:border-gray-700 dark:hover:bg-gray-600 hover:bg-gray-300"
           >
             Switch
           </button>
