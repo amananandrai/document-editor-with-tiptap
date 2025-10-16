@@ -37,7 +37,6 @@ import {
   PaletteIcon,
   HighlighterIcon,
   FileDown,
-  FileText,
   Quote,
   Code,
   CodeXml,
@@ -55,14 +54,29 @@ import {
   AlignRight,
   AlignJustify,
   CodeXmlIcon,
+  Layout,
+  FileX,
+  FileText,
+  Monitor,
+  Square,
 } from "lucide-react";
 import CustomColorPicker from '../ui/colorpicker'
 
 type Props = {
   editor: Editor | null;
+  isPageLayout?: boolean;
+  onTogglePageLayout?: () => void;
+  isMultiPageMode?: boolean;
+  onToggleMultiPageMode?: () => void;
 };
 
-export function EditorToolbar({ editor }: Props) {
+export function EditorToolbar({ 
+  editor, 
+  isPageLayout = false, 
+  onTogglePageLayout,
+  isMultiPageMode = false,
+  onToggleMultiPageMode
+}: Props) {
   const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   // Text Color Picker Props
@@ -481,6 +495,36 @@ export function EditorToolbar({ editor }: Props) {
     );
     if (!confirmed) return;
     editor.chain().focus().clearContent().run();
+  };
+
+  const insertPageBreak = () => {
+    editor.chain().focus().setPageBreak().run();
+  };
+
+  const handleLayoutChange = (mode: 'normal' | 'a4' | 'multipage') => {
+    // Reset all modes first
+    if (isPageLayout) onTogglePageLayout?.();
+    if (isMultiPageMode) onToggleMultiPageMode?.();
+    
+    // Set the desired mode
+    if (mode === 'a4') {
+      onTogglePageLayout?.();
+    } else if (mode === 'multipage') {
+      onToggleMultiPageMode?.();
+    }
+    // 'normal' mode is already set by resetting all modes
+  };
+
+  const getCurrentLayoutMode = () => {
+    if (isMultiPageMode) return 'multipage';
+    if (isPageLayout) return 'a4';
+    return 'normal';
+  };
+
+  const getLayoutModeLabel = () => {
+    if (isMultiPageMode) return "Multi-Page";
+    if (isPageLayout) return "A4 Layout";
+    return "Normal";
   };
 
   return (
@@ -985,6 +1029,19 @@ export function EditorToolbar({ editor }: Props) {
         </Button>
       </div>
 
+      {/* Page Break */}
+      <div className="flex items-center gap-1">
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={insertPageBreak}
+          aria-label="Insert page break"
+          title="Insert page break"
+        >
+          <FileX className="h-4 w-4" />
+        </Button>
+      </div>
+
       {/* Clear content */}
       <div className="flex items-center gap-1">
         <Button
@@ -998,6 +1055,67 @@ export function EditorToolbar({ editor }: Props) {
           <Eraser className="h-4 w-4" />
         </Button>
       </div>
+
+      {/* Layout Mode Selector */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            size="sm"
+            variant={isPageLayout || isMultiPageMode ? "default" : "secondary"}
+            aria-label="Select layout mode"
+            title="Choose editor layout mode"
+          >
+            <Layout className="h-4 w-4" />
+            <span className="ml-2 text-xs font-medium">{getLayoutModeLabel()}</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-64">
+          <DropdownMenuLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            Editor Layout
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          
+          <DropdownMenuRadioGroup 
+            value={getCurrentLayoutMode()} 
+            onValueChange={(value) => handleLayoutChange(value as 'normal' | 'a4' | 'multipage')}
+          >
+            <DropdownMenuRadioItem value="normal" className="flex items-center gap-3 py-2">
+              <div className="flex items-center justify-center w-8 h-8 rounded bg-gray-100 dark:bg-gray-800">
+                <Monitor className="h-4 w-4 text-gray-600" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-medium">Normal</span>
+                <span className="text-xs text-gray-500">Full-width editor</span>
+              </div>
+            </DropdownMenuRadioItem>
+            
+            <DropdownMenuRadioItem value="a4" className="flex items-center gap-3 py-2">
+              <div className="flex items-center justify-center w-8 h-8 rounded bg-gray-100 dark:bg-gray-800">
+                <Square className="h-4 w-4 text-gray-600" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-medium">A4 Layout</span>
+                <span className="text-xs text-gray-500">Single A4 page view</span>
+              </div>
+            </DropdownMenuRadioItem>
+            
+            <DropdownMenuRadioItem value="multipage" className="flex items-center gap-3 py-2">
+              <div className="flex items-center justify-center w-8 h-8 rounded bg-gray-100 dark:bg-gray-800">
+                <FileText className="h-4 w-4 text-gray-600" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-medium">Multi-Page</span>
+                <span className="text-xs text-gray-500">Google Docs style with multiple pages</span>
+              </div>
+            </DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
+          
+          <DropdownMenuSeparator />
+          <div className="px-2 py-1.5 text-xs text-gray-500">
+            Switch between different editor layouts to match your workflow
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {/* Export actions: PDF and Word */}
       <div className="ml-auto flex items-center gap-2 pl-4 border-l border-gray-200 dark:border-gray-700">
