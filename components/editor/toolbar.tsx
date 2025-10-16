@@ -59,7 +59,7 @@ import {
   FileText,
   Monitor,
   Square,
-  PaintBucket,
+  PaintRoller,
   RotateCcw,
 } from "lucide-react";
 import CustomColorPicker from '../ui/colorpicker'
@@ -951,7 +951,7 @@ export function EditorToolbar({
           title="Copy formatting from one text and apply to another (like MS Word)"
           className={isFormatPainterActive ? "bg-blue-100 border-blue-300 text-blue-700" : ""}
         >
-          <PaintBucket className="h-4 w-4" />
+          <PaintRoller className="h-4 w-4" />
         </Button>
         <Button
           size="sm"
