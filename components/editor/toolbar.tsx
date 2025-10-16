@@ -203,8 +203,8 @@ export function EditorToolbar({ editor }: Props) {
   }
 
   // Table functionality
-  const insertTable = () => {
-    editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+  const insertTable = (rows: number = 3, cols: number = 3) => {
+    editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run()
   }
 
   const addColumnBefore = () => {
@@ -388,7 +388,11 @@ export function EditorToolbar({ editor }: Props) {
           <Button
             size="sm"
             variant={editor.isActive("bold") ? "default" : "secondary"}
-            onClick={() => editor.chain().focus().toggleMark('bold').run()}
+            onClick={(e) => {
+              e.preventDefault()
+              editor.chain().focus().toggleMark('bold').run()
+            }}
+            onMouseDown={(e) => e.preventDefault()}
             aria-pressed={editor.isActive("bold")}
             aria-label="Bold"
             title="Bold"
@@ -399,7 +403,11 @@ export function EditorToolbar({ editor }: Props) {
           <Button
             size="sm"
             variant={editor.isActive("italic") ? "default" : "secondary"}
-            onClick={() => editor.chain().focus().toggleMark('italic').run()}
+            onClick={(e) => {
+              e.preventDefault()
+              editor.chain().focus().toggleMark('italic').run()
+            }}
+            onMouseDown={(e) => e.preventDefault()}
             aria-pressed={editor.isActive("italic")}
             aria-label="Italic"
             title="Italic"
@@ -410,7 +418,11 @@ export function EditorToolbar({ editor }: Props) {
           <Button
             size="sm"
             variant={editor.isActive("underline") ? "default" : "secondary"}
-            onClick={() => editor.chain().focus().toggleMark('underline').run()}
+            onClick={(e) => {
+              e.preventDefault()
+              editor.chain().focus().toggleMark('underline').run()
+            }}
+            onMouseDown={(e) => e.preventDefault()}
             aria-pressed={editor.isActive("underline")}
             aria-label="Underline"
             title="Underline"
@@ -425,7 +437,11 @@ export function EditorToolbar({ editor }: Props) {
           <Button
             size="sm"
             variant={editor.isActive("bulletList") ? "default" : "secondary"}
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            onClick={(e) => {
+              e.preventDefault()
+              editor.chain().focus().toggleBulletList().run()
+            }}
+            onMouseDown={(e) => e.preventDefault()}
             aria-pressed={editor.isActive("bulletList")}
             aria-label="Bullet list"
             title="Bullet list"
@@ -436,7 +452,11 @@ export function EditorToolbar({ editor }: Props) {
           <Button
             size="sm"
             variant={editor.isActive("orderedList") ? "default" : "secondary"}
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            onClick={(e) => {
+              e.preventDefault()
+              editor.chain().focus().toggleOrderedList().run()
+            }}
+            onMouseDown={(e) => e.preventDefault()}
             aria-pressed={editor.isActive("orderedList")}
             aria-label="Ordered list"
             title="Ordered list"
@@ -450,7 +470,11 @@ export function EditorToolbar({ editor }: Props) {
         <Button
           size="sm"
           variant="secondary"
-          onClick={() => setIsExpanded(!isExpanded)}
+          onClick={(e) => {
+            e.preventDefault()
+            setIsExpanded(!isExpanded)
+          }}
+          onMouseDown={(e) => e.preventDefault()}
           className="md:hidden h-8 px-2"
         >
           <MoreHorizontal className="h-4 w-4 mr-1" />
@@ -462,7 +486,11 @@ export function EditorToolbar({ editor }: Props) {
           <Button
             size="sm"
             variant="outline"
-            onClick={handleExportPDF}
+            onClick={(e) => {
+              e.preventDefault()
+              handleExportPDF()
+            }}
+            onMouseDown={(e) => e.preventDefault()}
             aria-label="Export as PDF"
             title="Export as PDF"
             className="h-8 px-2 text-xs bg-red-50 hover:bg-red-100 text-red-700 border-red-200 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:text-red-400 dark:border-red-800"
@@ -473,7 +501,11 @@ export function EditorToolbar({ editor }: Props) {
           <Button
             size="sm"
             variant="outline"
-            onClick={handleExportWord}
+            onClick={(e) => {
+              e.preventDefault()
+              handleExportWord()
+            }}
+            onMouseDown={(e) => e.preventDefault()}
             aria-label="Export as Word (.doc)"
             title="Export as Word (.doc)"
             className="h-8 px-2 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800"
@@ -704,22 +736,55 @@ export function EditorToolbar({ editor }: Props) {
 
           {/* Tables */}
           <div className="flex items-center gap-1">
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={insertTable}
-              aria-label="Insert table"
-              title="Insert table"
-              className="h-8 w-8 p-0"
-            >
-              <Table className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  aria-label="Insert table"
+                  title="Insert table"
+                  className="h-8 w-8 p-0"
+                >
+                  <Table className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuLabel>Insert Table</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <div className="p-2">
+                  <div className="text-sm text-muted-foreground mb-2">Select table size:</div>
+                  <div className="grid grid-cols-5 gap-1">
+                    {Array.from({ length: 5 }, (_, row) => (
+                      <div key={row} className="flex flex-col gap-1">
+                        {Array.from({ length: 5 }, (_, col) => (
+                          <button
+                            key={`${row}-${col}`}
+                            onClick={() => insertTable(row + 1, col + 1)}
+                            className="w-6 h-6 border border-gray-300 hover:bg-blue-100 hover:border-blue-500 rounded text-xs flex items-center justify-center"
+                            title={`${row + 1} × ${col + 1} table`}
+                          >
+                            {row + 1}×{col + 1}
+                          </button>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
             
-            {/* Table controls dropdown */}
+            {/* Table controls dropdown - only show when cursor is in a table */}
             {editor.isActive("table") && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="secondary" size="sm" aria-label="Table options" title="Table options" className="h-8 w-8 p-0">
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    aria-label="Table options" 
+                    title="Table options" 
+                    className="h-8 w-8 p-0"
+                    onMouseDown={(e) => e.preventDefault()}
+                  >
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
