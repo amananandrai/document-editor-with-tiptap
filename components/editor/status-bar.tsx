@@ -76,26 +76,33 @@ export function StatusBar({ editor }: StatusBarProps) {
   if (!editor) return null
 
   return (
-    <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-300">
+    <div className="w-full flex flex-col lg:flex-row items-center md:justify-between gap-y-2 lg:gap-y-0 px-4 py-2 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-300">
       {/* Left side - Document stats */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center justify-center gap-y-2 gap-x-4 md:gap-4">
+        <div className="flex items-center gap-1 text-blue-400">
           <FileText className="h-4 w-4" />
           <span className="font-medium">Document</span>
         </div>
+
         <div className="flex items-center gap-3">
           <span>{wordCount} words</span>
+        </div>
+
+        <div>
           {/* offset of -2 */}
           <span>{characterCount-2} characters</span>
+        </div>
+
+        <div>
           <span>{characterCountWhiteSpaces} characters excluding spaces</span>
         </div>
       </div>
 
       {/* Right side - Selection stats */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center justify-center gap-y-2 gap-x-4 md:gap-4">
         {selectedText.trim() && (
           <>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 text-green-400">
               <MousePointer className="h-4 w-4" />
               <span className="font-medium">Selected</span>
             </div>
@@ -107,7 +114,7 @@ export function StatusBar({ editor }: StatusBarProps) {
         )}
         
         {/* Cursor position indicator */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center justify-end gap-1">
           <Type className="h-4 w-4" />
           <span>Line {lineNumber}</span>
         </div>
