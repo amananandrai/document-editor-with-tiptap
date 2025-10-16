@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   title: 'DocuEdit Pro - Professional Document Editor',
   description: 'A powerful, feature-rich document editor built with modern web technologies. Create, edit, and format documents with professional-grade tools.',
   generator: 'Next.js',
+  icons: {
+    icon: '/logo.png'
+  }
 }
 
 export default function RootLayout({
