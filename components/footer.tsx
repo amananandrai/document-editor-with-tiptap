@@ -25,7 +25,7 @@ export function Footer() {
             </p>
             <div className="flex space-x-4">
               <a 
-                href="https://github.com/amananandrai/" 
+                href="https://github.com/amananandrai/document-editor-with-tiptap" 
                 className="text-gray-400 hover:text-white transition-colors"
                 aria-label="GitHub"
               >
