@@ -61,7 +61,7 @@ export default function CustomColorPicker({ value, onChange }: CustomColorPicker
         </div>
         {picker}
         
-        <div className="text-sm pt-2 flex justify-between content-center items-center">
+        <div className="text-xs pt-2 flex justify-between content-center items-center">
             {
                 mode==='hex' ? (
                     <div>HEX: {color.toUpperCase()}</div>
@@ -70,18 +70,43 @@ export default function CustomColorPicker({ value, onChange }: CustomColorPicker
                 ) : (
                     <div>
                         HSL:{" "}
-                        {Object.values(hexToHsl(color))
-                        .map((v) => Math.round(v))
-                        .join(", ")}
-            </div>
+                        {(() => {
+                          const { h, s, l } = hexToHsl(color);
+                          return `${Math.round(h)}°, ${Math.round(s)}%, ${Math.round(l)}%`;
+                        })()}
+                    </div>
                 )
             }
-            <button
-            onClick={toggleMode}
-            className="text-xs border px-2 py-1 rounded border-gray-200 dark:border-gray-700 dark:hover:bg-gray-600 hover:bg-gray-300"
-          >
-            Switch
-          </button>
+            <div className="flex, justify-end">
+              {/* Screen color picker button */}
+              <button
+                onClick={async () => {
+                  if ("EyeDropper" in window) {
+                    try {
+                      // @ts-ignore
+                      const eyeDropper = new EyeDropper();
+                      const result = await eyeDropper.open();
+                      handleChange(result.sRGBHex);
+                    } catch (err) {
+                      console.error("Eyedropper cancelled or failed:", err);
+                    }
+                  } else {
+                    alert("EyeDropper API not supported in this browser.");
+                  }
+                }}
+                className="text-xs border px-2 py-1 mr-1 rounded border-gray-200 dark:border-gray-700 dark:hover:bg-gray-600 hover:bg-gray-300"
+                title="Pick color from screen"
+              >
+                🗡
+              </button>
+              {/* Mode switch button */}
+              <button
+                onClick={toggleMode}
+                className="text-xs border px-2 py-1 rounded border-gray-200 dark:border-gray-700 dark:hover:bg-gray-600 hover:bg-gray-300"
+                        >
+                ⇆
+              </button>
+            </div>
         </div>
       </div>
     </div>
