@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import type { Editor } from "@tiptap/react";
@@ -54,6 +54,7 @@ import {
   AlignRight,
   AlignJustify,
 } from "lucide-react";
+import CustomColorPicker from '../ui/colorpicker'
 
 type Props = {
   editor: Editor | null;
@@ -62,6 +63,41 @@ type Props = {
 export function EditorToolbar({ editor }: Props) {
   const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  // Text Color Picker Props
+  const textColorRef = useRef<HTMLDivElement>(null);
+  const [showTextColorPicker, setShowTextColorPicker] = useState(false);
+  const [activeTextColor, setActiveTextColor] = useState("#000000"); // default color on the picker
+  // Background Color Picker Props
+  const [showBGColorPicker, setShowBGColorPicker] = useState(false);
+  const [activeBGColor, setActiveBGColor] = useState("#FFFFFF"); // default color on the picker
+  const bgColorRef = useRef<HTMLDivElement>(null);
+
+  // Close pickers when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+  
+      // If clicked outside both pickers and their buttons
+      if (
+        textColorRef.current &&
+        !textColorRef.current.contains(target)
+      ) {
+        setShowTextColorPicker(false);
+      }
+  
+      if (
+        bgColorRef.current &&
+        !bgColorRef.current.contains(target)
+      ) {
+        setShowBGColorPicker(false);
+      }
+    };
+  
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [linkModalData, setLinkModalData] = useState<{
     initialUrl: string;
@@ -872,14 +908,27 @@ export function EditorToolbar({ editor }: Props) {
           <PaletteIcon className="h-4 w-4" />
           <span className="sr-only">Text color</span>
         </label>
-        <input
-          id="text-color"
-          type="color"
-          onChange={(e) => setTextColor(e.currentTarget.value)}
-          className="h-8 w-8 cursor-pointer rounded border bg-background p-1"
-          aria-label="Text color"
-          title="Text color"
-        />
+        <div className="relative" ref={textColorRef}>
+          <button
+            onClick={() => setShowTextColorPicker((prev) => !prev)}
+            className="h-8 w-8 rounded border p-1 flex items-center justify-center cursor-pointer relative"
+            title="Text color"
+          >
+            <span
+              className="absolute inset-[4px] rounded-sm"
+              style={{ backgroundColor: activeTextColor }}
+            ></span>
+          </button>
+          {
+            showTextColorPicker&&(
+              <div className="absolute top-10 left-0 z-10">
+                <CustomColorPicker value={activeTextColor} onChange={(newColor) => {setTextColor(newColor); setActiveTextColor(newColor);}}/>
+              </div>
+            )
+          }
+        </div>
+        
+
         <label
           className="text-xs text-muted-foreground flex items-center gap-1"
           htmlFor="bg-color"
@@ -887,15 +936,25 @@ export function EditorToolbar({ editor }: Props) {
           <HighlighterIcon className="h-4 w-4" />
           <span className="sr-only">Highlight color</span>
         </label>
-        <input
-          id="bg-color"
-          type="color"
-          defaultValue="#FFFF00"
-          onChange={(e) => setBackgroundColor(e.currentTarget.value)}
-          className="h-8 w-8 cursor-pointer rounded border bg-background p-1"
-          aria-label="Background color"
-          title="Background color"
-        />
+        <div className="relative" ref={bgColorRef}>
+          <button
+            onClick={() => setShowBGColorPicker((prev) => !prev)}
+            className="h-8 w-8 rounded border p-1 flex items-center justify-center cursor-pointer relative"
+            title="Text color"
+          >
+            <span
+              className="absolute inset-[4px] rounded-sm"
+              style={{ backgroundColor: activeBGColor }}
+            ></span>
+          </button>
+          {
+            showBGColorPicker&&(
+              <div className="absolute top-10 left-0 z-10">
+                <CustomColorPicker value={activeBGColor} onChange={(newColor) => {setBackgroundColor(newColor); setActiveBGColor(newColor);}}/>
+              </div>
+            )
+          }
+        </div>
 
         {/* ✨ ADD THIS BUTTON */}
         <button
