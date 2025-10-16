@@ -59,6 +59,8 @@ import {
   FileText,
   Monitor,
   Square,
+  PaintBucket,
+  RotateCcw,
 } from "lucide-react";
 import CustomColorPicker from '../ui/colorpicker'
 
@@ -88,6 +90,10 @@ export function EditorToolbar({
   const [activeBGColor, setActiveBGColor] = useState("#FFFFFF"); // default color on the picker
   const bgColorRef = useRef<HTMLDivElement>(null);
 
+  // Copy Format state
+  const [copiedFormat, setCopiedFormat] = useState<any>(null);
+  const [isFormatPainterActive, setIsFormatPainterActive] = useState(false);
+
   // Close pickers when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -114,6 +120,106 @@ export function EditorToolbar({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  // Add click handler to editor for format painter
+  useEffect(() => {
+    if (!editor || !isFormatPainterActive) return;
+
+    const handleClick = () => {
+      // Small delay to ensure selection is updated
+      setTimeout(() => {
+        if (!isFormatPainterActive || !copiedFormat || !editor) return;
+
+        const { marks, attributes } = copiedFormat;
+        let chain = editor.chain().focus();
+
+        // Clear existing formatting first to avoid conflicts
+        chain = chain.unsetAllMarks().removeEmptyTextStyle();
+
+        // Apply marks
+        Object.entries(marks).forEach(([markType, value]) => {
+          switch (markType) {
+            case "bold":
+              if (value) chain = chain.setBold();
+              break;
+            case "italic":
+              if (value) chain = chain.setItalic();
+              break;
+            case "underline":
+              if (value) chain = chain.setUnderline();
+              break;
+            case "superscript":
+              if (value) chain = chain.setSuperscript();
+              break;
+            case "subscript":
+              if (value) chain = chain.setSubscript();
+              break;
+            case "code":
+              if (value) chain = chain.setCode();
+              break;
+            case "textStyle":
+              if (value && typeof value === "object") {
+                chain = chain.setMark("textStyle", value);
+              }
+              break;
+            case "color":
+              if (value && typeof value === "string") chain = chain.setColor(value);
+              break;
+            case "highlight":
+              if (value && typeof value === "object" && "color" in value && value.color) {
+                chain = chain.toggleHighlight({ color: value.color as string });
+              }
+              break;
+            case "link":
+              if (value && typeof value === "object" && "href" in value && value.href) {
+                chain = chain.setLink({ href: value.href as string });
+              }
+              break;
+          }
+        });
+
+        // Apply node attributes
+        if (attributes.heading) {
+          const level = attributes.heading.level;
+          if (level) {
+            chain = chain.toggleHeading({ level });
+          }
+          // Apply other heading attributes
+          Object.entries(attributes.heading).forEach(([attr, val]) => {
+            if (attr !== "level" && val !== null && val !== undefined) {
+              chain = chain.updateAttributes("heading", { [attr]: val });
+            }
+          });
+        } else if (attributes.paragraph) {
+          chain = chain.setParagraph();
+          // Apply paragraph attributes
+          Object.entries(attributes.paragraph).forEach(([attr, val]) => {
+            if (val !== null && val !== undefined) {
+              chain = chain.updateAttributes("paragraph", { [attr]: val });
+            }
+          });
+        }
+
+        // Apply text alignment
+        if (attributes.textAlign) {
+          chain = chain.setTextAlign(attributes.textAlign);
+        }
+
+        chain.run();
+
+        // Deactivate format painter after applying (single use like MS Word)
+        setIsFormatPainterActive(false);
+        setCopiedFormat(null);
+      }, 10);
+    };
+
+    const editorElement = editor.view.dom;
+    editorElement.addEventListener('click', handleClick);
+
+    return () => {
+      editorElement.removeEventListener('click', handleClick);
+    };
+  }, [editor, isFormatPainterActive, copiedFormat]);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [linkModalData, setLinkModalData] = useState<{
     initialUrl: string;
@@ -527,6 +633,101 @@ export function EditorToolbar({
     return "Normal";
   };
 
+  // Copy formatting from current selection (like MS Word Format Painter)
+  const toggleFormatPainter = () => {
+    if (!editor) return;
+
+    if (isFormatPainterActive) {
+      // Deactivate format painter
+      setIsFormatPainterActive(false);
+      setCopiedFormat(null);
+      return;
+    }
+
+    const selection = editor.state.selection;
+    
+    // Check if there's a selection
+    if (selection.empty) {
+      // No selection, just toggle the format painter state
+      setIsFormatPainterActive(true);
+      return;
+    }
+
+    // Get all active marks and node attributes from selection
+    const marks: any = {};
+    const attributes: any = {};
+
+    // Collect marks (bold, italic, underline, etc.)
+    if (editor.isActive("bold")) marks.bold = true;
+    if (editor.isActive("italic")) marks.italic = true;
+    if (editor.isActive("underline")) marks.underline = true;
+    if (editor.isActive("superscript")) marks.superscript = true;
+    if (editor.isActive("subscript")) marks.subscript = true;
+    if (editor.isActive("code")) marks.code = true;
+    if (editor.isActive("link")) marks.link = editor.getAttributes("link");
+    
+    // Get text style attributes (color, font family, font size)
+    const textStyle = editor.getAttributes("textStyle");
+    if (textStyle && Object.keys(textStyle).length > 0) {
+      marks.textStyle = textStyle;
+    }
+
+    // Get color attributes
+    const color = editor.getAttributes("textStyle")?.color;
+    if (color) marks.color = color;
+
+    // Get highlight/background color
+    const highlight = editor.getAttributes("highlight");
+    if (highlight && Object.keys(highlight).length > 0) {
+      marks.highlight = highlight;
+    }
+
+    // Get paragraph/heading attributes
+    if (editor.isActive("heading")) {
+      const headingAttrs = editor.getAttributes("heading");
+      attributes.heading = headingAttrs;
+    } else if (editor.isActive("paragraph")) {
+      const paragraphAttrs = editor.getAttributes("paragraph");
+      attributes.paragraph = paragraphAttrs;
+    }
+
+    // Get text alignment
+    const textAlign = editor.getAttributes("paragraph")?.textAlign || 
+                     editor.getAttributes("heading")?.textAlign;
+    if (textAlign) attributes.textAlign = textAlign;
+
+    setCopiedFormat({ marks, attributes });
+    setIsFormatPainterActive(true);
+  };
+
+  // Clear all formatting from current selection
+  const clearFormatting = () => {
+    if (!editor) return;
+
+    editor
+      .chain()
+      .focus()
+      // Clear all marks
+      .unsetAllMarks()
+      // Clear text styles
+      .removeEmptyTextStyle()
+      // Clear colors
+      .unsetColor()
+      // Clear highlights
+      .unsetHighlight()
+      // Clear links
+      .unsetLink()
+      // Convert to paragraph (removes headings)
+      .setParagraph()
+      // Clear text alignment
+      .unsetTextAlign()
+      // Clear indent
+      .updateAttributes("paragraph", { indent: 0 })
+      // Clear line height
+      .updateAttributes("paragraph", { lineHeight: null })
+      .run();
+  };
+
   return (
     <div
       className="flex flex-wrap items-center gap-2 p-4 bg-white dark:bg-slate-800"
@@ -737,6 +938,30 @@ export function EditorToolbar({
           title="Subscript"
         >
           <SubscriptIcon className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Format Actions */}
+      <div className="flex items-center gap-1">
+        <Button
+          size="sm"
+          variant={isFormatPainterActive ? "default" : "secondary"}
+          onClick={toggleFormatPainter}
+          aria-label="Format Painter"
+          title="Copy formatting from one text and apply to another (like MS Word)"
+          className={isFormatPainterActive ? "bg-blue-100 border-blue-300 text-blue-700" : ""}
+        >
+          <PaintBucket className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={clearFormatting}
+          aria-label="Clear formatting"
+          title="Remove all formatting from selected text"
+          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 border-orange-200 dark:text-orange-400 dark:hover:bg-orange-900/30 dark:border-orange-800"
+        >
+          <RotateCcw className="h-4 w-4" />
         </Button>
       </div>
 
