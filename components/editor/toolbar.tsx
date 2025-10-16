@@ -40,6 +40,7 @@ import {
   FileText,
   Quote,
   Code,
+  CodeXml,
   Link,
   Table,
   Plus,
@@ -53,6 +54,7 @@ import {
   AlignCenter,
   AlignRight,
   AlignJustify,
+  CodeXmlIcon,
 } from "lucide-react";
 import CustomColorPicker from '../ui/colorpicker'
 
@@ -724,7 +726,7 @@ export function EditorToolbar({ editor }: Props) {
           aria-label="Code block"
           title="Code block"
         >
-          <Code className="h-4 w-4" />
+          <CodeXml className="h-4 w-4" />
         </Button>
         <Button
           size="sm"
