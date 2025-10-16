@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils"
 import { EditorToolbar } from "./toolbar"
 import { StatusBar } from "./status-bar"
 import { useImageUpload } from "./use-image-upload"
-import { IndentExtension, LineHeightExtension, FontFamilyExtension } from "./tiptap-extensions"
+import { IndentExtension, LineHeightExtension, FontFamilyExtension, EmojiExtension, MentionExtension } from "./tiptap-extensions"
 
 export function RichEditor() {
   const editor = useEditor({
@@ -48,36 +48,36 @@ export function RichEditor() {
           },
         },
         codeBlock: false, // We'll use the standalone CodeBlock extension
-      }),
+      }) as any,
       // Marks and styles
-      Underline,
-      TextStyle,
-      Color, // text color via TextStyle
-      Highlight.configure({ multicolor: true }), // background color
-      Superscript,
-      Subscript,
+      Underline as any,
+      TextStyle as any,
+      Color as any, // text color via TextStyle
+      Highlight.configure({ multicolor: true }) as any, // background color
+      Superscript as any,
+      Subscript as any,
   // Custom attributes
-  IndentExtension,
-  LineHeightExtension,
-  FontFamilyExtension,
+  IndentExtension as any,
+  LineHeightExtension as any,
+  FontFamilyExtension as any,
       // Content blocks
-      Blockquote,
-      CodeBlock,
-      Code,
+      Blockquote as any,
+      CodeBlock as any,
+      Code as any,
       // Links
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
           class: 'text-blue-600 underline cursor-pointer hover:text-blue-800',
         },
-      }),
+      }) as any,
       // Tables
       Table.configure({
         resizable: true,
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
+      }) as any,
+      TableRow as any,
+      TableHeader as any,
+      TableCell as any,
       // Images
       ImageResize.configure({
         inline: true,
@@ -85,10 +85,13 @@ export function RichEditor() {
         HTMLAttributes: {
           class: 'max-w-full h-auto rounded-lg shadow-sm',
         },
-      }),
+      }) as any,
       // Custom attributes
-      IndentExtension,
-      LineHeightExtension,
+      IndentExtension as any,
+      LineHeightExtension as any,
+      // Emoji and mentions
+      EmojiExtension as any,
+      MentionExtension as any,
     ],
     // Prevent immediate DOM rendering on initial (server) render to avoid hydration mismatch
     immediatelyRender: false,
@@ -97,9 +100,11 @@ export function RichEditor() {
         class:
           // Keep styles semantic and token-based
           cn(
-            "min-h-[600px] rounded-lg bg-card p-8 text-foreground focus:outline-none",
-            "prose prose-lg max-w-none dark:prose-invert prose-headings:font-bold",
+            "min-h-[400px] sm:min-h-[500px] lg:min-h-[600px] rounded-lg bg-card p-4 sm:p-6 lg:p-8 text-foreground focus:outline-none",
+            "prose prose-sm sm:prose-base lg:prose-lg max-w-none dark:prose-invert prose-headings:font-bold",
             "prose-p:leading-relaxed prose-headings:leading-tight",
+            // Mobile-friendly prose sizing
+            "prose-sm sm:prose-base lg:prose-lg",
             // If the project doesn't include Typography plugin, this still renders fine
           ),
       },
@@ -115,9 +120,9 @@ export function RichEditor() {
       <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
         <EditorToolbar editor={editor} />
       </div>
-      <div className="p-8">
+      <div className="p-2 sm:p-4 lg:p-8">
         <div 
-          className="min-h-[600px] max-w-5xl mx-auto"
+          className="min-h-[400px] sm:min-h-[500px] lg:min-h-[600px] max-w-5xl mx-auto"
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -130,14 +135,15 @@ export function RichEditor() {
       <StatusBar editor={editor} />
       
       {/* Help text */}
-      <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-8 py-4">
-        <p className="text-sm text-muted-foreground text-center">
+      <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-2 sm:px-4 lg:px-8 py-2 sm:py-4">
+        <p className="text-xs sm:text-sm text-muted-foreground text-center leading-relaxed">
           💡 <strong>Pro Tips:</strong> Use Ctrl/Cmd + B/I/U for quick formatting • 
           Ctrl/Cmd + S to save • Right-click for context menu • 
           Use Tab/Shift+Tab for indentation • Insert tables, blockquotes, code blocks, and links • 
           Create multilevel nested lists with proper indentation • 
           Drag & drop images or use the image button to upload • 
-          Click images to resize with corner handles or remove them
+          Click images to resize with corner handles or remove them • 
+          Use the emoji picker 😀 or type @ to mention users 👥
         </p>
       </div>
     </div>

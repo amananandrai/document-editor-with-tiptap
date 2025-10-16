@@ -62,38 +62,41 @@ export function StatusBar({ editor }: StatusBarProps) {
   if (!editor) return null
 
   return (
-    <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 text-sm text-muted-foreground">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-2 sm:px-4 py-2 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 text-xs sm:text-sm text-muted-foreground gap-2 sm:gap-4">
       {/* Left side - Document stats */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         <div className="flex items-center gap-1">
-          <FileText className="h-4 w-4" />
-          <span className="font-medium">Document</span>
+          <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+          <span className="font-medium hidden sm:inline">Document</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <span>{wordCount} words</span>
-          <span>{characterCount} characters</span>
+          <span className="hidden sm:inline">{characterCount} characters</span>
+          <span className="sm:hidden">{characterCount} chars</span>
         </div>
       </div>
 
-      {/* Right side - Selection stats */}
-      <div className="flex items-center gap-4">
+      {/* Right side - Selection stats and cursor position */}
+      <div className="flex items-center gap-2 sm:gap-4">
         {selectedText.trim() && (
           <>
             <div className="flex items-center gap-1">
-              <MousePointer className="h-4 w-4" />
-              <span className="font-medium">Selected</span>
+              <MousePointer className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="font-medium hidden sm:inline">Selected</span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <span>{selectedWordCount} words</span>
-              <span>{selectedCharacterCount} characters</span>
+              <span className="hidden sm:inline">{selectedCharacterCount} characters</span>
+              <span className="sm:hidden">{selectedCharacterCount} chars</span>
             </div>
           </>
         )}
         
         {/* Cursor position indicator */}
         <div className="flex items-center gap-1">
-          <Type className="h-4 w-4" />
-          <span>Line {editor.state.selection.anchor + 1}</span>
+          <Type className="h-3 w-3 sm:h-4 sm:w-4" />
+          <span className="hidden sm:inline">Line {editor.state.selection.anchor + 1}</span>
+          <span className="sm:hidden">L{editor.state.selection.anchor + 1}</span>
         </div>
       </div>
     </div>

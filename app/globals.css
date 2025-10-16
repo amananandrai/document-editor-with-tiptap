@@ -478,4 +478,37 @@
   .dark .resize-handle:hover {
     background: #3b82f6;
   }
+
+  /* Mention styles */
+  .ProseMirror .mention {
+    background-color: #dbeafe;
+    border-radius: 0.375rem;
+    color: #1e40af;
+    font-weight: 500;
+    padding: 0.125rem 0.25rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .ProseMirror .mention:hover {
+    background-color: #bfdbfe;
+    color: #1e3a8a;
+  }
+
+  .dark .ProseMirror .mention {
+    background-color: #1e3a8a;
+    color: #dbeafe;
+  }
+
+  .dark .ProseMirror .mention:hover {
+    background-color: #1e40af;
+    color: #bfdbfe;
+  }
+
+  /* Emoji styles */
+  .ProseMirror .emoji {
+    font-size: 1.2em;
+    line-height: 1;
+    vertical-align: middle;
+  }
 }
