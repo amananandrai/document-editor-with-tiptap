@@ -40,8 +40,9 @@ export function StatusBar({ editor }: StatusBarProps) {
       const words = fullText.split(/\s+/).filter(word => word.length > 0)
       setWordCount(words.length)
       
-      // Count characters
-      setCharacterCount(fullText.length)
+
+      // Count characters excluding newlines
+      setCharacterCount(fullText.replace(/\n/g, '').length)
       
       // Get selected text
       const { from, to } = editor.state.selection
@@ -90,7 +91,7 @@ export function StatusBar({ editor }: StatusBarProps) {
 
         <div>
           {/* offset of -2 */}
-          <span>{characterCount-2} characters</span>
+          <span>{characterCount} characters</span>
         </div>
 
         <div>
