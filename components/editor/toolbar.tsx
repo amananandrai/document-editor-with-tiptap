@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { FindReplaceModal } from "./find-replace-modal";
+import { LinkModal } from "./link-modal";
 import {
   BoldIcon,
   ItalicIcon,
@@ -97,6 +98,16 @@ export function EditorToolbar({ editor }: Props) {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [linkModalData, setLinkModalData] = useState<{
+    initialUrl: string;
+    initialText: string;
+    hasSelection: boolean;
+  }>({
+    initialUrl: "",
+    initialText: "",
+    hasSelection: false,
+  });
 
   if (!editor) return null;
 
@@ -253,21 +264,42 @@ export function EditorToolbar({ editor }: Props) {
   // Link functionality
   const setLink = () => {
     const previousUrl = editor.getAttributes("link").href;
-    const url = window.prompt("URL", previousUrl);
+    const hasSelection = !editor.state.selection.empty;
+    const selectedText = hasSelection ? editor.state.doc.textBetween(
+      editor.state.selection.from,
+      editor.state.selection.to
+    ) : "";
 
-    // cancelled
-    if (url === null) {
-      return;
-    }
+    setLinkModalData({
+      initialUrl: previousUrl || "",
+      initialText: selectedText,
+      hasSelection,
+    });
+    setIsLinkModalOpen(true);
+  };
 
-    // empty
-    if (url === "") {
+  const handleLinkConfirm = (url: string, text?: string) => {
+    if (!url.trim()) {
+      // Remove link if URL is empty
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
       return;
     }
 
-    // update link
-    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+    if (linkModalData.hasSelection) {
+      // There's a selection - convert selected text to link
+      const selection = editor.state.selection;
+      editor.chain().focus().setLink({ href: url }).run();
+      // Move cursor to the end of the link
+      editor.commands.setTextSelection(selection.to);
+    } else {
+      // No selection - insert new link with provided text
+      const linkText = text || "Link";
+      const currentPos = editor.state.selection.from;
+      editor.chain().focus().insertContent(`<a href="${url}">${linkText}</a>`).run();
+      // Move cursor after the inserted link
+      const newPos = currentPos + linkText.length + 2; // +2 for <a> tags
+      editor.commands.setTextSelection(newPos);
+    }
   };
 
   // Table functionality
@@ -996,6 +1028,16 @@ export function EditorToolbar({ editor }: Props) {
         editor={editor}
         isOpen={isFindReplaceOpen}
         onClose={() => setIsFindReplaceOpen(false)}
+      />
+
+      {/* Link Modal */}
+      <LinkModal
+        isOpen={isLinkModalOpen}
+        onClose={() => setIsLinkModalOpen(false)}
+        onConfirm={handleLinkConfirm}
+        initialUrl={linkModalData.initialUrl}
+        initialText={linkModalData.initialText}
+        hasSelection={linkModalData.hasSelection}
       />
     </div>
   );
