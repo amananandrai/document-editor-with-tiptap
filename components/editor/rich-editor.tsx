@@ -73,7 +73,9 @@ export function RichEditor() {
       CodeBlock,
       Code,
       // Links
-      Link.configure({
+      Link.extend({
+        inclusive: false, // This ensures cursor moves outside link after insertion
+      }).configure({
         openOnClick: false,
         HTMLAttributes: {
           class: "text-blue-600 underline cursor-pointer hover:text-blue-800",
