@@ -63,6 +63,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import CustomColorPicker from '../ui/colorpicker'
+import { toast } from "sonner";
 
 type Props = {
   editor: Editor | null;
@@ -521,6 +522,26 @@ export function EditorToolbar({
   };
 
   const handleExportPDF = async () => {
+    // Get the HTML content
+    const htmlContent = editor.getHTML();
+    const textContent = editor.getText().trim();
+
+    // Check if it's the default initial content
+    const isDefaultContent =
+      htmlContent === "<h1>Welcome</h1><p>Start typing…</p>" ||
+      htmlContent === "<h1>Welcome</h1><p>Start typing...</p>" ||
+      textContent === "WelcomeStart typing…" ||
+      textContent === "WelcomeStart typing..." ||
+      textContent.length < 5;
+
+    if (editor.isEmpty || isDefaultContent) {
+      toast.error("Document is empty", {
+        description:
+          "Please add some content to the document before exporting to PDF.",
+      });
+      return;
+    }
+
     try {
       const element = editor.view.dom as HTMLElement;
       const opt = {
@@ -545,8 +566,14 @@ export function EditorToolbar({
       };
       const { default: html2PDF } = await import("jspdf-html2canvas-pro");
       await html2PDF(element, opt);
+      toast.success("PDF exported successfully", {
+        description: "Your document has been downloaded as PDF.",
+      });
     } catch (err) {
       console.error("[v0] Export PDF error:", err);
+      toast.error("Export failed", {
+        description: "An error occurred while exporting to PDF.",
+      });
     }
   };
 
@@ -568,30 +595,56 @@ export function EditorToolbar({
   };
 
   const handleExportWord = async () => {
+    // Get the HTML content
+    const htmlContent = editor.getHTML();
+    const textContent = editor.getText().trim();
+
+    // Check if it's the default initial content
+    const isDefaultContent =
+      htmlContent === "<h1>Welcome</h1><p>Start typing…</p>" ||
+      htmlContent === "<h1>Welcome</h1><p>Start typing...</p>" ||
+      textContent === "WelcomeStart typing…" ||
+      textContent === "WelcomeStart typing..." ||
+      textContent.length < 5;
+
+    if (editor.isEmpty || isDefaultContent) {
+      toast.error("Document is empty", {
+        description:
+          "Please add some content to the document before exporting to Word.",
+      });
+      return;
+    }
+
     try {
       const html = editor.getHTML();
       // Minimal Word-compatible HTML wrapper
       const docHtml = `
-<!DOCTYPE html>
-<html xmlns:o="urn:schemas-microsoft-com:office:office"
-      xmlns:w="urn:schemas-microsoft-com:office:word"
-      xmlns="http://www.w3.org/TR/REC-html40">
-  <head>
-    <meta charset="utf-8" />
-    <title>Document</title>
-    <style>
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
-      h1,h2,h3,h4,h5 { line-height: 1.25; }
-      p { line-height: 1.5; }
-    </style>
-  </head>
-  <body>
-    ${html}
-  </body>
-</html>`;
+          <!DOCTYPE html>
+          <html xmlns:o="urn:schemas-microsoft-com:office:office"
+                xmlns:w="urn:schemas-microsoft-com:office:word"
+                xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+              <meta charset="utf-8" />
+              <title>Document</title>
+              <style>
+                body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+                h1,h2,h3,h4,h5 { line-height: 1.25; }
+                p { line-height: 1.5; }
+              </style>
+            </head>
+            <body>
+              ${html}
+            </body>
+          </html>`;
       downloadBlob(docHtml, "document.doc", "application/msword");
+      toast.success("Word document exported successfully", {
+        description: "Your document has been downloaded as .doc file.",
+      });
     } catch (err) {
       console.error("[v0] Export Word (.doc) error:", err);
+      toast.error("Export failed", {
+        description: "An error occurred while exporting to Word.",
+      });
     }
   };
 
