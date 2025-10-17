@@ -31,6 +31,7 @@ import {
   FontFamilyExtension,
 } from "./tiptap-extensions";
 import { TextAlign } from "@tiptap/extension-text-align";
+import Placeholder from "@tiptap/extension-placeholder";
 export function RichEditor() {
   const [isPageLayout, setIsPageLayout] = useState(false);
   const [isMultiPageMode, setIsMultiPageMode] = useState(false);
@@ -118,6 +119,11 @@ export function RichEditor() {
       
       // Page break
       PageBreak,
+      // Placeholder
+      Placeholder.configure({
+        placeholder: "Welcome! Start typing…",
+        emptyEditorClass: "is-editor-empty",
+      }),
     ],
     // Prevent immediate DOM rendering on initial (server) render to avoid hydration mismatch
     immediatelyRender: false,
@@ -133,7 +139,7 @@ export function RichEditor() {
           ),
       },
     },
-    content: `<h1>Welcome</h1><p>Start typing…</p>`,
+    content: "",
   });
 
   // Image upload functionality
