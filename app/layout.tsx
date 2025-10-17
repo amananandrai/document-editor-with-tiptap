@@ -6,11 +6,15 @@ import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
+import { Toaster } from "sonner"
 
 export const metadata: Metadata = {
   title: 'DocuEdit Pro - Professional Document Editor',
   description: 'A powerful, feature-rich document editor built with modern web technologies. Create, edit, and format documents with professional-grade tools.',
   generator: 'Next.js',
+  icons: {
+    icon: '/logo.png'
+  }
 }
 
 export default function RootLayout({
@@ -26,6 +30,7 @@ export default function RootLayout({
             <Navbar />
             <main className="flex-1">
               {children}
+               <Toaster /> 
             </main>
             <Footer />
           </div>

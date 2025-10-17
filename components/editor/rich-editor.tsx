@@ -1,5 +1,6 @@
 "use client";
 import { useEditor, EditorContent } from "@tiptap/react";
+import { useState } from "react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Color from "@tiptap/extension-color";
@@ -19,6 +20,10 @@ import { ImageResize } from "./image-extension";
 import { cn } from "@/lib/utils";
 import { EditorToolbar } from "./toolbar";
 import { StatusBar } from "./status-bar";
+import { A4PageLayout } from "./a4-page-layout";
+import { PageManagerProvider } from "./page-manager";
+import { MultiPageEditor } from "./multi-page-editor";
+import { PageBreak } from "./page-break-extension";
 import { useImageUpload } from "./use-image-upload";
 import {
   IndentExtension,
@@ -27,6 +32,17 @@ import {
 } from "./tiptap-extensions";
 import { TextAlign } from "@tiptap/extension-text-align";
 export function RichEditor() {
+  const [isPageLayout, setIsPageLayout] = useState(false);
+  const [isMultiPageMode, setIsMultiPageMode] = useState(false);
+
+  const togglePageLayout = () => {
+    setIsPageLayout(!isPageLayout);
+  };
+
+  const toggleMultiPageMode = () => {
+    setIsMultiPageMode(!isMultiPageMode);
+  };
+
   const editor = useEditor({
     extensions: [
       // Base kit: paragraphs, headings, bold, italic, lists, etc.
@@ -76,7 +92,9 @@ export function RichEditor() {
       CodeBlock,
       Code,
       // Links
-      Link.configure({
+      Link.extend({
+        inclusive: false, // This ensures cursor moves outside link after insertion
+      }).configure({
         openOnClick: false,
         HTMLAttributes: {
           class: "text-blue-600 underline cursor-pointer hover:text-blue-800",
@@ -100,6 +118,9 @@ export function RichEditor() {
       // Custom attributes
       IndentExtension,
       LineHeightExtension,
+      
+      // Page break
+      PageBreak,
     ],
     // Prevent immediate DOM rendering on initial (server) render to avoid hydration mismatch
     immediatelyRender: false,
@@ -125,19 +146,48 @@ export function RichEditor() {
   return (
     <div className="flex flex-col">
       <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-        <EditorToolbar editor={editor} />
+        <EditorToolbar 
+          editor={editor} 
+          isPageLayout={isPageLayout}
+          onTogglePageLayout={togglePageLayout}
+          isMultiPageMode={isMultiPageMode}
+          onToggleMultiPageMode={toggleMultiPageMode}
+        />
       </div>
-      <div className="p-8">
-        <div
-          className="min-h-[600px] max-w-5xl mx-auto bg-white"
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onPaste={handlePaste}
-        >
-          <EditorContent editor={editor} />
+      {isMultiPageMode ? (
+        <PageManagerProvider editor={editor}>
+          <MultiPageEditor
+            editor={editor}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onPaste={handlePaste}
+          />
+        </PageManagerProvider>
+      ) : isPageLayout ? (
+        <A4PageLayout>
+          <div
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onPaste={handlePaste}
+          >
+            <EditorContent editor={editor} />
+          </div>
+        </A4PageLayout>
+      ) : (
+        <div className="p-8">
+          <div
+            className="min-h-[600px] max-w-5xl mx-auto bg-white"
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onPaste={handlePaste}
+          >
+            <EditorContent editor={editor} />
+          </div>
         </div>
-      </div>
+      )}
       {/* Status bar */}
       <StatusBar editor={editor} />
 

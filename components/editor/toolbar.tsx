@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import type { Editor } from "@tiptap/react";
@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { FindReplaceModal } from "./find-replace-modal";
+import { LinkModal } from "./link-modal";
 import {
   BoldIcon,
   ItalicIcon,
@@ -36,9 +37,9 @@ import {
   PaletteIcon,
   HighlighterIcon,
   FileDown,
-  FileText,
   Quote,
   Code,
+  CodeXml,
   Link,
   Table,
   Plus,
@@ -52,15 +53,184 @@ import {
   AlignCenter,
   AlignRight,
   AlignJustify,
+  CodeXmlIcon,
+  Layout,
+  FileX,
+  FileText,
+  Monitor,
+  Square,
+  PaintRoller,
+  RotateCcw,
 } from "lucide-react";
+import CustomColorPicker from '../ui/colorpicker'
+import { toast } from "sonner";
 
 type Props = {
   editor: Editor | null;
+  isPageLayout?: boolean;
+  onTogglePageLayout?: () => void;
+  isMultiPageMode?: boolean;
+  onToggleMultiPageMode?: () => void;
 };
 
-export function EditorToolbar({ editor }: Props) {
+export function EditorToolbar({ 
+  editor, 
+  isPageLayout = false, 
+  onTogglePageLayout,
+  isMultiPageMode = false,
+  onToggleMultiPageMode
+}: Props) {
   const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  // Text Color Picker Props
+  const textColorRef = useRef<HTMLDivElement>(null);
+  const [showTextColorPicker, setShowTextColorPicker] = useState(false);
+  const [activeTextColor, setActiveTextColor] = useState("#000000"); // default color on the picker
+  // Background Color Picker Props
+  const [showBGColorPicker, setShowBGColorPicker] = useState(false);
+  const [activeBGColor, setActiveBGColor] = useState("#FFFFFF"); // default color on the picker
+  const bgColorRef = useRef<HTMLDivElement>(null);
+
+  // Copy Format state
+  const [copiedFormat, setCopiedFormat] = useState<any>(null);
+  const [isFormatPainterActive, setIsFormatPainterActive] = useState(false);
+
+  // Close pickers when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+  
+      // If clicked outside both pickers and their buttons
+      if (
+        textColorRef.current &&
+        !textColorRef.current.contains(target)
+      ) {
+        setShowTextColorPicker(false);
+      }
+  
+      if (
+        bgColorRef.current &&
+        !bgColorRef.current.contains(target)
+      ) {
+        setShowBGColorPicker(false);
+      }
+    };
+  
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Add click handler to editor for format painter
+  useEffect(() => {
+    if (!editor || !isFormatPainterActive) return;
+
+    const handleClick = () => {
+      // Small delay to ensure selection is updated
+      setTimeout(() => {
+        if (!isFormatPainterActive || !copiedFormat || !editor) return;
+
+        const { marks, attributes } = copiedFormat;
+        let chain = editor.chain().focus();
+
+        // Clear existing formatting first to avoid conflicts
+        chain = chain.unsetAllMarks().removeEmptyTextStyle();
+
+        // Apply marks
+        Object.entries(marks).forEach(([markType, value]) => {
+          switch (markType) {
+            case "bold":
+              if (value) chain = chain.setBold();
+              break;
+            case "italic":
+              if (value) chain = chain.setItalic();
+              break;
+            case "underline":
+              if (value) chain = chain.setUnderline();
+              break;
+            case "superscript":
+              if (value) chain = chain.setSuperscript();
+              break;
+            case "subscript":
+              if (value) chain = chain.setSubscript();
+              break;
+            case "code":
+              if (value) chain = chain.setCode();
+              break;
+            case "textStyle":
+              if (value && typeof value === "object") {
+                chain = chain.setMark("textStyle", value);
+              }
+              break;
+            case "color":
+              if (value && typeof value === "string") chain = chain.setColor(value);
+              break;
+            case "highlight":
+              if (value && typeof value === "object" && "color" in value && value.color) {
+                chain = chain.toggleHighlight({ color: value.color as string });
+              }
+              break;
+            case "link":
+              if (value && typeof value === "object" && "href" in value && value.href) {
+                chain = chain.setLink({ href: value.href as string });
+              }
+              break;
+          }
+        });
+
+        // Apply node attributes
+        if (attributes.heading) {
+          const level = attributes.heading.level;
+          if (level) {
+            chain = chain.toggleHeading({ level });
+          }
+          // Apply other heading attributes
+          Object.entries(attributes.heading).forEach(([attr, val]) => {
+            if (attr !== "level" && val !== null && val !== undefined) {
+              chain = chain.updateAttributes("heading", { [attr]: val });
+            }
+          });
+        } else if (attributes.paragraph) {
+          chain = chain.setParagraph();
+          // Apply paragraph attributes
+          Object.entries(attributes.paragraph).forEach(([attr, val]) => {
+            if (val !== null && val !== undefined) {
+              chain = chain.updateAttributes("paragraph", { [attr]: val });
+            }
+          });
+        }
+
+        // Apply text alignment
+        if (attributes.textAlign) {
+          chain = chain.setTextAlign(attributes.textAlign);
+        }
+
+        chain.run();
+
+        // Deactivate format painter after applying (single use like MS Word)
+        setIsFormatPainterActive(false);
+        setCopiedFormat(null);
+      }, 10);
+    };
+
+    const editorElement = editor.view.dom;
+    editorElement.addEventListener('click', handleClick);
+
+    return () => {
+      editorElement.removeEventListener('click', handleClick);
+    };
+  }, [editor, isFormatPainterActive, copiedFormat]);
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [linkModalData, setLinkModalData] = useState<{
+    initialUrl: string;
+    initialText: string;
+    hasSelection: boolean;
+  }>({
+    initialUrl: "",
+    initialText: "",
+    hasSelection: false,
+  });
 
   if (!editor) return null;
 
@@ -229,21 +399,42 @@ export function EditorToolbar({ editor }: Props) {
   // Link functionality
   const setLink = () => {
     const previousUrl = editor.getAttributes("link").href;
-    const url = window.prompt("URL", previousUrl);
+    const hasSelection = !editor.state.selection.empty;
+    const selectedText = hasSelection ? editor.state.doc.textBetween(
+      editor.state.selection.from,
+      editor.state.selection.to
+    ) : "";
 
-    // cancelled
-    if (url === null) {
-      return;
-    }
+    setLinkModalData({
+      initialUrl: previousUrl || "",
+      initialText: selectedText,
+      hasSelection,
+    });
+    setIsLinkModalOpen(true);
+  };
 
-    // empty
-    if (url === "") {
+  const handleLinkConfirm = (url: string, text?: string) => {
+    if (!url.trim()) {
+      // Remove link if URL is empty
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
       return;
     }
 
-    // update link
-    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+    if (linkModalData.hasSelection) {
+      // There's a selection - convert selected text to link
+      const selection = editor.state.selection;
+      editor.chain().focus().setLink({ href: url }).run();
+      // Move cursor to the end of the link
+      editor.commands.setTextSelection(selection.to);
+    } else {
+      // No selection - insert new link with provided text
+      const linkText = text || "Link";
+      const currentPos = editor.state.selection.from;
+      editor.chain().focus().insertContent(`<a href="${url}">${linkText}</a>`).run();
+      // Move cursor after the inserted link
+      const newPos = currentPos + linkText.length + 2; // +2 for <a> tags
+      editor.commands.setTextSelection(newPos);
+    }
   };
 
   // Table functionality
@@ -343,6 +534,26 @@ export function EditorToolbar({ editor }: Props) {
   };
 
   const handleExportPDF = async () => {
+    // Get the HTML content
+    const htmlContent = editor.getHTML();
+    const textContent = editor.getText().trim();
+
+    // Check if it's the default initial content
+    const isDefaultContent =
+      htmlContent === "<h1>Welcome</h1><p>Start typing…</p>" ||
+      htmlContent === "<h1>Welcome</h1><p>Start typing...</p>" ||
+      textContent === "WelcomeStart typing…" ||
+      textContent === "WelcomeStart typing..." ||
+      textContent.length < 5;
+
+    if (editor.isEmpty || isDefaultContent) {
+      toast.error("Document is empty", {
+        description:
+          "Please add some content to the document before exporting to PDF.",
+      });
+      return;
+    }
+
     try {
       const element = editor.view.dom as HTMLElement;
       const opt = {
@@ -367,8 +578,14 @@ export function EditorToolbar({ editor }: Props) {
       };
       const { default: html2PDF } = await import("jspdf-html2canvas-pro");
       await html2PDF(element, opt);
+      toast.success("PDF exported successfully", {
+        description: "Your document has been downloaded as PDF.",
+      });
     } catch (err) {
       console.error("[v0] Export PDF error:", err);
+      toast.error("Export failed", {
+        description: "An error occurred while exporting to PDF.",
+      });
     }
   };
 
@@ -390,30 +607,56 @@ export function EditorToolbar({ editor }: Props) {
   };
 
   const handleExportWord = async () => {
+    // Get the HTML content
+    const htmlContent = editor.getHTML();
+    const textContent = editor.getText().trim();
+
+    // Check if it's the default initial content
+    const isDefaultContent =
+      htmlContent === "<h1>Welcome</h1><p>Start typing…</p>" ||
+      htmlContent === "<h1>Welcome</h1><p>Start typing...</p>" ||
+      textContent === "WelcomeStart typing…" ||
+      textContent === "WelcomeStart typing..." ||
+      textContent.length < 5;
+
+    if (editor.isEmpty || isDefaultContent) {
+      toast.error("Document is empty", {
+        description:
+          "Please add some content to the document before exporting to Word.",
+      });
+      return;
+    }
+
     try {
       const html = editor.getHTML();
       // Minimal Word-compatible HTML wrapper
       const docHtml = `
-<!DOCTYPE html>
-<html xmlns:o="urn:schemas-microsoft-com:office:office"
-      xmlns:w="urn:schemas-microsoft-com:office:word"
-      xmlns="http://www.w3.org/TR/REC-html40">
-  <head>
-    <meta charset="utf-8" />
-    <title>Document</title>
-    <style>
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
-      h1,h2,h3,h4,h5 { line-height: 1.25; }
-      p { line-height: 1.5; }
-    </style>
-  </head>
-  <body>
-    ${html}
-  </body>
-</html>`;
+          <!DOCTYPE html>
+          <html xmlns:o="urn:schemas-microsoft-com:office:office"
+                xmlns:w="urn:schemas-microsoft-com:office:word"
+                xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+              <meta charset="utf-8" />
+              <title>Document</title>
+              <style>
+                body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+                h1,h2,h3,h4,h5 { line-height: 1.25; }
+                p { line-height: 1.5; }
+              </style>
+            </head>
+            <body>
+              ${html}
+            </body>
+          </html>`;
       downloadBlob(docHtml, "document.doc", "application/msword");
+      toast.success("Word document exported successfully", {
+        description: "Your document has been downloaded as .doc file.",
+      });
     } catch (err) {
       console.error("[v0] Export Word (.doc) error:", err);
+      toast.error("Export failed", {
+        description: "An error occurred while exporting to Word.",
+      });
     }
   };
 
@@ -423,6 +666,131 @@ export function EditorToolbar({ editor }: Props) {
     );
     if (!confirmed) return;
     editor.chain().focus().clearContent().run();
+  };
+
+  const insertPageBreak = () => {
+    editor.chain().focus().setPageBreak().run();
+  };
+
+  const handleLayoutChange = (mode: 'normal' | 'a4' | 'multipage') => {
+    // Reset all modes first
+    if (isPageLayout) onTogglePageLayout?.();
+    if (isMultiPageMode) onToggleMultiPageMode?.();
+    
+    // Set the desired mode
+    if (mode === 'a4') {
+      onTogglePageLayout?.();
+    } else if (mode === 'multipage') {
+      onToggleMultiPageMode?.();
+    }
+    // 'normal' mode is already set by resetting all modes
+  };
+
+  const getCurrentLayoutMode = () => {
+    if (isMultiPageMode) return 'multipage';
+    if (isPageLayout) return 'a4';
+    return 'normal';
+  };
+
+  const getLayoutModeLabel = () => {
+    if (isMultiPageMode) return "Multi-Page";
+    if (isPageLayout) return "A4 Layout";
+    return "Normal";
+  };
+
+  // Copy formatting from current selection (like MS Word Format Painter)
+  const toggleFormatPainter = () => {
+    if (!editor) return;
+
+    if (isFormatPainterActive) {
+      // Deactivate format painter
+      setIsFormatPainterActive(false);
+      setCopiedFormat(null);
+      return;
+    }
+
+    const selection = editor.state.selection;
+    
+    // Check if there's a selection
+    if (selection.empty) {
+      // No selection, just toggle the format painter state
+      setIsFormatPainterActive(true);
+      return;
+    }
+
+    // Get all active marks and node attributes from selection
+    const marks: any = {};
+    const attributes: any = {};
+
+    // Collect marks (bold, italic, underline, etc.)
+    if (editor.isActive("bold")) marks.bold = true;
+    if (editor.isActive("italic")) marks.italic = true;
+    if (editor.isActive("underline")) marks.underline = true;
+    if (editor.isActive("superscript")) marks.superscript = true;
+    if (editor.isActive("subscript")) marks.subscript = true;
+    if (editor.isActive("code")) marks.code = true;
+    if (editor.isActive("link")) marks.link = editor.getAttributes("link");
+    
+    // Get text style attributes (color, font family, font size)
+    const textStyle = editor.getAttributes("textStyle");
+    if (textStyle && Object.keys(textStyle).length > 0) {
+      marks.textStyle = textStyle;
+    }
+
+    // Get color attributes
+    const color = editor.getAttributes("textStyle")?.color;
+    if (color) marks.color = color;
+
+    // Get highlight/background color
+    const highlight = editor.getAttributes("highlight");
+    if (highlight && Object.keys(highlight).length > 0) {
+      marks.highlight = highlight;
+    }
+
+    // Get paragraph/heading attributes
+    if (editor.isActive("heading")) {
+      const headingAttrs = editor.getAttributes("heading");
+      attributes.heading = headingAttrs;
+    } else if (editor.isActive("paragraph")) {
+      const paragraphAttrs = editor.getAttributes("paragraph");
+      attributes.paragraph = paragraphAttrs;
+    }
+
+    // Get text alignment
+    const textAlign = editor.getAttributes("paragraph")?.textAlign || 
+                     editor.getAttributes("heading")?.textAlign;
+    if (textAlign) attributes.textAlign = textAlign;
+
+    setCopiedFormat({ marks, attributes });
+    setIsFormatPainterActive(true);
+  };
+
+  // Clear all formatting from current selection
+  const clearFormatting = () => {
+    if (!editor) return;
+
+    editor
+      .chain()
+      .focus()
+      // Clear all marks
+      .unsetAllMarks()
+      // Clear text styles
+      .removeEmptyTextStyle()
+      // Clear colors
+      .unsetColor()
+      // Clear highlights
+      .unsetHighlight()
+      // Clear links
+      .unsetLink()
+      // Convert to paragraph (removes headings)
+      .setParagraph()
+      // Clear text alignment
+      .unsetTextAlign()
+      // Clear indent
+      .updateAttributes("paragraph", { indent: 0 })
+      // Clear line height
+      .updateAttributes("paragraph", { lineHeight: null })
+      .run();
   };
 
   return (
@@ -640,6 +1008,30 @@ export function EditorToolbar({ editor }: Props) {
         </Button>
       </div>
 
+      {/* Format Actions */}
+      <div className="flex items-center gap-1">
+        <Button
+          size="sm"
+          variant={isFormatPainterActive ? "default" : "secondary"}
+          onClick={toggleFormatPainter}
+          aria-label="Format Painter"
+          title="Copy formatting from one text and apply to another (like MS Word)"
+          className={isFormatPainterActive ? "bg-blue-100 border-blue-300 text-blue-700" : ""}
+        >
+          <PaintRoller className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={clearFormatting}
+          aria-label="Clear formatting"
+          title="Remove all formatting from selected text"
+          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 border-orange-200 dark:text-orange-400 dark:hover:bg-orange-900/30 dark:border-orange-800"
+        >
+          <RotateCcw className="h-4 w-4" />
+        </Button>
+      </div>
+
       {/* Content blocks */}
       <div className="flex items-center gap-1">
         <Button
@@ -670,7 +1062,7 @@ export function EditorToolbar({ editor }: Props) {
           aria-label="Code block"
           title="Code block"
         >
-          <Code className="h-4 w-4" />
+          <CodeXml className="h-4 w-4" />
         </Button>
         <Button
           size="sm"
@@ -854,14 +1246,27 @@ export function EditorToolbar({ editor }: Props) {
           <PaletteIcon className="h-4 w-4" />
           <span className="sr-only">Text color</span>
         </label>
-        <input
-          id="text-color"
-          type="color"
-          onChange={(e) => setTextColor(e.currentTarget.value)}
-          className="h-8 w-8 cursor-pointer rounded border bg-background p-1"
-          aria-label="Text color"
-          title="Text color"
-        />
+        <div className="relative" ref={textColorRef}>
+          <button
+            onClick={() => setShowTextColorPicker((prev) => !prev)}
+            className="h-8 w-8 rounded border p-1 flex items-center justify-center cursor-pointer relative"
+            title="Text color"
+          >
+            <span
+              className="absolute inset-[4px] rounded-sm"
+              style={{ backgroundColor: activeTextColor }}
+            ></span>
+          </button>
+          {
+            showTextColorPicker&&(
+              <div className="absolute top-10 left-0 z-10">
+                <CustomColorPicker value={activeTextColor} onChange={(newColor) => {setTextColor(newColor); setActiveTextColor(newColor);}}/>
+              </div>
+            )
+          }
+        </div>
+        
+
         <label
           className="text-xs text-muted-foreground flex items-center gap-1"
           htmlFor="bg-color"
@@ -869,17 +1274,42 @@ export function EditorToolbar({ editor }: Props) {
           <HighlighterIcon className="h-4 w-4" />
           <span className="sr-only">Highlight color</span>
         </label>
-        <input
-          id="bg-color"
-          type="color"
-          defaultValue="#FFFF00"
-          onChange={(e) => setBackgroundColor(e.currentTarget.value)}
-          className="h-8 w-8 cursor-pointer rounded border bg-background p-1"
-          aria-label="Background color"
-          title="Background color"
-        />
+        <div className="relative" ref={bgColorRef}>
+          <button
+            onClick={() => setShowBGColorPicker((prev) => !prev)}
+            className="h-8 w-8 rounded border p-1 flex items-center justify-center cursor-pointer relative"
+            title="Text color"
+          >
+            <span
+              className="absolute inset-[4px] rounded-sm"
+              style={{ backgroundColor: activeBGColor }}
+            ></span>
+          </button>
+          {
+            showBGColorPicker&&(
+              <div className="absolute top-10 left-0 z-10">
+                <CustomColorPicker
+                  value={activeBGColor} 
+                  onChange={(newColor) => {setBackgroundColor(newColor); setActiveBGColor(newColor);}}
+                  children={
+                      <button
+                        type="button"
+                        onClick={removeBackgroundColor}
+                        className="w-full p-1.5 mt-1.5 cursor-pointer rounded border text-sm border-gray-200 dark:border-gray-700 dark:hover:bg-gray-600 hover:bg-gray-300"
+                        aria-label="Remove highlight"
+                        title="Remove highlight"
+                      >
+                        {/* You can replace this emoji with an icon component */}
+                        🚫 Clear Background color
+                      </button>
+                  }
+                />
+              </div>
+            )
+          }
+        </div>
 
-        {/* ✨ ADD THIS BUTTON */}
+        {/* ✨ ADD THIS BUTTON
         <button
           type="button"
           onClick={removeBackgroundColor}
@@ -887,9 +1317,8 @@ export function EditorToolbar({ editor }: Props) {
           aria-label="Remove highlight"
           title="Remove highlight"
         >
-          {/* You can replace this emoji with an icon component */}
           🚫
-        </button>
+        </button> */}
       </div>
 
 
@@ -906,6 +1335,19 @@ export function EditorToolbar({ editor }: Props) {
         </Button>
       </div>
 
+      {/* Page Break */}
+      <div className="flex items-center gap-1">
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={insertPageBreak}
+          aria-label="Insert page break"
+          title="Insert page break"
+        >
+          <FileX className="h-4 w-4" />
+        </Button>
+      </div>
+
       {/* Clear content */}
       <div className="flex items-center gap-1">
         <Button
@@ -919,6 +1361,67 @@ export function EditorToolbar({ editor }: Props) {
           <Eraser className="h-4 w-4" />
         </Button>
       </div>
+
+      {/* Layout Mode Selector */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            size="sm"
+            variant={isPageLayout || isMultiPageMode ? "default" : "secondary"}
+            aria-label="Select layout mode"
+            title="Choose editor layout mode"
+          >
+            <Layout className="h-4 w-4" />
+            <span className="ml-2 text-xs font-medium">{getLayoutModeLabel()}</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-64">
+          <DropdownMenuLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            Editor Layout
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          
+          <DropdownMenuRadioGroup 
+            value={getCurrentLayoutMode()} 
+            onValueChange={(value) => handleLayoutChange(value as 'normal' | 'a4' | 'multipage')}
+          >
+            <DropdownMenuRadioItem value="normal" className="flex items-center gap-3 py-2">
+              <div className="flex items-center justify-center w-8 h-8 rounded bg-gray-100 dark:bg-gray-800">
+                <Monitor className="h-4 w-4 text-gray-600" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-medium">Normal</span>
+                <span className="text-xs text-gray-500">Full-width editor</span>
+              </div>
+            </DropdownMenuRadioItem>
+            
+            <DropdownMenuRadioItem value="a4" className="flex items-center gap-3 py-2">
+              <div className="flex items-center justify-center w-8 h-8 rounded bg-gray-100 dark:bg-gray-800">
+                <Square className="h-4 w-4 text-gray-600" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-medium">A4 Layout</span>
+                <span className="text-xs text-gray-500">Single A4 page view</span>
+              </div>
+            </DropdownMenuRadioItem>
+            
+            <DropdownMenuRadioItem value="multipage" className="flex items-center gap-3 py-2">
+              <div className="flex items-center justify-center w-8 h-8 rounded bg-gray-100 dark:bg-gray-800">
+                <FileText className="h-4 w-4 text-gray-600" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-medium">Multi-Page</span>
+                <span className="text-xs text-gray-500">Google Docs style with multiple pages</span>
+              </div>
+            </DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
+          
+          <DropdownMenuSeparator />
+          <div className="px-2 py-1.5 text-xs text-gray-500">
+            Switch between different editor layouts to match your workflow
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {/* Export actions: PDF and Word */}
       <div className="ml-auto flex items-center gap-2 pl-4 border-l border-gray-200 dark:border-gray-700">
@@ -951,6 +1454,16 @@ export function EditorToolbar({ editor }: Props) {
         editor={editor}
         isOpen={isFindReplaceOpen}
         onClose={() => setIsFindReplaceOpen(false)}
+      />
+
+      {/* Link Modal */}
+      <LinkModal
+        isOpen={isLinkModalOpen}
+        onClose={() => setIsLinkModalOpen(false)}
+        onConfirm={handleLinkConfirm}
+        initialUrl={linkModalData.initialUrl}
+        initialText={linkModalData.initialText}
+        hasSelection={linkModalData.hasSelection}
       />
     </div>
   );
