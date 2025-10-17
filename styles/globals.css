@@ -123,3 +123,16 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* TipTap Placeholder Styles */
+.is-editor-empty .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #9ca3af;
+  pointer-events: none;
+  height: 0;
+}
+
+.dark .is-editor-empty .ProseMirror p.is-editor-empty:first-child::before {
+  color: #6b7280;
+}

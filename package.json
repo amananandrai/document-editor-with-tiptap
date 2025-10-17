@@ -47,6 +47,7 @@
     "@tiptap/extension-image": "^3.6.6",
     "@tiptap/extension-link": "^3.6.6",
     "@tiptap/extension-mention": "^3.6.6",
+    "@tiptap/extension-placeholder": "^3.7.2",
     "@tiptap/extension-subscript": "latest",
     "@tiptap/extension-superscript": "latest",
     "@tiptap/extension-table": "^3.6.6",
