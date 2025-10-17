@@ -4,7 +4,7 @@ import { useState } from "react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Color from "@tiptap/extension-color";
-import { TextStyle } from "@tiptap/extension-text-style";
+import { FontSize, TextStyle } from "@tiptap/extension-text-style";
 import Highlight from "@tiptap/extension-highlight";
 import Superscript from "@tiptap/extension-superscript";
 import Subscript from "@tiptap/extension-subscript";
@@ -80,6 +80,9 @@ export function RichEditor() {
       IndentExtension,
       LineHeightExtension,
       FontFamilyExtension,
+      FontSize.configure({
+      types: ['textStyle'],
+      }),
       // Text alignment
       TextAlign.configure({
         types: ["heading", "paragraph"],

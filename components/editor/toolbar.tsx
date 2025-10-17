@@ -282,29 +282,41 @@ export function EditorToolbar({
   const lineHeights = ["1", "1.15", "1.5", "2"];
 
   // Heading options
-  const headingOptions: Array<{ label: string; level: number | "paragraph" }> =
+  const headingOptions: Array<{ label: string; level: number | "paragraph", size: string }> =
     [
-      { label: "Paragraph", level: "paragraph" },
-      { label: "Heading 1", level: 1 },
-      { label: "Heading 2", level: 2 },
-      { label: "Heading 3", level: 3 },
-      { label: "Heading 4", level: 4 },
+      { label: "Paragraph", level: "paragraph", size: "16" },
+      { label: "Heading 1", level: 1, size: "32" },
+      { label: "Heading 2", level: 2, size: "24" },
+      { label: "Heading 3", level: 3, size: "18" },
+      { label: "Heading 4", level: 4, size: "16" },
     ];
 
-  const setHeading = (lvl: number | "paragraph") => {
-    const chain = editor.chain().focus();
+  const setHeading = (lvl: number | "paragraph", size: string) => {
+    editor.chain().focus().unsetFontSize();
     if (lvl === "paragraph") {
-      chain.setParagraph().run();
-    } else {
-      chain.toggleHeading({ level: lvl as 1 | 2 | 3 | 4 }).run();
-    }
+    editor
+      .chain()
+      .focus()
+      .setParagraph()
+      // Apply the font size for the paragraph
+      .setMark("textStyle", { fontSize: `${size}px` })
+      .run();
+  } else {
+    editor
+      .chain()
+      .focus()
+      .toggleHeading({ level: lvl as 1 | 2 | 3 | 4 })
+      // Apply the font size for the heading
+      .setMark("textStyle", { fontSize: `${size}px` })
+      .run();
+  }
   };
 
   const setFontSize = (sizePx: string) => {
     editor
       .chain()
       .focus()
-      .setMark("textStyle", { fontSize: `${sizePx}px` })
+      .setMark("textStyle", { fontSize: sizePx })
       .run();
   };
 
@@ -827,9 +839,11 @@ export function EditorToolbar({
           {headingOptions.map((opt) => (
             <DropdownMenuItem
               key={opt.label}
-              onClick={() => setHeading(opt.level)}
+              onClick={() => setHeading(opt.level, opt.size)}
             >
-              {opt.label}
+              <span style={{ fontSize: `${opt.size}px` }}>
+                {opt.label}
+              </span>
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
