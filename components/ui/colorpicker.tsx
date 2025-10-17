@@ -1,16 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import {
   HexColorPicker,
   RgbColorPicker,
   HslColorPicker,
 } from "react-colorful";
+import { Button } from "./button";
 
 interface CustomColorPickerProps {
   value: string;
   onChange: (color: string) => void;
+  children?: ReactNode;
 }
 
-export default function CustomColorPicker({ value, onChange }: CustomColorPickerProps) {
+export default function CustomColorPicker({ value, onChange, children }: CustomColorPickerProps) {
   const [mode, setMode] = useState<"hex" | "rgb" | "hsl">("hex");
   const [color, setColor] = useState(value || "#000000");
   const [hslColor, setHslColor] = useState(hexToHsl(value || "#000000")); // for HSL mode
@@ -108,6 +110,7 @@ export default function CustomColorPicker({ value, onChange }: CustomColorPicker
               </button>
             </div>
         </div>
+        {children}
       </div>
     </div>
   );
