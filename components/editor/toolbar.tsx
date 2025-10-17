@@ -95,6 +95,9 @@ export function EditorToolbar({
   const [copiedFormat, setCopiedFormat] = useState<any>(null);
   const [isFormatPainterActive, setIsFormatPainterActive] = useState(false);
 
+  // Table state to check if table is active or not
+  const [isTableActive, setIsTableActive] = useState(false)
+
   // Close pickers when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -121,6 +124,24 @@ export function EditorToolbar({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    if(!editor) return
+    const updateTableActiveState = () => {
+      setIsTableActive(editor.isActive("table"))
+    }
+    editor.on("transaction", updateTableActiveState)
+    editor.on("focus", updateTableActiveState)
+    editor.on("blur", updateTableActiveState)
+    editor.on("selectionUpdate", updateTableActiveState)
+
+    return () => {
+      editor.off('transaction', updateTableActiveState);
+      editor.off('focus', updateTableActiveState);
+      editor.off('blur', updateTableActiveState);
+      editor.off('selectionUpdate', updateTableActiveState);
+    }
+  }, [editor])
 
   // Add click handler to editor for format painter
   useEffect(() => {
@@ -975,7 +996,10 @@ export function EditorToolbar({
         <Button
           size="sm"
           variant={editor.isActive("superscript") ? "default" : "secondary"}
-          onClick={() => editor.chain().focus().toggleSuperscript().run()}
+          onClick={() => {
+            editor.chain().focus().unsetSubscript().run()
+            editor.chain().focus().toggleSuperscript().run()
+          }}
           aria-pressed={editor.isActive("superscript")}
           aria-label="Superscript"
           title="Superscript"
@@ -985,7 +1009,10 @@ export function EditorToolbar({
         <Button
           size="sm"
           variant={editor.isActive("subscript") ? "default" : "secondary"}
-          onClick={() => editor.chain().focus().toggleSubscript().run()}
+          onClick={() => {
+            editor.chain().focus().unsetSuperscript().run()
+            editor.chain().focus().toggleSubscript().run()
+          }}
           aria-pressed={editor.isActive("subscript")}
           aria-label="Subscript"
           title="Subscript"
@@ -1146,7 +1173,7 @@ export function EditorToolbar({
         </Button>
 
         {/* Table controls dropdown */}
-        {editor.isActive("table") && (
+        {isTableActive && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
