@@ -113,7 +113,7 @@ export function EditorToolbar({ editor }: Props) {
     editor
       .chain()
       .focus()
-      .setMark("textStyle", { fontSize: `${sizePx}px` })
+      .setMark("textStyle", { fontSize: sizePx })
       .run();
   };
 
