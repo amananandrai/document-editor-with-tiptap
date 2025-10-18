@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { FileText, Download, Save, Share2, Settings, Menu, X } from 'lucide-react'
+import Link from 'next/link'
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -13,19 +14,23 @@ export function Navbar() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo and Brand */}
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">
-                <FileText className="h-6 w-6 text-white" />
+            <Link
+              href="/"
+            >
+              <div className="flex items-center space-x-2">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">
+                  <FileText className="h-6 w-6 text-white" />
+                </div>
+                <div className="flex flex-col">
+                  <h1 className="text-xl font-bold text-white font-serif">
+                    DocuEdit Pro
+                  </h1>
+                  <p className="hidden sm:block text-xs text-white/80 font-mono">
+                    Professional Document Editor
+                  </p>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <h1 className="text-xl font-bold text-white font-serif">
-                  DocuEdit Pro
-                </h1>
-                <p className="hidden sm:block text-xs text-white/80 font-mono">
-                  Professional Document Editor
-                </p>
-              </div>
-            </div>
+            </Link>
           </div>
 
           {/* Desktop Navigation Actions */}
@@ -62,7 +67,7 @@ export function Navbar() {
               <Settings className="h-4 w-4 mr-2" />
               Settings
             </Button>
-            
+
             {/* Theme Toggle */}
             <div className="ml-4 pl-4 border-l border-white/30">
               <ThemeToggle className="text-white hover:bg-white/20" />

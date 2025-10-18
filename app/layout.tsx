@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
 import { Toaster } from "sonner"
+import "aos/dist/aos.css";
 
 export const metadata: Metadata = {
   title: 'DocuEdit Pro - Professional Document Editor',
