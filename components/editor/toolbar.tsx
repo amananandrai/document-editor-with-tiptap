@@ -76,6 +76,8 @@ type Props = {
   onTogglePageLayout?: () => void;
   isMultiPageMode?: boolean;
   onToggleMultiPageMode?: () => void;
+  pageMargin?: number;
+  onChangePageMargin?: (marginPx: number) => void;
 };
 
 export function EditorToolbar({ 
@@ -84,6 +86,8 @@ export function EditorToolbar({
   onTogglePageLayout,
   isMultiPageMode = false,
   onToggleMultiPageMode
+  ,pageMargin = 64,
+  onChangePageMargin
 }: Props) {
   const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -1419,6 +1423,48 @@ export function EditorToolbar({
           <Eraser className="h-4 w-4" />
         </Button>
       </div>
+
+      {/* Page margin selector */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            size="sm"
+            variant="secondary"
+            aria-label="Page margin"
+            title="Page margin"
+          >
+            <Monitor className="h-4 w-4" />
+            <span className="ml-2 text-xs font-medium">Margin</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-56">
+          <DropdownMenuLabel>Page Margin</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => onChangePageMargin?.(32)}>
+            Narrow (32px)
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onChangePageMargin?.(64)}>
+            Normal (64px)
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onChangePageMargin?.(96)}>
+            Wide (96px)
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <div className="px-3 py-2">
+            <label className="text-xs text-muted-foreground">Custom (px)</label>
+            <input
+              type="number"
+              min={0}
+              className="w-full mt-1 p-1 border rounded text-sm"
+              value={String(pageMargin)}
+              onChange={(e) => {
+                const v = Number(e.target.value || 0);
+                if (!Number.isNaN(v)) onChangePageMargin?.(v);
+              }}
+            />
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {/* Layout Mode Selector */}
       <DropdownMenu>

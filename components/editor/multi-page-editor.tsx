@@ -13,6 +13,7 @@ interface MultiPageEditorProps {
   onDragOver?: (event: React.DragEvent<HTMLDivElement>) => void;
   onDragLeave?: (event: React.DragEvent<HTMLDivElement>) => void;
   onPaste?: (event: React.ClipboardEvent<HTMLDivElement>) => void;
+  pageMargin?: number;
 }
 
 export function MultiPageEditor({ 
@@ -20,7 +21,8 @@ export function MultiPageEditor({
   onDrop, 
   onDragOver, 
   onDragLeave, 
-  onPaste 
+  onPaste,
+  pageMargin = 64
 }: MultiPageEditorProps) {
   const { pages, currentPageIndex, setCurrentPage } = usePageManager();
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -59,6 +61,7 @@ export function MultiPageEditor({
                   pageNumber={index + 1}
                   isActive={index === currentPageIndex}
                   onClick={() => setCurrentPage(index)}
+                  pageMargin={pageMargin}
                   className={cn(
                     "transition-all duration-300",
                     index === currentPageIndex 

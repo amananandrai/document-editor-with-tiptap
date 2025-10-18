@@ -6,9 +6,10 @@ import { cn } from "@/lib/utils";
 interface A4PageLayoutProps {
   children: React.ReactNode;
   className?: string;
+  pageMargin?: number; // px
 }
 
-export function A4PageLayout({ children, className }: A4PageLayoutProps) {
+export function A4PageLayout({ children, className, pageMargin = 64 }: A4PageLayoutProps) {
   return (
     <div className="flex justify-center items-start min-h-screen bg-gray-100 dark:bg-gray-800 py-8">
       <div
@@ -19,7 +20,7 @@ export function A4PageLayout({ children, className }: A4PageLayoutProps) {
           "w-[794px] min-h-[1123px]",
           "bg-white shadow-2xl",
           "border border-gray-300",
-          "p-16", // 64px padding on all sides
+          // padding replaced by inline style to allow dynamic margin (default 64px)
           "prose prose-lg max-w-none",
           "prose-headings:font-bold prose-headings:leading-tight",
           "prose-p:leading-relaxed",
@@ -28,6 +29,7 @@ export function A4PageLayout({ children, className }: A4PageLayoutProps) {
         style={{
           // Ensure exact A4 proportions
           aspectRatio: "210/297",
+          padding: `${pageMargin}px`,
         }}
       >
         {children}

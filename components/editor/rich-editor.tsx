@@ -34,6 +34,8 @@ import { TextAlign } from "@tiptap/extension-text-align";
 export function RichEditor() {
   const [isPageLayout, setIsPageLayout] = useState(false);
   const [isMultiPageMode, setIsMultiPageMode] = useState(false);
+  // page margin in pixels (applies as padding inside page container)
+  const [pageMargin, setPageMargin] = useState<number>(64); // default: 64px (p-16)
 
   const togglePageLayout = () => {
     setIsPageLayout(!isPageLayout);
@@ -152,12 +154,15 @@ export function RichEditor() {
           onTogglePageLayout={togglePageLayout}
           isMultiPageMode={isMultiPageMode}
           onToggleMultiPageMode={toggleMultiPageMode}
+          pageMargin={pageMargin}
+          onChangePageMargin={(m: number) => setPageMargin(m)}
         />
       </div>
       {isMultiPageMode ? (
         <PageManagerProvider editor={editor}>
           <MultiPageEditor
             editor={editor}
+            pageMargin={pageMargin}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -165,7 +170,7 @@ export function RichEditor() {
           />
         </PageManagerProvider>
       ) : isPageLayout ? (
-        <A4PageLayout>
+        <A4PageLayout pageMargin={pageMargin}>
           <div
             onDrop={handleDrop}
             onDragOver={handleDragOver}
@@ -179,6 +184,7 @@ export function RichEditor() {
         <div className="p-8">
           <div
             className="min-h-[600px] max-w-5xl mx-auto bg-white"
+            style={{ padding: `${pageMargin}px` }}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
