@@ -53,36 +53,45 @@ export function PageManagerProvider({ children, editor }: PageManagerProviderPro
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
 
   const addPage = useCallback((content = "<p>New page content...</p>") => {
-    const newPage: Page = {
-      id: `page-${Date.now()}`,
-      content,
-      title: `Page ${pages.length + 1}`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    
-    setPages(prev => [...prev, newPage]);
-    setCurrentPageIndex(pages.length);
-  }, [pages.length]);
+    // Use functional updates so we always derive from the latest state
+    setPages((prevPages: Page[]) => {
+      const newIndex = prevPages.length; // index for the newly appended page
+      const newPage: Page = {
+        id: `page-${Date.now()}`,
+        content,
+        title: `Page ${newIndex + 1}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      // Update the current page index to point to the newly added page
+      setCurrentPageIndex(newIndex);
+      return [...prevPages, newPage];
+    });
+  }, []);
 
   const deletePage = useCallback((pageId: string) => {
-    if (pages.length <= 1) return; // Don't delete the last page
-    
-    setPages(prev => {
-      const newPages = prev.filter(page => page.id !== pageId);
-      const deletedIndex = prev.findIndex(page => page.id === pageId);
-      
-      // Adjust current page index if necessary
-      if (deletedIndex <= currentPageIndex) {
-        setCurrentPageIndex(Math.max(0, currentPageIndex - 1));
-      }
-      
+    // Use functional updates so calculations are based on freshest state
+    setPages((prevPages: Page[]) => {
+      if (prevPages.length <= 1) return prevPages; // Don't delete the last page
+
+      const deletedIndex = prevPages.findIndex((p: Page) => p.id === pageId);
+      if (deletedIndex === -1) return prevPages; // Page not found, no-op
+
+      const newPages = prevPages.filter((p: Page) => p.id !== pageId);
+
+      // Clamp or shift the current page index relative to the deleted page
+      setCurrentPageIndex((idx: number) => {
+        if (idx > deletedIndex) return idx - 1; // shift left if a previous page was removed
+        if (idx === deletedIndex) return Math.max(0, Math.min(idx, newPages.length - 1));
+        return idx; // unchanged if deletion was after current index
+      });
+
       return newPages;
     });
-  }, [pages.length, currentPageIndex]);
+  }, []);
 
   const updatePageContent = useCallback((pageId: string, content: string) => {
-    setPages(prev => prev.map(page => 
+    setPages((prev: Page[]) => prev.map((page: Page) => 
       page.id === pageId 
         ? { ...page, content, updatedAt: new Date() }
         : page
@@ -97,13 +106,13 @@ export function PageManagerProvider({ children, editor }: PageManagerProviderPro
 
   const nextPage = useCallback(() => {
     if (currentPageIndex < pages.length - 1) {
-      setCurrentPageIndex(prev => prev + 1);
+      setCurrentPageIndex((prev: number) => prev + 1);
     }
   }, [currentPageIndex, pages.length]);
 
   const prevPage = useCallback(() => {
     if (currentPageIndex > 0) {
-      setCurrentPageIndex(prev => prev - 1);
+      setCurrentPageIndex((prev: number) => prev - 1);
     }
   }, [currentPageIndex]);
 
