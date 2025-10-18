@@ -63,6 +63,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import CustomColorPicker from '../ui/colorpicker'
+import { toast } from "sonner";
 
 type Props = {
   editor: Editor | null;
@@ -521,6 +522,26 @@ export function EditorToolbar({
   };
 
   const handleExportPDF = async () => {
+    // Get the HTML content
+    const htmlContent = editor.getHTML();
+    const textContent = editor.getText().trim();
+
+    // Check if it's the default initial content
+    const isDefaultContent =
+      htmlContent === "<h1>Welcome</h1><p>Start typing…</p>" ||
+      htmlContent === "<h1>Welcome</h1><p>Start typing...</p>" ||
+      textContent === "WelcomeStart typing…" ||
+      textContent === "WelcomeStart typing..." ||
+      textContent.length < 5;
+
+    if (editor.isEmpty || isDefaultContent) {
+      toast.error("Document is empty", {
+        description:
+          "Please add some content to the document before exporting to PDF.",
+      });
+      return;
+    }
+
     try {
       const element = editor.view.dom as HTMLElement;
       const opt = {
@@ -545,8 +566,14 @@ export function EditorToolbar({
       };
       const { default: html2PDF } = await import("jspdf-html2canvas-pro");
       await html2PDF(element, opt);
+      toast.success("PDF exported successfully", {
+        description: "Your document has been downloaded as PDF.",
+      });
     } catch (err) {
       console.error("[v0] Export PDF error:", err);
+      toast.error("Export failed", {
+        description: "An error occurred while exporting to PDF.",
+      });
     }
   };
 
@@ -568,30 +595,56 @@ export function EditorToolbar({
   };
 
   const handleExportWord = async () => {
+    // Get the HTML content
+    const htmlContent = editor.getHTML();
+    const textContent = editor.getText().trim();
+
+    // Check if it's the default initial content
+    const isDefaultContent =
+      htmlContent === "<h1>Welcome</h1><p>Start typing…</p>" ||
+      htmlContent === "<h1>Welcome</h1><p>Start typing...</p>" ||
+      textContent === "WelcomeStart typing…" ||
+      textContent === "WelcomeStart typing..." ||
+      textContent.length < 5;
+
+    if (editor.isEmpty || isDefaultContent) {
+      toast.error("Document is empty", {
+        description:
+          "Please add some content to the document before exporting to Word.",
+      });
+      return;
+    }
+
     try {
       const html = editor.getHTML();
       // Minimal Word-compatible HTML wrapper
       const docHtml = `
-<!DOCTYPE html>
-<html xmlns:o="urn:schemas-microsoft-com:office:office"
-      xmlns:w="urn:schemas-microsoft-com:office:word"
-      xmlns="http://www.w3.org/TR/REC-html40">
-  <head>
-    <meta charset="utf-8" />
-    <title>Document</title>
-    <style>
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
-      h1,h2,h3,h4,h5 { line-height: 1.25; }
-      p { line-height: 1.5; }
-    </style>
-  </head>
-  <body>
-    ${html}
-  </body>
-</html>`;
+          <!DOCTYPE html>
+          <html xmlns:o="urn:schemas-microsoft-com:office:office"
+                xmlns:w="urn:schemas-microsoft-com:office:word"
+                xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+              <meta charset="utf-8" />
+              <title>Document</title>
+              <style>
+                body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+                h1,h2,h3,h4,h5 { line-height: 1.25; }
+                p { line-height: 1.5; }
+              </style>
+            </head>
+            <body>
+              ${html}
+            </body>
+          </html>`;
       downloadBlob(docHtml, "document.doc", "application/msword");
+      toast.success("Word document exported successfully", {
+        description: "Your document has been downloaded as .doc file.",
+      });
     } catch (err) {
       console.error("[v0] Export Word (.doc) error:", err);
+      toast.error("Export failed", {
+        description: "An error occurred while exporting to Word.",
+      });
     }
   };
 
@@ -1221,13 +1274,28 @@ export function EditorToolbar({
           {
             showBGColorPicker&&(
               <div className="absolute top-10 left-0 z-10">
-                <CustomColorPicker value={activeBGColor} onChange={(newColor) => {setBackgroundColor(newColor); setActiveBGColor(newColor);}}/>
+                <CustomColorPicker
+                  value={activeBGColor} 
+                  onChange={(newColor) => {setBackgroundColor(newColor); setActiveBGColor(newColor);}}
+                  children={
+                      <button
+                        type="button"
+                        onClick={removeBackgroundColor}
+                        className="w-full p-1.5 mt-1.5 cursor-pointer rounded border text-sm border-gray-200 dark:border-gray-700 dark:hover:bg-gray-600 hover:bg-gray-300"
+                        aria-label="Remove highlight"
+                        title="Remove highlight"
+                      >
+                        {/* You can replace this emoji with an icon component */}
+                        🚫 Clear Background color
+                      </button>
+                  }
+                />
               </div>
             )
           }
         </div>
 
-        {/* ✨ ADD THIS BUTTON */}
+        {/* ✨ ADD THIS BUTTON
         <button
           type="button"
           onClick={removeBackgroundColor}
@@ -1235,9 +1303,8 @@ export function EditorToolbar({
           aria-label="Remove highlight"
           title="Remove highlight"
         >
-          {/* You can replace this emoji with an icon component */}
           🚫
-        </button>
+        </button> */}
       </div>
 
 
