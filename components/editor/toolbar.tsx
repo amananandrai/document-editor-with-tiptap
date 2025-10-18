@@ -1,8 +1,12 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
-import type { Editor } from "@tiptap/react";
+import data from "@emoji-mart/data";
+import type { Editor } from "@tiptap/react";import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import html2canvas from "html2canvas-pro";
 import html2PDF from "jspdf-html2canvas-pro";
@@ -61,6 +65,7 @@ import {
   Square,
   PaintRoller,
   RotateCcw,
+  SmilePlus
 } from "lucide-react";
 import CustomColorPicker from '../ui/colorpicker'
 import { toast } from "sonner";
@@ -257,7 +262,6 @@ export function EditorToolbar({
 
   const addEmoji = (emoji: any) => {
     editor.chain().focus().insertContent(emoji.native).run();
-    setShowEmojiPicker(false);
   };
 
   // Font size options in px
@@ -1061,6 +1065,33 @@ export function EditorToolbar({
 
       {/* Content blocks */}
       <div className="flex items-center gap-1">
+        <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="secondary"
+              size="sm"
+              aria-label="Emoji Picker"
+              title="Emoji Picker"
+            >
+              <SmilePlus className="h-4 w-4" />
+              <span className="sr-only">Add emoji</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent 
+            align="start" 
+            className="p-0 w-auto border-0"
+            onFocusOutside={(e) => {
+              e.preventDefault();       // prevent closing until focused outside
+            }}
+          >
+            <Picker
+              data={data}
+              onEmojiSelect={addEmoji}
+              theme="dark" // theme: "light" or "dark"
+            />
+          </PopoverContent>
+        </Popover>
+       
         <Button
           size="sm"
           variant={editor.isActive("blockquote") ? "default" : "secondary"}
