@@ -64,11 +64,11 @@ export function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4">Support</h4>
             <ul className="space-y-2 text-gray-300">
-              <li><a href="#" className="hover:text-white transition-colors">Documentation</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Contact Us</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Bug Reports</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Feature Requests</a></li>
+              <li><a href="/documentation" className="hover:text-white transition-colors">Documentation</a></li>
+              <li><a href="/help-center" className="hover:text-white transition-colors">Help Center</a></li>
+              <li><a href="/contact-us" className="hover:text-white transition-colors">Contact Us</a></li>
+              <li><a href="https://github.com/amananandrai/document-editor-with-tiptap/issues" className="hover:text-white transition-colors">Bug Reports</a></li>
+              <li><a href="https://github.com/amananandrai/document-editor-with-tiptap/issues" className="hover:text-white transition-colors">Feature Requests</a></li>
             </ul>
           </div>
         </div>
