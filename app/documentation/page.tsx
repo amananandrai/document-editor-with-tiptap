@@ -2,7 +2,7 @@ import React from "react";
 
 export default function Documentation() {
   return (
-    <main className="max-w-3xl mx-auto py-12 px-4 text-gray-200">
+    <main className="max-w-3xl mx-auto py-12 px-4">
       <h1 className="text-4xl font-bold mb-6 text-center">Documentation</h1>
       <p className="mb-8 text-lg text-center">
         Welcome to the <strong>DocuEdit Pro Documentation</strong> — your complete guide to creating, editing, and exporting professional documents using our editor.

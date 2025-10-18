@@ -2,7 +2,7 @@ import React from "react";
 
 export default function HelpCenter() {
   return (
-    <main className="max-w-3xl mx-auto py-12 px-4 text-gray-200">
+    <main className="max-w-3xl mx-auto py-12 px-4">
       <h1 className="text-4xl font-bold mb-6 text-center">Help Center</h1>
       <p className="mb-8 text-lg text-center">
         Need assistance? The <strong>DocuEdit Pro Help Center</strong> provides answers to common questions, troubleshooting steps, and guidance for reporting issues or suggesting new features.

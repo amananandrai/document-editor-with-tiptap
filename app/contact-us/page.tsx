@@ -2,7 +2,7 @@ import React from "react";
 
 export default function ContactUs() {
   return (
-    <main className="max-w-3xl mx-auto py-12 px-4 text-gray-200">
+    <main className="max-w-3xl mx-auto py-12 px-4">
       <h1 className="text-4xl font-bold mb-6 text-center">Contact Us</h1>
       <p className="mb-8 text-lg text-center">
         Have feedback, questions, or suggestions? The <strong>DocuEdit Pro Support Team</strong> is here to help.
