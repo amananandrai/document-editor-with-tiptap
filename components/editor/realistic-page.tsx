@@ -9,6 +9,7 @@ interface RealisticPageProps {
   pageNumber?: number;
   isActive?: boolean;
   onClick?: () => void;
+  pageMargin?: number;
 }
 
 export function RealisticPage({ 
@@ -17,6 +18,7 @@ export function RealisticPage({
   pageNumber, 
   isActive = false,
   onClick 
+  , pageMargin = 64
 }: RealisticPageProps) {
   return (
     <div
@@ -44,7 +46,7 @@ export function RealisticPage({
       onClick={onClick}
     >
       {/* Page content area with realistic margins */}
-      <div className="absolute inset-0 p-16">
+      <div className="absolute inset-0" style={{ padding: pageMargin }}>
         <div className="h-full w-full">
           {children}
         </div>
