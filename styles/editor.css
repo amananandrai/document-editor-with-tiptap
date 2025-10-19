@@ -1,0 +1,36 @@
+/* styles/editor.css */
+ul[data-style="circle"] {
+  list-style-type: circle;
+}
+ul[data-style="square"] {
+  list-style-type: square;
+}
+ol[data-style="lower-roman"] {
+  list-style-type: lower-roman;
+}
+ul[data-level="1"], ol[data-level="1"] {
+  margin-left: 20px;
+}
+ul[data-level="2"], ol[data-level="2"] {
+  margin-left: 40px;
+}
+ul[data-level="3"], ol[data-level="3"] {
+  margin-left: 60px;
+}
+
+ul, ol {
+  border: 1px dashed #ff4081;
+  padding: 8px;
+}
+li {
+  border: 1px solid #00f7ff;
+  margin: 4px;
+}
+
+ul[data-level="1"], ol[data-level="1"] { margin-left: 20px; }
+ul[data-level="2"], ol[data-level="2"] { margin-left: 40px; }
+ul[data-level="3"], ol[data-level="3"] { margin-left: 60px; }
+
+ul[data-style="circle"] { list-style-type: circle; }
+ul[data-style="square"] { list-style-type: square; }
+ol[data-style="lower-roman"] { list-style-type: lower-roman; }
