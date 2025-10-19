@@ -10,6 +10,7 @@ A powerful, feature-rich document editor built with modern web technologies. Cre
 ## ✨ Features
 
 ### 🎨 Rich Text Editing
+
 - **Headings & Paragraphs**: Support for H1-H4 headings with proper hierarchy
 - **Text Formatting**: Bold, italic, underline, superscript, and subscript
 - **Font Customization**: Multiple font families (System, Serif, Monospace) and sizes (12px-48px)
@@ -19,8 +20,9 @@ A powerful, feature-rich document editor built with modern web technologies. Cre
 - **Indentation**: Custom indent system for paragraphs and headings
 
 ### 🎯 Advanced Features
+
 - **Keyboard Shortcuts**: Ctrl/Cmd + B/I/U for quick formatting
-- **Export Capabilities**: 
+- **Export Capabilities**:
   - PDF export using html2pdf.js
   - Word document export (.doc format)
 - **Theme Support**: Beautiful dark/light mode with system preference detection
@@ -28,6 +30,7 @@ A powerful, feature-rich document editor built with modern web technologies. Cre
 - **Accessibility**: ARIA labels and keyboard navigation support
 
 ### 🛠️ Technical Features
+
 - **Modern Stack**: Next.js 15, React 18, TypeScript
 - **Rich Editor**: TipTap with custom extensions
 - **UI Components**: Radix UI primitives with shadcn/ui
@@ -37,23 +40,27 @@ A powerful, feature-rich document editor built with modern web technologies. Cre
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - bun
 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/yourusername/document-editor-with-tip-mukutap.git
    cd document-editor-with-tip-mukutap
    ```
 
 2. **Install dependencies**
+
    ```bash
    bun install
    ```
 
 3. **Run the development server**
+
    ```bash
    bun run dev
    ```
@@ -61,33 +68,39 @@ A powerful, feature-rich document editor built with modern web technologies. Cre
 4. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
-## 📁 Project Structure
+## 📁 Project Folder Structure
+
+> **Note:** This is just the main folder structure. Some subfolders and files may be omitted for brevity.
 
 ```
 ├── app/
-│   ├── (editor)/
-│   │   ├── editor-client.tsx    # Client-side editor wrapper
-│   │   └── page.tsx              # Main editor page
-│   ├── layout.tsx               # Root layout with navbar/footer
-│   └── globals.css              # Global styles with design tokens
-├── components/
 │   ├── editor/
-│   │   ├── rich-editor.tsx       # Main TipTap editor component
-│   │   ├── toolbar.tsx           # Comprehensive toolbar
-│   │   └── tiptap-extensions.ts  # Custom extensions
-│   ├── navbar.tsx               # Custom navigation bar
-│   ├── footer.tsx               # Footer component
-│   ├── theme-provider.tsx        # Theme context provider
-│   ├── theme-toggle.tsx          # Dark/light mode toggle
-│   └── ui/                       # shadcn/ui components
+│   │   ├── editor-client.tsx               # Client-side editor wrapper
+│   │   ├── features.js                     # Editor features and Lucide icons
+│   │   └── page.tsx                        # /editor route (editor page)
+│   ├── layout.tsx                          # Root layout with navbar/footer
+│   ├── globals.css                         # Global styles with design tokens
+│   └── page.tsx                            # Home/landing page
+├── components/
+│   ├── editor/                             # Editor-related components and extensions
+│   ├── ui/                                 # Reusable UI components (buttons, dialogs, etc.)
+│   ├── navbar.tsx                          # Custom navigation bar
+│   ├── footer.tsx                          # Footer component
+│   ├── theme-provider.tsx                  # Theme context provider
+│   ├── theme-toggle.tsx                    # Dark/light mode toggle
+├── docs/
+│   └── blockquote-code-link-guide.md       # Blockquote/code/link feature plan
 ├── lib/
-│   └── utils.ts                  # Utility functions
-└── public/                       # Static assets
+│   └── utils.ts                            # Utility functions
+├── public/                                 # Static assets (images, icons, etc.)
+├── styles/
+│   └── globals.css                         # Global CSS styles
 ```
 
 ## 🎨 Customization
 
 ### Theme Customization
+
 The project uses a custom design system with OKLCH color space for better color consistency. You can customize colors in `app/globals.css`:
 
 ```css
@@ -99,29 +112,34 @@ The project uses a custom design system with OKLCH color space for better color 
 ```
 
 ### Adding New Extensions
+
 Create custom TipTap extensions in `components/editor/tiptap-extensions.ts`:
 
 ```typescript
-import { Extension } from "@tiptap/core"
+import { Extension } from "@tiptap/core";
 
 export const CustomExtension = Extension.create({
   name: "customExtension",
   // Your extension logic here
-})
+});
 ```
 
 ### Styling Components
+
 The project uses Tailwind CSS with custom design tokens. Components are styled using the `cn()` utility function for conditional classes.
 
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
+
 1. Push your code to GitHub
 2. Connect your repository to Vercel
 3. Deploy with zero configuration
 
 ### Other Platforms
+
 The project can be deployed to any platform that supports Next.js:
+
 - Netlify
 - AWS Amplify
 - Railway
@@ -147,25 +165,26 @@ npm run test:watch
 ## 📚 API Reference
 
 ### Editor Component
+
 ```typescript
-import { RichEditor } from '@/components/editor/rich-editor'
+import { RichEditor } from "@/components/editor/rich-editor";
 
 // Basic usage
-<RichEditor />
+<RichEditor />;
 ```
 
 ### Custom Extensions
+
 ```typescript
-import { IndentExtension, LineHeightExtension } from '@/components/editor/tiptap-extensions'
+import {
+  IndentExtension,
+  LineHeightExtension,
+} from "@/components/editor/tiptap-extensions";
 
 // Use in editor configuration
 const editor = useEditor({
-  extensions: [
-    StarterKit,
-    IndentExtension,
-    LineHeightExtension,
-  ],
-})
+  extensions: [StarterKit, IndentExtension, LineHeightExtension],
+});
 ```
 
 ## 🤝 Contributing
@@ -189,6 +208,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 📧 Email: support@docueditpro.com
 - 🐛 Issues: [GitHub Issues](https://github.com/amananandrai/document-editor-with-tiptap/issues)
 - 💬 Discussions: [GitHub Discussions](https://github.com/amananandrai/document-editor-with-tiptap/discussions)
+
 ---
 
 <div align="center">

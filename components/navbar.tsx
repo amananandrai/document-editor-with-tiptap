@@ -1,16 +1,41 @@
-'use client'
-import React, { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { FileText, Download, Save, Share2, Settings, Menu, X } from 'lucide-react'
-import Link from 'next/link'
+"use client";
+
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { FileText, Menu, X, Home, Star, Info, BookOpen } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
+
+const navLinks = [
+  { name: "Home", href: "#home-section", icon: <Home size={20} /> },
+  { name: "About", href: "#about-section", icon: <BookOpen size={20} /> },
+  { name: "Features", href: "#features-section", icon: <Star size={20} /> },
+];
 
 export function Navbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const handleNavClick = (href: string) => {
+    const [, hash] = href.split("#");
+
+    if (pathname === "/") {
+      // Already on home → smooth scroll
+      const element = document.getElementById(hash);
+      if (element) element.scrollIntoView({ behavior: "smooth" });
+    } else {
+      // Navigate to home with hash
+      router.push(`/${hash ? `#${hash}` : ""}`);
+    }
+
+    setIsMenuOpen(false);
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 shadow-lg">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-1">
         <div className="flex h-16 items-center justify-between">
           {/* Logo and Brand */}
           <div className="flex items-center space-x-4">
@@ -33,48 +58,25 @@ export function Navbar() {
             </Link>
           </div>
 
-          {/* Desktop Navigation Actions */}
-          <div className="hidden md:flex items-center space-x-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white hover:bg-white/20 hover:text-white border-white/30"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              Save
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white hover:bg-white/20 hover:text-white border-white/30"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white hover:bg-white/20 hover:text-white border-white/30"
-            >
-              <Share2 className="h-4 w-4 mr-2" />
-              Share
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white hover:bg-white/20 hover:text-white border-white/30"
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </Button>
-
-            {/* Theme Toggle */}
+          {/* Desktop Nav */}
+          <div className="hidden md:flex items-center gap-4">
+            {navLinks.map((link, i) => (
+              <button
+                key={i}
+                onClick={() => handleNavClick(link.href)}
+                className="group cursor-pointer flex gap-2 items-center text-white text-base md:text-lg px-4 py-2 
+                  rounded-lg transition duration-300 hover:scale-105 hover:bg-purple-800 hover:shadow outline-none"
+              >
+                <span className="group-hover:animate-bounce">{link.icon}</span>
+                <span>{link.name}</span>
+              </button>
+            ))}
             <div className="ml-4 pl-4 border-l border-white/30">
               <ThemeToggle className="text-white hover:bg-white/20" />
             </div>
           </div>
 
-          {/* Mobile Menu Button and Theme Toggle */}
+          {/* Mobile */}
           <div className="flex md:hidden items-center space-x-2">
             <ThemeToggle className="text-white hover:bg-white/20" />
             <Button
@@ -83,11 +85,7 @@ export function Navbar() {
               className="text-white hover:bg-white/20"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              {isMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
           </div>
         </div>
@@ -95,45 +93,20 @@ export function Navbar() {
         {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="md:hidden pb-4 space-y-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start text-white hover:bg-white/20 hover:text-white"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Save className="h-4 w-4 mr-2" />
-              Save
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start text-white hover:bg-white/20 hover:text-white"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start text-white hover:bg-white/20 hover:text-white"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Share2 className="h-4 w-4 mr-2" />
-              Share
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start text-white hover:bg-white/20 hover:text-white"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </Button>
+            {navLinks.map((link, i) => (
+              <button
+                key={i}
+                onClick={() => handleNavClick(link.href)}
+                className="group cursor-pointer flex gap-2 items-center text-white text-base md:text-lg px-4 py-2 
+                  rounded-lg hover:bg-purple-800 hover:scale-105 hover:shadow outline-none"
+              >
+                <span className="group-hover:animate-bounce">{link.icon}</span>
+                <span>{link.name}</span>
+              </button>
+            ))}
           </div>
         )}
       </div>
     </nav>
-  )
+  );
 }
