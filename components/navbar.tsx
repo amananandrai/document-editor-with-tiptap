@@ -3,9 +3,10 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { FileText, Menu, X, Home, Star, Info, BookOpen } from "lucide-react";
+import { FileText, Menu, X, Home, Star, BookOpen } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import { useFocusMode } from "@/components/focus-mode-context"; // ✅ added
 
 const navLinks = [
   { name: "Home", href: "#home-section", icon: <Home size={20} /> },
@@ -18,15 +19,25 @@ export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
 
+  // ✅ Try to use Focus Mode (safe access)
+  let isFocusMode = false;
+  try {
+    const focus = useFocusMode();
+    isFocusMode = focus.isFocusMode;
+  } catch {
+    // No FocusModeProvider found (e.g., landing page)
+  }
+
+  // ✅ Hide navbar completely if in Focus Mode (only works inside editor)
+  if (isFocusMode) return null;
+
   const handleNavClick = (href: string) => {
     const [, hash] = href.split("#");
 
     if (pathname === "/") {
-      // Already on home → smooth scroll
       const element = document.getElementById(hash);
       if (element) element.scrollIntoView({ behavior: "smooth" });
     } else {
-      // Navigate to home with hash
       router.push(`/${hash ? `#${hash}` : ""}`);
     }
 
@@ -39,9 +50,7 @@ export function Navbar() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo and Brand */}
           <div className="flex items-center space-x-4">
-            <Link
-              href="/"
-            >
+            <Link href="/">
               <div className="flex items-center space-x-2">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">
                   <FileText className="h-6 w-6 text-white" />
@@ -71,6 +80,7 @@ export function Navbar() {
                 <span>{link.name}</span>
               </button>
             ))}
+
             <div className="ml-4 pl-4 border-l border-white/30">
               <ThemeToggle className="text-white hover:bg-white/20" />
             </div>
