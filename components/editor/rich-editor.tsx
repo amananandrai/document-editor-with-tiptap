@@ -31,6 +31,8 @@ import {
   FontFamilyExtension,
 } from "./tiptap-extensions";
 import { TextAlign } from "@tiptap/extension-text-align";
+import { useEffect } from "react";
+
 export function RichEditor() {
   const [isPageLayout, setIsPageLayout] = useState(false);
   const [isMultiPageMode, setIsMultiPageMode] = useState(false);
@@ -83,7 +85,7 @@ export function RichEditor() {
       LineHeightExtension,
       FontFamilyExtension,
       FontSize.configure({
-      types: ['textStyle'],
+        types: ["textStyle"],
       }),
       // Text alignment
       TextAlign.configure({
@@ -120,7 +122,7 @@ export function RichEditor() {
       // Custom attributes
       IndentExtension,
       LineHeightExtension,
-      
+
       // Page break
       PageBreak,
     ],
@@ -128,18 +130,58 @@ export function RichEditor() {
     immediatelyRender: false,
     editorProps: {
       attributes: {
-        class:
-          // Keep styles semantic and token-based
-          cn(
-            "min-h-[600px] rounded-lg bg-white p-8 text-gray-900 focus:outline-none",
-            "prose prose-lg max-w-none prose-headings:font-bold",
-            "prose-p:leading-relaxed prose-headings:leading-tight"
-            // If the project doesn't include Typography plugin, this still renders fine
-          ),
+        class: cn(
+          "min-h-[600px] rounded-lg bg-white p-8 text-gray-900 focus:outline-none",
+          "prose prose-lg max-w-none prose-headings:font-bold",
+          "prose-p:leading-relaxed prose-headings:leading-tight"
+        ),
       },
     },
-    content: `<h1>Welcome</h1><p>Start typing…</p>`,
+    content: "",
   });
+
+  const [showPlaceholder, setShowPlaceholder] = useState(true);
+
+  // register update/paste/drop listeners when editor becomes available
+  useEffect(() => {
+    if (!editor) return;
+
+    const handleUpdate = () => {
+      const text = editor.getText().trim();
+      if (text.length > 0) {
+        setShowPlaceholder(false);
+      }
+    };
+
+    const handlePasteOrDrop = () => {
+      const text = editor.getText().trim();
+      if (text.length > 0) {
+        setShowPlaceholder(false);
+      }
+    };
+
+    const handleFocus = () => {
+      // hide placeholder on focus (useful for IME or some mobile behaviors)
+      setShowPlaceholder((prev) => {
+        // keep idempotent
+        if (prev) return false;
+        return prev;
+      });
+    };
+
+    editor.on("update", handleUpdate);
+    editor.on("transaction", handleUpdate);
+    editor.on("paste", handlePasteOrDrop);
+    // tiptap emits focus/blur events
+    editor.on("focus", handleFocus);
+
+    return () => {
+      editor.off("update", handleUpdate);
+      editor.off("transaction", handleUpdate);
+      editor.off("paste", handlePasteOrDrop);
+      editor.off("focus", handleFocus);
+    };
+  }, [editor]);
 
   // Image upload functionality
   const { handleDrop, handleDragOver, handleDragLeave, handlePaste } =
@@ -148,8 +190,8 @@ export function RichEditor() {
   return (
     <div className="flex flex-col">
       <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-        <EditorToolbar 
-          editor={editor} 
+        <EditorToolbar
+          editor={editor}
           isPageLayout={isPageLayout}
           onTogglePageLayout={togglePageLayout}
           isMultiPageMode={isMultiPageMode}
@@ -158,46 +200,53 @@ export function RichEditor() {
           onChangePageMargin={(m: number) => setPageMargin(m)}
         />
       </div>
-      {isMultiPageMode ? (
-        <PageManagerProvider editor={editor}>
-          <MultiPageEditor
-            editor={editor}
-            pageMargin={pageMargin}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onPaste={handlePaste}
-          />
-        </PageManagerProvider>
-      ) : isPageLayout ? (
-        <A4PageLayout pageMargin={pageMargin}>
-          <div
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onPaste={handlePaste}
-          >
-            <EditorContent editor={editor} />
-          </div>
-        </A4PageLayout>
-      ) : (
-        <div className="p-8">
-          <div
-            className="min-h-[600px] max-w-5xl mx-auto bg-white"
-            style={{ padding: `${pageMargin}px` }}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onPaste={handlePaste}
-          >
-            <EditorContent editor={editor} />
-          </div>
+
+      {/* ✅ Unified Editor Area for all modes */}
+      <div className="p-8">
+        <div
+          // clicking container focuses editor (so placeholder -> typing)
+          onClick={() => editor?.commands.focus()}
+          className="min-h-[600px] max-w-5xl mx-auto bg-white relative"
+          style={{ padding: `${pageMargin}px` }}
+          onDrop={(e) => {
+            handleDrop(e);
+            // small delay to let drop apply
+            setTimeout(() => {
+              const text = editor?.getText().trim();
+              if (text && text.length > 0) setShowPlaceholder(false);
+            }, 20);
+          }}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onPaste={(e) => {
+            handlePaste(e);
+            setTimeout(() => {
+              const text = editor?.getText().trim();
+              if (text && text.length > 0) setShowPlaceholder(false);
+            }, 20);
+          }}
+        >
+          {/* Placeholder now in normal flow so it looks like editor content */}
+          {showPlaceholder && (
+            <div
+              className={cn(
+                "prose prose-lg max-w-none text-gray-700 select-none pointer-events-none placeholder-fade",
+                !showPlaceholder && "hidden"
+              )}
+            >
+              <h1 className="text-2xl font-semibold text-gray-700">Welcome</h1>
+              <p className="text-gray-600">Start typing...</p>
+            </div>
+          )}
+
+          <EditorContent editor={editor} />
         </div>
-      )}
-      {/* Status bar */}
+      </div>
+
+      {/* ✅ Status Bar */}
       <StatusBar editor={editor} />
 
-      {/* Help text */}
+      {/* ✅ Help Text */}
       <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-8 py-4">
         <p className="text-sm text-gray-600 dark:text-gray-300 text-center">
           💡 <strong>Pro Tips:</strong> Use Ctrl/Cmd + B/I/U for quick
