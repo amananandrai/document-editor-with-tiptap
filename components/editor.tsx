@@ -5,7 +5,6 @@ import StarterKit from '@tiptap/starter-kit'
 import BulletList from '@tiptap/extension-bullet-list'
 import OrderedList from '@tiptap/extension-ordered-list'
 import ListItem from '@tiptap/extension-list-item'
-import { CustomList } from '../lib/extensions/CustomList'
 import Toolbar from './Toolbar'
 import '../styles/editor.css'
 
@@ -16,7 +15,6 @@ export default function Editor() {
       BulletList,
       OrderedList,
       ListItem,
-      CustomList,
     ],
     content: '<ul><li>Start typing...</li></ul>',
   })
