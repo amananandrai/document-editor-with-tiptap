@@ -1,36 +1,37 @@
 "use client";
-import { useEditor, EditorContent } from "@tiptap/react";
-import { useState } from "react";
-import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
-import Color from "@tiptap/extension-color";
-import { FontSize, TextStyle } from "@tiptap/extension-text-style";
-import Highlight from "@tiptap/extension-highlight";
-import Superscript from "@tiptap/extension-superscript";
-import Subscript from "@tiptap/extension-subscript";
-import Blockquote from "@tiptap/extension-blockquote";
-import CodeBlock from "@tiptap/extension-code-block";
-import Code from "@tiptap/extension-code";
-import Link from "@tiptap/extension-link";
-import { Table } from "@tiptap/extension-table";
-import { TableRow } from "@tiptap/extension-table-row";
-import { TableHeader } from "@tiptap/extension-table-header";
-import { TableCell } from "@tiptap/extension-table-cell";
-import { ImageResize } from "./image-extension";
 import { cn } from "@/lib/utils";
-import { EditorToolbar } from "./toolbar";
-import { StatusBar } from "./status-bar";
+import Blockquote from "@tiptap/extension-blockquote";
+import Code from "@tiptap/extension-code";
+import CodeBlock from "@tiptap/extension-code-block";
+import Color from "@tiptap/extension-color";
+import Highlight from "@tiptap/extension-highlight";
+import Link from "@tiptap/extension-link";
+import Subscript from "@tiptap/extension-subscript";
+import Superscript from "@tiptap/extension-superscript";
+import { Table } from "@tiptap/extension-table";
+import { TableCell } from "@tiptap/extension-table-cell";
+import { TableHeader } from "@tiptap/extension-table-header";
+import { TableRow } from "@tiptap/extension-table-row";
+import { TextAlign } from "@tiptap/extension-text-align";
+import { FontSize, TextStyle } from "@tiptap/extension-text-style";
+import Underline from "@tiptap/extension-underline";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { useState } from "react";
 import { A4PageLayout } from "./a4-page-layout";
-import { PageManagerProvider } from "./page-manager";
+import { ImageResize } from "./image-extension";
 import { MultiPageEditor } from "./multi-page-editor";
 import { PageBreak } from "./page-break-extension";
-import { useImageUpload } from "./use-image-upload";
+import { PageManagerProvider } from "./page-manager";
+import { StatusBar } from "./status-bar";
 import {
+  FontFamilyExtension,
   IndentExtension,
   LineHeightExtension,
-  FontFamilyExtension,
 } from "./tiptap-extensions";
-import { TextAlign } from "@tiptap/extension-text-align";
+import { EditorToolbar } from "./toolbar";
+import { useImageUpload } from "./use-image-upload";
+
 export function RichEditor() {
   const [isPageLayout, setIsPageLayout] = useState(false);
   const [isMultiPageMode, setIsMultiPageMode] = useState(false);
@@ -83,7 +84,7 @@ export function RichEditor() {
       LineHeightExtension,
       FontFamilyExtension,
       FontSize.configure({
-      types: ['textStyle'],
+        types: ["textStyle"],
       }),
       // Text alignment
       TextAlign.configure({
@@ -120,7 +121,7 @@ export function RichEditor() {
       // Custom attributes
       IndentExtension,
       LineHeightExtension,
-      
+
       // Page break
       PageBreak,
     ],
@@ -131,7 +132,7 @@ export function RichEditor() {
         class:
           // Keep styles semantic and token-based
           cn(
-            "min-h-[600px] rounded-lg bg-white p-8 text-gray-900 focus:outline-none",
+            "w-full h-full min-h-[600px] rounded-lg bg-white text-gray-900 focus:outline-none",
             "prose prose-lg max-w-none prose-headings:font-bold",
             "prose-p:leading-relaxed prose-headings:leading-tight"
             // If the project doesn't include Typography plugin, this still renders fine
@@ -148,8 +149,8 @@ export function RichEditor() {
   return (
     <div className="flex flex-col">
       <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-        <EditorToolbar 
-          editor={editor} 
+        <EditorToolbar
+          editor={editor}
           isPageLayout={isPageLayout}
           onTogglePageLayout={togglePageLayout}
           isMultiPageMode={isMultiPageMode}
@@ -181,17 +182,15 @@ export function RichEditor() {
           </div>
         </A4PageLayout>
       ) : (
-        <div className="p-8">
-          <div
-            className="min-h-[600px] max-w-5xl mx-auto bg-white"
-            style={{ padding: `${pageMargin}px` }}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onPaste={handlePaste}
-          >
-            <EditorContent editor={editor} />
-          </div>
+        <div
+          className="w-full h-full mx-auto bg-white"
+          style={{ padding: `${pageMargin}px` }}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onPaste={handlePaste}
+        >
+          <EditorContent editor={editor} />
         </div>
       )}
       {/* Status bar */}
