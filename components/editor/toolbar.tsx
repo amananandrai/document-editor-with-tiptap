@@ -635,6 +635,39 @@ export function EditorToolbar({
     URL.revokeObjectURL(url);
   };
 
+  const inlineComputedColors = (root: HTMLElement) => {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+    let node = walker.currentNode as HTMLElement | null;
+    while (node) {
+      const el = node as HTMLElement;
+      const styles = window.getComputedStyle(el);
+      const color = styles.color;
+      const backgroundColor = styles.backgroundColor;
+
+      const inlineStyle = el.getAttribute('style') || '';
+      if (color && !/color\s*:/.test(inlineStyle)) {
+        el.style.color = color;
+      }
+      if (backgroundColor && backgroundColor !== 'rgba(0, 0, 0, 0)' && backgroundColor !== 'transparent' && !/background(-color)?\s*:/.test(inlineStyle)) {
+        el.style.backgroundColor = backgroundColor;
+      }
+
+      node = walker.nextNode() as HTMLElement | null;
+    }
+  };
+
+  // Convert any rgb()/rgba() color tokens inside a style string to #rrggbb hex
+  const replaceRgbWithHex = (styleText: string): string => {
+    const rgbRegex = /rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*([0-9.]+))?\s*\)/gi;
+    return styleText.replace(rgbRegex, (_m, r, g, b) => {
+      const toHex = (n: string) => {
+        const v = Math.max(0, Math.min(255, parseInt(n, 10)));
+        return v.toString(16).padStart(2, '0');
+      };
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    });
+  };
+
   const handleExportWord = async () => {
     // Get the HTML content
     const htmlContent = editor.getHTML();
@@ -657,7 +690,10 @@ export function EditorToolbar({
     }
   
     try {
-      let html = editor.getHTML();
+      const liveDom = editor.view.dom as HTMLElement;
+      const cloned = liveDom.cloneNode(true) as HTMLElement;
+      inlineComputedColors(cloned);
+      let html = cloned.innerHTML;
       // Process HTML for better Word compatibility
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, 'text/html');
@@ -672,13 +708,14 @@ export function EditorToolbar({
         // Replace mark with span
         mark.parentNode?.replaceChild(span, mark);
       });
-      // Handle spans with background-color and add mso-highlight for Word
       const spansWithBg = doc.querySelectorAll('span[style*="background"]');
       spansWithBg.forEach((span) => {
-        const currentBg = span.style.backgroundColor;
+        const currentBg = (span as HTMLElement).style.backgroundColor;
         if (currentBg) {
-          // Add mso-specific attribute for better Word compatibility
-          span.setAttribute('style', `${span.getAttribute('style')}; mso-highlight: ${currentBg};`);
+          const existing = span.getAttribute('style') || '';
+          if (!/background(-color)?\s*:/.test(existing)) {
+            span.setAttribute('style', `${existing}; background-color: ${currentBg};`);
+          }
         }
       });
       // Process images
@@ -843,7 +880,7 @@ export function EditorToolbar({
     </head>
     <body>
       <div class="WordSection1">
-        ${html}
+        ${replaceRgbWithHex(html)}
       </div>
     </body>
   </html>`;
