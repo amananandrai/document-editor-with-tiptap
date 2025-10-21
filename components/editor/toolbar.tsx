@@ -730,17 +730,50 @@ export function EditorToolbar({
            h1.parentNode?.replaceChild(p, h1);
          }
        });
-       // Process images
-       const images = doc.querySelectorAll('img');
-       images.forEach((img) => {
-         const src = img.getAttribute('src');
-         if (src && src.startsWith('data:')) {
-           img.style.maxWidth = '100%';
-           img.style.height = 'auto';
-         }
-       });
-       // Get processed HTML
-       html = doc.body.innerHTML;
+      // Process images
+      const images = Array.from(doc.querySelectorAll('img')) as HTMLImageElement[];
+      // Helper: fetch URL -> data URL
+      const fetchToDataUrl = async (url: string): Promise<string | null> => {
+        try {
+          const resp = await fetch(url, { mode: 'cors' as RequestMode });
+          if (!resp.ok) return null;
+          const blob = await resp.blob();
+          return await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        } catch {
+          return null;
+        }
+      };
+      for (const img of images) {
+        const src = img.getAttribute('src') || '';
+        if (!src) continue;
+        if (!src.startsWith('data:')) {
+          const dataUrl = await fetchToDataUrl(src);
+          if (dataUrl) {
+            img.setAttribute('src', dataUrl);
+          }
+        }
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        img.style.display = 'block';
+        img.style.margin = '8pt 0';
+      }
+      const imgsPostProcess = Array.from(doc.querySelectorAll('img')) as HTMLImageElement[];
+      for (const img of imgsPostProcess) {
+        const src = img.getAttribute('src') || '';
+        if (!src || !src.startsWith('data:')) {
+          img.remove();
+          continue;
+        }
+        img.setAttribute('alt', '');
+        img.setAttribute('title', '');
+      }
+      // Get processed HTML
+      html = doc.body.innerHTML;
       // Enhanced Word-compatible HTML
       const docHtml = `
   <!DOCTYPE html>
