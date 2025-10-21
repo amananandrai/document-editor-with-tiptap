@@ -22,7 +22,7 @@ export const FontFamilyExtension = TextStyle.extend({
       fontFamily: {
         default: null,
         parseHTML: (element) =>
-          element.style.fontFamily?.replace(/['"]/g, "") || null,
+          element.style.fontFamily?.replace(/["']/g, "") || null,
         renderHTML: (attributes) => {
           if (!attributes.fontFamily) return {};
           return { style: `font-family: ${attributes.fontFamily}` };
@@ -38,7 +38,7 @@ export const IndentExtension = Extension.create({
   addGlobalAttributes() {
     return [
       {
-        types: ["paragraph", "heading"],
+        types: ["paragraph", "heading", "blockquote"],
         attributes: {
           indent: {
             default: 0,
@@ -67,7 +67,7 @@ export const LineHeightExtension = Extension.create({
   addGlobalAttributes() {
     return [
       {
-        types: ["paragraph", "heading"],
+        types: ["paragraph", "heading", "blockquote"],
         attributes: {
           lineHeight: {
             default: null,
