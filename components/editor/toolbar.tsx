@@ -718,17 +718,29 @@ export function EditorToolbar({
           }
         }
       });
-      // Process images
-      const images = doc.querySelectorAll('img');
-      images.forEach((img) => {
-        const src = img.getAttribute('src');
-        if (src && src.startsWith('data:')) {
-          img.style.maxWidth = '100%';
-          img.style.height = 'auto';
-        }
-      });
-      // Get processed HTML
-      html = doc.body.innerHTML;
+       // Fix the "Welcome" H1 issue - convert H1 to paragraph if it's the default content
+       const h1Elements = doc.querySelectorAll('h1');
+       h1Elements.forEach((h1) => {
+         if (h1.textContent?.trim() === 'Welcome') {
+           const p = doc.createElement('p');
+           p.innerHTML = h1.innerHTML;
+           if (h1.getAttribute('style')) {
+             p.setAttribute('style', h1.getAttribute('style') || '');
+           }
+           h1.parentNode?.replaceChild(p, h1);
+         }
+       });
+       // Process images
+       const images = doc.querySelectorAll('img');
+       images.forEach((img) => {
+         const src = img.getAttribute('src');
+         if (src && src.startsWith('data:')) {
+           img.style.maxWidth = '100%';
+           img.style.height = 'auto';
+         }
+       });
+       // Get processed HTML
+       html = doc.body.innerHTML;
       // Enhanced Word-compatible HTML
       const docHtml = `
   <!DOCTYPE html>
