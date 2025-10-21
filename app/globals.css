@@ -183,7 +183,7 @@ html {
     border-left: 3px solid #e2e8f0;
     padding-left: 1rem;
     margin: 1rem 0;
-    font-style: italic;
+    font-style: inherit;
     color: #64748b;
   }
 

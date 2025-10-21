@@ -87,7 +87,7 @@ export function RichEditor() {
       }),
       // Text alignment
       TextAlign.configure({
-        types: ["heading", "paragraph"],
+        types: ["heading", "paragraph", "blockquote"],
       }),
       // Content blocks
       Blockquote,
