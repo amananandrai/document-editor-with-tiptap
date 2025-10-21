@@ -635,11 +635,44 @@ export function EditorToolbar({
     URL.revokeObjectURL(url);
   };
 
+  const inlineComputedColors = (root: HTMLElement) => {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+    let node = walker.currentNode as HTMLElement | null;
+    while (node) {
+      const el = node as HTMLElement;
+      const styles = window.getComputedStyle(el);
+      const color = styles.color;
+      const backgroundColor = styles.backgroundColor;
+
+      const inlineStyle = el.getAttribute('style') || '';
+      if (color && !/color\s*:/.test(inlineStyle)) {
+        el.style.color = color;
+      }
+      if (backgroundColor && backgroundColor !== 'rgba(0, 0, 0, 0)' && backgroundColor !== 'transparent' && !/background(-color)?\s*:/.test(inlineStyle)) {
+        el.style.backgroundColor = backgroundColor;
+      }
+
+      node = walker.nextNode() as HTMLElement | null;
+    }
+  };
+
+  // Convert any rgb()/rgba() color tokens inside a style string to #rrggbb hex
+  const replaceRgbWithHex = (styleText: string): string => {
+    const rgbRegex = /rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*([0-9.]+))?\s*\)/gi;
+    return styleText.replace(rgbRegex, (_m, r, g, b) => {
+      const toHex = (n: string) => {
+        const v = Math.max(0, Math.min(255, parseInt(n, 10)));
+        return v.toString(16).padStart(2, '0');
+      };
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    });
+  };
+
   const handleExportWord = async () => {
     // Get the HTML content
     const htmlContent = editor.getHTML();
     const textContent = editor.getText().trim();
-
+  
     // Check if it's the default initial content
     const isDefaultContent =
       htmlContent === "<h1>Welcome</h1><p>Start typing…</p>" ||
@@ -647,7 +680,7 @@ export function EditorToolbar({
       textContent === "WelcomeStart typing…" ||
       textContent === "WelcomeStart typing..." ||
       textContent.length < 5;
-
+  
     if (editor.isEmpty || isDefaultContent) {
       toast.error("Document is empty", {
         description:
@@ -655,28 +688,215 @@ export function EditorToolbar({
       });
       return;
     }
-
+  
     try {
-      const html = editor.getHTML();
-      // Minimal Word-compatible HTML wrapper
+      const liveDom = editor.view.dom as HTMLElement;
+      const cloned = liveDom.cloneNode(true) as HTMLElement;
+      inlineComputedColors(cloned);
+      let html = cloned.innerHTML;
+      // Process HTML for better Word compatibility
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      // Convert <mark> tags with data-color to spans with background-color
+      const marks = doc.querySelectorAll('mark[data-color]');
+      marks.forEach((mark) => {
+        const span = doc.createElement('span');
+        const bgColor = mark.getAttribute('data-color');
+        span.style.backgroundColor = bgColor || '#ffff00';
+        // Preserve all content and nested elements
+        span.innerHTML = mark.innerHTML;
+        // Replace mark with span
+        mark.parentNode?.replaceChild(span, mark);
+      });
+      const spansWithBg = doc.querySelectorAll('span[style*="background"]');
+      spansWithBg.forEach((span) => {
+        const currentBg = (span as HTMLElement).style.backgroundColor;
+        if (currentBg) {
+          const existing = span.getAttribute('style') || '';
+          if (!/background(-color)?\s*:/.test(existing)) {
+            span.setAttribute('style', `${existing}; background-color: ${currentBg};`);
+          }
+        }
+      });
+       // Fix the "Welcome" H1 issue - convert H1 to paragraph if it's the default content
+       const h1Elements = doc.querySelectorAll('h1');
+       h1Elements.forEach((h1) => {
+         if (h1.textContent?.trim() === 'Welcome') {
+           const p = doc.createElement('p');
+           p.innerHTML = h1.innerHTML;
+           if (h1.getAttribute('style')) {
+             p.setAttribute('style', h1.getAttribute('style') || '');
+           }
+           h1.parentNode?.replaceChild(p, h1);
+         }
+       });
+       // Process images
+       const images = doc.querySelectorAll('img');
+       images.forEach((img) => {
+         const src = img.getAttribute('src');
+         if (src && src.startsWith('data:')) {
+           img.style.maxWidth = '100%';
+           img.style.height = 'auto';
+         }
+       });
+       // Get processed HTML
+       html = doc.body.innerHTML;
+      // Enhanced Word-compatible HTML
       const docHtml = `
-          <!DOCTYPE html>
-          <html xmlns:o="urn:schemas-microsoft-com:office:office"
-                xmlns:w="urn:schemas-microsoft-com:office:word"
-                xmlns="http://www.w3.org/TR/REC-html40">
-            <head>
-              <meta charset="utf-8" />
-              <title>Document</title>
-              <style>
-                body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
-                h1,h2,h3,h4,h5 { line-height: 1.25; }
-                p { line-height: 1.5; }
-              </style>
-            </head>
-            <body>
-              ${html}
-            </body>
-          </html>`;
+  <!DOCTYPE html>
+  <html xmlns:o="urn:schemas-microsoft-com:office:office"
+        xmlns:w="urn:schemas-microsoft-com:office:word"
+        xmlns:m="http://schemas.microsoft.com/office/2004/12/omml"
+        xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+      <meta charset="utf-8" />
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+      <meta name="ProgId" content="Word.Document" />
+      <meta name="Generator" content="Microsoft Word 15" />
+      <meta name="Originator" content="Microsoft Word 15" />
+      <title>Document</title>
+      <!--[if gte mso 9]>
+      <xml>
+        <w:WordDocument>
+          <w:View>Print</w:View>
+          <w:Zoom>100</w:Zoom>
+          <w:DoNotOptimizeForBrowser/>
+        </w:WordDocument>
+      </xml>
+      <![endif]-->
+      <style>
+        /* Reset */
+        * { 
+          margin: 0; 
+          padding: 0; 
+        }
+        
+        /* Page setup */
+        @page WordSection1 {
+          size: 8.5in 11.0in;
+          margin: 1.0in;
+        }
+        
+        div.WordSection1 { page: WordSection1; }
+        
+        body { 
+          font-family: Calibri, Arial, sans-serif;
+          font-size: 11pt;
+          line-height: 115%;
+          color: #000000;
+        }
+        
+        /* CRITICAL: Inline styles must be preserved */
+        [style] { 
+          mso-style-priority: 1 !important;
+        }
+        
+        /* Background/Highlight colors - Word compatibility */
+        span[style*="background-color"],
+        span[style*="background"] {
+          mso-style-priority: 1 !important;
+        }
+        
+        /* Text formatting */
+        strong, b { 
+          font-weight: bold;
+          mso-bidi-font-weight: bold;
+        }
+        
+        em, i { 
+          font-style: italic;
+          mso-bidi-font-style: italic;
+        }
+        
+        u { 
+          text-decoration: underline;
+        }
+        
+        sup { vertical-align: super; font-size: 0.83em; }
+        sub { vertical-align: sub; font-size: 0.83em; }
+        
+        /* Headings */
+        h1 { font-size: 24pt; font-weight: bold; margin: 12pt 0 6pt; }
+        h2 { font-size: 18pt; font-weight: bold; margin: 10pt 0 5pt; }
+        h3 { font-size: 14pt; font-weight: bold; margin: 8pt 0 4pt; }
+        h4 { font-size: 12pt; font-weight: bold; margin: 6pt 0 3pt; }
+        
+        /* Paragraphs */
+        p { margin: 0 0 8pt; line-height: 115%; }
+        
+        /* Code */
+        code { 
+          font-family: 'Courier New', monospace;
+          background-color: #f5f5f5;
+          padding: 2px 4px;
+          mso-highlight: #f5f5f5;
+        }
+        
+        pre {
+          font-family: 'Courier New', monospace;
+          background-color: #f5f5f5;
+          padding: 8pt;
+          margin: 8pt 0;
+          border: 1px solid #ddd;
+          white-space: pre-wrap;
+        }
+        
+        /* Blockquote */
+        blockquote {
+          margin: 8pt 0;
+          padding-left: 16pt;
+          border-left: 3pt solid #cccccc;
+          font-style: italic;
+          color: #666666;
+        }
+        
+        /* Lists */
+        ul, ol { margin: 8pt 0; padding-left: 24pt; }
+        li { margin-bottom: 4pt; }
+        
+        /* Links */
+        a { color: #0563c1; text-decoration: underline; }
+        
+        /* Tables */
+        table {
+          border-collapse: collapse;
+          width: 100%;
+          margin: 8pt 0;
+        }
+        
+        th, td {
+          border: 1px solid #d0d0d0;
+          padding: 6pt;
+          text-align: left;
+        }
+        
+        th {
+          background-color: #f2f2f2;
+          font-weight: bold;
+        }
+        
+        /* Images */
+        img {
+          max-width: 100%;
+          height: auto;
+          display: block;
+          margin: 8pt 0;
+        }
+        
+        /* Text alignment */
+        .text-left { text-align: left; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-justify { text-align: justify; }
+      </style>
+    </head>
+    <body>
+      <div class="WordSection1">
+        ${replaceRgbWithHex(html)}
+      </div>
+    </body>
+  </html>`;
+      
       downloadBlob(docHtml, "document.doc", "application/msword");
       toast.success("Word document exported successfully", {
         description: "Your document has been downloaded as .doc file.",
