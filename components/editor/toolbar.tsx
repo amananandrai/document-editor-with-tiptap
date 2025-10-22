@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { FindReplaceModal } from "./find-replace-modal";
 import { LinkModal } from "./link-modal";
+import { useFocusMode } from "../focus-mode-context";
 import {
   BoldIcon,
   ItalicIcon,
@@ -67,6 +68,7 @@ import {
   RotateCcw,
   SmilePlus
 } from "lucide-react";
+import { Eye } from "lucide-react";
 import CustomColorPicker from '../ui/colorpicker'
 import { toast } from "sonner";
 
@@ -91,6 +93,7 @@ export function EditorToolbar({
 }: Props) {
   const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const { isFocusMode, toggleFocusMode } = useFocusMode();
   // Text Color Picker Props
   const textColorRef = useRef<HTMLDivElement>(null);
   const [showTextColorPicker, setShowTextColorPicker] = useState(false);
@@ -1101,6 +1104,36 @@ export function EditorToolbar({
       role="toolbar"
       aria-label="Editor toolbar"
     >
+      {/* Main Menu (leftmost) */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="secondary"
+            size="sm"
+            aria-label="Main menu"
+            title="Menu"
+          >
+            <MoreHorizontal className="h-4 w-4" />
+            <span className="sr-only">Menu</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuLabel>File</DropdownMenuLabel>
+          <DropdownMenuItem onClick={handleExportPDF}>
+            <FileDown className="h-4 w-4 mr-2" />
+            Save as PDF
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleExportWord}>
+            <FileText className="h-4 w-4 mr-2" />
+            Save as Word
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={toggleFocusMode}>
+            <Eye className="h-4 w-4 mr-2" />
+            {isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       {/* Headings */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -1257,7 +1290,7 @@ export function EditorToolbar({
       </DropdownMenu>
 
       {/* Styles */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <Button
           size="sm"
           variant={editor.isActive("bold") ? "default" : "secondary"}
@@ -1317,7 +1350,7 @@ export function EditorToolbar({
       </div>
 
       {/* Format Actions */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <Button
           size="sm"
           variant={isFormatPainterActive ? "default" : "secondary"}
@@ -1341,34 +1374,7 @@ export function EditorToolbar({
       </div>
 
       {/* Content blocks */}
-      <div className="flex items-center gap-1">
-        <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="secondary"
-              size="sm"
-              aria-label="Emoji Picker"
-              title="Emoji Picker"
-            >
-              <SmilePlus className="h-4 w-4" />
-              <span className="sr-only">Add emoji</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent 
-            align="start" 
-            className="p-0 w-auto border-0"
-            onFocusOutside={(e) => {
-              e.preventDefault();       // prevent closing until focused outside
-            }}
-          >
-            <Picker
-              data={data}
-              onEmojiSelect={addEmoji}
-              theme="dark" // theme: "light" or "dark"
-            />
-          </PopoverContent>
-        </Popover>
-       
+      <div className="flex items-center gap-2">
         <Button
           size="sm"
           variant={editor.isActive("blockquote") ? "default" : "secondary"}
@@ -1412,7 +1418,35 @@ export function EditorToolbar({
       </div>
 
       {/* Images */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
+        {/* Emoji picker moved here (to the left of Insert image) */}
+        <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="secondary"
+              size="sm"
+              aria-label="Emoji Picker"
+              title="Emoji Picker"
+            >
+              <SmilePlus className="h-4 w-4" />
+              <span className="sr-only">Add emoji</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent 
+            align="start" 
+            className="p-0 w-auto border-0"
+            onFocusOutside={(e) => {
+              e.preventDefault();       // prevent closing until focused outside
+            }}
+          >
+            <Picker
+              data={data}
+              onEmojiSelect={addEmoji}
+              theme="dark" // theme: "light" or "dark"
+            />
+          </PopoverContent>
+        </Popover>
+
         <Button
           size="sm"
           variant="secondary"
@@ -1437,7 +1471,7 @@ export function EditorToolbar({
       </div>
 
       {/* Lists */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <Button
           size="sm"
           variant={editor.isActive("bulletList") ? "default" : "secondary"}
@@ -1461,7 +1495,7 @@ export function EditorToolbar({
       </div>
 
       {/* Indentation */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <Button
           size="sm"
           variant="secondary"
@@ -1483,7 +1517,7 @@ export function EditorToolbar({
       </div>
 
       {/* Tables */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <Button
           size="sm"
           variant="secondary"
@@ -1658,7 +1692,7 @@ export function EditorToolbar({
 
 
       {/* Find & Replace */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <Button
           size="sm"
           variant="secondary"
@@ -1671,7 +1705,7 @@ export function EditorToolbar({
       </div>
 
       {/* Page Break */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <Button
           size="sm"
           variant="secondary"
@@ -1684,7 +1718,7 @@ export function EditorToolbar({
       </div>
 
       {/* Clear content */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <Button
           size="sm"
           variant="outline"
@@ -1707,7 +1741,6 @@ export function EditorToolbar({
             title="Page margin"
           >
             <Monitor className="h-4 w-4" />
-            <span className="ml-2 text-xs font-medium">Margin</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-56">
@@ -1744,12 +1777,11 @@ export function EditorToolbar({
         <DropdownMenuTrigger asChild>
           <Button
             size="sm"
-            variant={isPageLayout || isMultiPageMode ? "default" : "secondary"}
+            variant="secondary"
             aria-label="Select layout mode"
-            title="Choose editor layout mode"
+            title="Editor layout"
           >
             <Layout className="h-4 w-4" />
-            <span className="ml-2 text-xs font-medium">{getLayoutModeLabel()}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-64">
@@ -1800,31 +1832,7 @@ export function EditorToolbar({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Export actions: PDF and Word */}
-      <div className="ml-auto flex items-center gap-2 pl-4 border-l border-gray-200 dark:border-gray-700">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={handleExportPDF}
-          aria-label="Export as PDF"
-          title="Export as PDF"
-          className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:text-red-400 dark:border-red-800"
-        >
-          <FileDown className="h-4 w-4 mr-2" />
-          PDF
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={handleExportWord}
-          aria-label="Export as Word (.doc)"
-          title="Export as Word (.doc)"
-          className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800"
-        >
-          <FileText className="h-4 w-4 mr-2" />
-          Word
-        </Button>
-      </div>
+      
 
       {/* Find & Replace Modal */}
       <FindReplaceModal
