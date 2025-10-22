@@ -55,14 +55,14 @@ export function RichEditor() {
           keepMarks: true,
           keepAttributes: true,
           HTMLAttributes: {
-            class: "list-disc list-inside",
+            class: "list-disc list-outside",
           },
         },
         orderedList: {
           keepMarks: true,
           keepAttributes: true,
           HTMLAttributes: {
-            class: "list-decimal list-inside",
+            class: "list-decimal list-outside",
           },
         },
         listItem: {
@@ -88,7 +88,7 @@ export function RichEditor() {
       }),
       // Text alignment
       TextAlign.configure({
-        types: ["heading", "paragraph"],
+        types: ["heading", "paragraph", "blockquote"],
       }),
       // Content blocks
       Blockquote,

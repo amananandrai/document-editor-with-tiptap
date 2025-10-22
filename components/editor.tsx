@@ -2,9 +2,6 @@
 import React from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import BulletList from '@tiptap/extension-bullet-list'
-import OrderedList from '@tiptap/extension-ordered-list'
-import ListItem from '@tiptap/extension-list-item'
 import Toolbar from './Toolbar'
 import '../styles/editor.css'
 
@@ -12,9 +9,6 @@ export default function Editor() {
   const editor = useEditor({
     extensions: [
       StarterKit,
-      BulletList,
-      OrderedList,
-      ListItem,
     ],
     content: '<ul><li>Start typing...</li></ul>',
   })
