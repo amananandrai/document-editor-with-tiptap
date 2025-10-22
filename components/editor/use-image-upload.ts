@@ -42,6 +42,12 @@ export function useImageUpload(editor: Editor | null) {
   const handleDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault()
     
+    // Remove visual feedback for drag over    
+    const editorElement = editor?.view.dom as HTMLElement
+    if (editorElement) {
+      editorElement.classList.remove('drag-over')
+    }
+
     const files = event.dataTransfer?.files
     if (!files || files.length === 0) return
     
@@ -49,7 +55,7 @@ export function useImageUpload(editor: Editor | null) {
     Array.from(files).forEach(file => {
       handleImageUpload(file)
     })
-  }, [handleImageUpload])
+  }, [handleImageUpload, editor])
 
   const handleDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault()
