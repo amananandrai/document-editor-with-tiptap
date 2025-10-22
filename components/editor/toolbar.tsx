@@ -718,6 +718,7 @@ export function EditorToolbar({
           }
         }
       });
+
        // Fix the "Welcome" H1 issue - convert H1 to paragraph if it's the default content
        const h1Elements = doc.querySelectorAll('h1');
        h1Elements.forEach((h1) => {
@@ -730,6 +731,25 @@ export function EditorToolbar({
            h1.parentNode?.replaceChild(p, h1);
          }
        });
+      // Convert all headings (h1-h4) to paragraphs, preserving existing inline styles/classes and content
+      const replaceHeadingWithParagraph = (selector: string) => {
+        Array.from(doc.querySelectorAll(selector)).forEach((h) => {
+          const el = h as HTMLElement;
+          const p = doc.createElement('p');
+          // Preserve existing inline styles
+          const existingStyle = el.getAttribute('style') || '';
+          if (existingStyle) p.setAttribute('style', existingStyle);
+          // Preserve classes (alignment, etc.)
+          if (el.className) p.className = el.className;
+          // Move content
+          p.innerHTML = el.innerHTML;
+          el.parentNode?.replaceChild(p, el);
+        });
+      };
+      replaceHeadingWithParagraph('h1');
+      replaceHeadingWithParagraph('h2');
+      replaceHeadingWithParagraph('h3');
+      replaceHeadingWithParagraph('h4');
       // Process images
       const images = Array.from(doc.querySelectorAll('img')) as HTMLImageElement[];
       // Helper: fetch URL -> data URL
