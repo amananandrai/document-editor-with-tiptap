@@ -718,6 +718,7 @@ export function EditorToolbar({
           }
         }
       });
+
        // Fix the "Welcome" H1 issue - convert H1 to paragraph if it's the default content
        const h1Elements = doc.querySelectorAll('h1');
        h1Elements.forEach((h1) => {
@@ -730,17 +731,69 @@ export function EditorToolbar({
            h1.parentNode?.replaceChild(p, h1);
          }
        });
-       // Process images
-       const images = doc.querySelectorAll('img');
-       images.forEach((img) => {
-         const src = img.getAttribute('src');
-         if (src && src.startsWith('data:')) {
-           img.style.maxWidth = '100%';
-           img.style.height = 'auto';
-         }
-       });
-       // Get processed HTML
-       html = doc.body.innerHTML;
+      // Convert all headings (h1-h4) to paragraphs, preserving existing inline styles/classes and content
+      const replaceHeadingWithParagraph = (selector: string) => {
+        Array.from(doc.querySelectorAll(selector)).forEach((h) => {
+          const el = h as HTMLElement;
+          const p = doc.createElement('p');
+          // Preserve existing inline styles
+          const existingStyle = el.getAttribute('style') || '';
+          if (existingStyle) p.setAttribute('style', existingStyle);
+          // Preserve classes (alignment, etc.)
+          if (el.className) p.className = el.className;
+          // Move content
+          p.innerHTML = el.innerHTML;
+          el.parentNode?.replaceChild(p, el);
+        });
+      };
+      replaceHeadingWithParagraph('h1');
+      replaceHeadingWithParagraph('h2');
+      replaceHeadingWithParagraph('h3');
+      replaceHeadingWithParagraph('h4');
+      // Process images
+      const images = Array.from(doc.querySelectorAll('img')) as HTMLImageElement[];
+      // Helper: fetch URL -> data URL
+      const fetchToDataUrl = async (url: string): Promise<string | null> => {
+        try {
+          const resp = await fetch(url, { mode: 'cors' as RequestMode });
+          if (!resp.ok) return null;
+          const blob = await resp.blob();
+          return await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        } catch {
+          return null;
+        }
+      };
+      for (const img of images) {
+        const src = img.getAttribute('src') || '';
+        if (!src) continue;
+        if (!src.startsWith('data:')) {
+          const dataUrl = await fetchToDataUrl(src);
+          if (dataUrl) {
+            img.setAttribute('src', dataUrl);
+          }
+        }
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        img.style.display = 'block';
+        img.style.margin = '8pt 0';
+      }
+      const imgsPostProcess = Array.from(doc.querySelectorAll('img')) as HTMLImageElement[];
+      for (const img of imgsPostProcess) {
+        const src = img.getAttribute('src') || '';
+        if (!src || !src.startsWith('data:')) {
+          img.remove();
+          continue;
+        }
+        img.setAttribute('alt', '');
+        img.setAttribute('title', '');
+      }
+      // Get processed HTML
+      html = doc.body.innerHTML;
       // Enhanced Word-compatible HTML
       const docHtml = `
   <!DOCTYPE html>
