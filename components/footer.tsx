@@ -18,13 +18,13 @@ export function Footer() {
   if (isFocusMode) return null;
 
   return (
-    <footer className="bg-gradient-to-r from-slate-900 via-gray-900 to-slate-900 text-white">
+    <footer className="bg-linear-to-r from-slate-900 via-gray-900 to-slate-900 text-white">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-purple-600">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-r from-blue-500 to-purple-600">
                 <FileText className="h-6 w-6 text-white" />
               </div>
               <div>
@@ -69,10 +69,10 @@ export function Footer() {
             <h4 className="text-lg font-semibold mb-4">Features</h4>
             <ul className="space-y-2 text-gray-300">
               <li>Rich Text Editing</li>
-              <li>Export to PDF & Word</li>
-              <li>Dark/Light Themes</li>
-              <li>Real-time Collaboration</li>
-              <li>Advanced Formatting</li>
+              <li>Fast & Intuitive</li>
+              <li>Seamless Export</li>
+              <li>Light & Dark Themes</li>
+              <li>Modern Tech Stack</li>
             </ul>
           </div>
 
@@ -145,7 +145,7 @@ export function Footer() {
             </div>
           </div>
           <div className="text-center text-gray-500 text-sm mt-4">
-            © 2024 DocuEdit Pro. All rights reserved.
+            © {new Date().getFullYear()} DocuEdit Pro. All rights reserved.
           </div>
         </div>
       </div>
