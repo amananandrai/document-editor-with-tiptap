@@ -1252,7 +1252,7 @@ export function EditorToolbar({
       {/* Top menu bar */}
       <div className="w-full flex items-center gap-1 pb-2">
         {/* File */}
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button variant="secondary" size="sm" title="File">File</Button>
           </DropdownMenuTrigger>
@@ -1281,7 +1281,7 @@ export function EditorToolbar({
           </DropdownMenuContent>
         </DropdownMenu>
         {/* View */}
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button variant="secondary" size="sm" title="View">View</Button>
           </DropdownMenuTrigger>
@@ -1375,7 +1375,7 @@ export function EditorToolbar({
           </DropdownMenuContent>
         </DropdownMenu>
         {/* Insert */}
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button variant="secondary" size="sm" title="Insert">Insert</Button>
           </DropdownMenuTrigger>
@@ -1592,7 +1592,7 @@ export function EditorToolbar({
           </DropdownMenuContent>
         </DropdownMenu>
         {/* Tools */}
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button variant="secondary" size="sm" title="Tools">Tools</Button>
           </DropdownMenuTrigger>
@@ -1606,7 +1606,7 @@ export function EditorToolbar({
 
         {/* Table (moved from toolbar into menu bar) */}
         {isTableActive && (
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="sm" title="Table">Table</Button>
             </DropdownMenuTrigger>
@@ -1665,7 +1665,7 @@ export function EditorToolbar({
       </div>
 
       {/* Headings */}
-      <DropdownMenu>
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="secondary"
@@ -1694,7 +1694,7 @@ export function EditorToolbar({
       </DropdownMenu>
 
       {/* Font size */}
-      <DropdownMenu>
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="secondary"
@@ -1760,7 +1760,7 @@ export function EditorToolbar({
       </DropdownMenu>
 
       {/* Font family */}
-      <DropdownMenu>
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="secondary"
@@ -1796,7 +1796,7 @@ export function EditorToolbar({
       </DropdownMenu>
 
       {/* Line spacing */}
-      <DropdownMenu>
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="secondary"
@@ -1820,7 +1820,7 @@ export function EditorToolbar({
       </DropdownMenu>
 
       {/* Text Alignment */}
-      <DropdownMenu>
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="secondary"

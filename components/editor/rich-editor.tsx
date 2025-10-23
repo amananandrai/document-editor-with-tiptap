@@ -125,9 +125,6 @@ export function RichEditor() {
           class: "max-w-full h-auto rounded-lg shadow-sm",
         },
       }),
-      // Custom attributes
-      IndentExtension,
-      LineHeightExtension,
 
       // Page break
       PageBreak,
