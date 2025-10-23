@@ -3,7 +3,6 @@
 import { FocusModeProvider } from "@/components/focus-mode-context";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { Toaster } from "sonner";
 
 export default function EditorLayout({
   children,
@@ -16,7 +15,6 @@ export default function EditorLayout({
         <Navbar />
         <main className="flex-1">
           {children}
-          <Toaster />
         </main>
         <Footer />
       </div>

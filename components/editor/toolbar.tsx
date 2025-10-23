@@ -19,9 +19,13 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import { FindReplaceModal } from "./find-replace-modal";
 import { LinkModal } from "./link-modal";
+import { useFocusMode } from "../focus-mode-context";
 import {
   BoldIcon,
   ItalicIcon,
@@ -67,6 +71,7 @@ import {
   RotateCcw,
   SmilePlus
 } from "lucide-react";
+import { Eye } from "lucide-react";
 import CustomColorPicker from '../ui/colorpicker'
 import { toast } from "sonner";
 
@@ -91,6 +96,7 @@ export function EditorToolbar({
 }: Props) {
   const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const { isFocusMode, toggleFocusMode } = useFocusMode();
   // Text Color Picker Props
   const textColorRef = useRef<HTMLDivElement>(null);
   const [showTextColorPicker, setShowTextColorPicker] = useState(false);
@@ -1088,10 +1094,6 @@ export function EditorToolbar({
       .setParagraph()
       // Clear text alignment
       .unsetTextAlign()
-      // Clear indent
-      .updateAttributes("paragraph", { indent: 0 })
-      // Clear line height
-      .updateAttributes("paragraph", { lineHeight: null })
       .run();
   };
 
@@ -1101,6 +1103,165 @@ export function EditorToolbar({
       role="toolbar"
       aria-label="Editor toolbar"
     >
+      {/* Top menu bar */}
+      <div className="w-full flex items-center gap-1 pb-2">
+        {/* File */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="secondary" size="sm" title="File">File</Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onClick={handleExportPDF}>
+              <FileDown className="h-4 w-4 mr-2" />
+              Save as PDF
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExportWord}>
+              <FileText className="h-4 w-4 mr-2" />
+              Save as Word
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={toggleFocusMode}>
+              <Eye className="h-4 w-4 mr-2" />
+              {isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {/* View */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="secondary" size="sm" title="View">View</Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56 max-h-none overflow-visible">
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Layout className="h-4 w-4 mr-2" />
+                Editor Layout
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent sideOffset={8} className="w-64 max-h-none overflow-visible">
+                <DropdownMenuLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Editor Layout
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioGroup 
+                  value={getCurrentLayoutMode()} 
+                  onValueChange={(value) => handleLayoutChange(value as 'normal' | 'a4' | 'multipage')}
+                >
+                  <DropdownMenuRadioItem value="normal" className="flex items-center gap-3 py-2">
+                    <div className="flex items-center justify-center w-8 h-8 rounded bg-gray-100 dark:bg-gray-800">
+                      <Monitor className="h-4 w-4 text-gray-600" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium">Normal</span>
+                      <span className="text-xs text-gray-500">Full-width editor</span>
+                    </div>
+                  </DropdownMenuRadioItem>
+                  
+                  <DropdownMenuRadioItem value="a4" className="flex items-center gap-3 py-2">
+                    <div className="flex items-center justify-center w-8 h-8 rounded bg-gray-100 dark:bg-gray-800">
+                      <Square className="h-4 w-4 text-gray-600" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium">A4 Layout</span>
+                      <span className="text-xs text-gray-500">Single A4 page view</span>
+                    </div>
+                  </DropdownMenuRadioItem>
+                  
+                  <DropdownMenuRadioItem value="multipage" className="flex items-center gap-3 py-2">
+                    <div className="flex items-center justify-center w-8 h-8 rounded bg-gray-100 dark:bg-gray-800">
+                      <FileText className="h-4 w-4 text-gray-600" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium">Multi-Page</span>
+                      <span className="text-xs text-gray-500">Google Docs style with multiple pages</span>
+                    </div>
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+                
+                <DropdownMenuSeparator />
+                <div className="px-2 py-1.5 text-xs text-gray-500">
+                  Switch between different editor layouts to match your workflow
+                </div>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+
+            {/* Page Margin submenu */}
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Monitor className="h-4 w-4 mr-2" />
+                Page Margin
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent sideOffset={8} className="w-64 max-h-none overflow-visible">
+                <DropdownMenuLabel>Page Margin</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => onChangePageMargin?.(32)}>
+                  Narrow (32px)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onChangePageMargin?.(64)}>
+                  Normal (64px)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onChangePageMargin?.(96)}>
+                  Wide (96px)
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <div className="px-3 py-2">
+                  <label className="text-xs text-muted-foreground">Custom (px)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    className="w-full mt-1 p-1 border rounded text-sm"
+                    value={String(pageMargin)}
+                    onChange={(e) => {
+                      const v = Number(e.target.value || 0);
+                      if (!Number.isNaN(v)) onChangePageMargin?.(v);
+                    }}
+                  />
+                </div>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {/* Insert */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="secondary" size="sm" title="Insert">Insert</Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onClick={setLink}>
+              <Link className="h-4 w-4 mr-2" />
+              Add/Edit Link
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShowEmojiPicker(true)}>
+              <SmilePlus className="h-4 w-4 mr-2" />
+              Emoji
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={insertTable}>
+              <Table className="h-4 w-4 mr-2" />
+              Table
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={insertPageBreak}>
+              <FileX className="h-4 w-4 mr-2" />
+              Page Break
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleImageUpload}>
+              <Image className="h-4 w-4 mr-2" />
+              Image
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {/* Tools */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="secondary" size="sm" title="Tools">Tools</Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onClick={() => setIsFindReplaceOpen(true)}>
+              <Search className="h-4 w-4 mr-2" />
+              Search
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       {/* Headings */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -1206,7 +1367,7 @@ export function EditorToolbar({
             aria-label="Line spacing"
             title="Line spacing"
           >
-            <BetweenVerticalStart className="h-4 w-4" />
+            <BetweenVerticalStart className="h-4 w-4 rotate-90" />
             <span className="sr-only">Line Spacing</span>
           </Button>
         </DropdownMenuTrigger>
@@ -1257,7 +1418,7 @@ export function EditorToolbar({
       </DropdownMenu>
 
       {/* Styles */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <Button
           size="sm"
           variant={editor.isActive("bold") ? "default" : "secondary"}
@@ -1317,7 +1478,7 @@ export function EditorToolbar({
       </div>
 
       {/* Format Actions */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <Button
           size="sm"
           variant={isFormatPainterActive ? "default" : "secondary"}
@@ -1341,34 +1502,7 @@ export function EditorToolbar({
       </div>
 
       {/* Content blocks */}
-      <div className="flex items-center gap-1">
-        <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="secondary"
-              size="sm"
-              aria-label="Emoji Picker"
-              title="Emoji Picker"
-            >
-              <SmilePlus className="h-4 w-4" />
-              <span className="sr-only">Add emoji</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent 
-            align="start" 
-            className="p-0 w-auto border-0"
-            onFocusOutside={(e) => {
-              e.preventDefault();       // prevent closing until focused outside
-            }}
-          >
-            <Picker
-              data={data}
-              onEmojiSelect={addEmoji}
-              theme="dark" // theme: "light" or "dark"
-            />
-          </PopoverContent>
-        </Popover>
-       
+      <div className="flex items-center gap-2">
         <Button
           size="sm"
           variant={editor.isActive("blockquote") ? "default" : "secondary"}
@@ -1399,45 +1533,28 @@ export function EditorToolbar({
         >
           <CodeXml className="h-4 w-4" />
         </Button>
-        <Button
-          size="sm"
-          variant={editor.isActive("link") ? "default" : "secondary"}
-          onClick={setLink}
-          aria-pressed={editor.isActive("link")}
-          aria-label="Link"
-          title="Add/Edit link"
-        >
-          <Link className="h-4 w-4" />
-        </Button>
       </div>
 
-      {/* Images */}
-      <div className="flex items-center gap-1">
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={handleImageUpload}
-          aria-label="Insert image"
-          title="Insert image"
+      {/* Hidden anchor for Emoji Popover */}
+      <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+        <PopoverTrigger asChild>
+          <button aria-hidden className="hidden" />
+        </PopoverTrigger>
+        <PopoverContent
+          align="start"
+          className="p-0 w-auto border-0"
+          onFocusOutside={(e) => {
+            e.preventDefault();
+          }}
         >
-          <Image className="h-4 w-4" />
-        </Button>
-        {editor.isActive("image") && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={removeImage}
-            aria-label="Remove image"
-            title="Remove image"
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-          >
-            <Minus className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
+          <Picker data={data} onEmojiSelect={addEmoji} theme="dark" />
+        </PopoverContent>
+      </Popover>
+
+      
 
       {/* Lists */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <Button
           size="sm"
           variant={editor.isActive("bulletList") ? "default" : "secondary"}
@@ -1461,7 +1578,7 @@ export function EditorToolbar({
       </div>
 
       {/* Indentation */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <Button
           size="sm"
           variant="secondary"
@@ -1483,18 +1600,7 @@ export function EditorToolbar({
       </div>
 
       {/* Tables */}
-      <div className="flex items-center gap-1">
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={insertTable}
-          aria-label="Insert table"
-          title="Insert table"
-        >
-          <Table className="h-4 w-4" />
-        </Button>
-
-        {/* Table controls dropdown */}
+      <div className="flex items-center gap-2">
         {isTableActive && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -1657,34 +1763,10 @@ export function EditorToolbar({
       </div>
 
 
-      {/* Find & Replace */}
-      <div className="flex items-center gap-1">
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={() => setIsFindReplaceOpen(true)}
-          aria-label="Find and Replace"
-          title="Find and Replace"
-        >
-          <Search className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Page Break */}
-      <div className="flex items-center gap-1">
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={insertPageBreak}
-          aria-label="Insert page break"
-          title="Insert page break"
-        >
-          <FileX className="h-4 w-4" />
-        </Button>
-      </div>
+      
 
       {/* Clear content */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <Button
           size="sm"
           variant="outline"
@@ -1694,135 +1776,6 @@ export function EditorToolbar({
           className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 dark:text-red-400 dark:hover:bg-red-900/30 dark:border-red-800"
         >
           <Eraser className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Page margin selector */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            size="sm"
-            variant="secondary"
-            aria-label="Page margin"
-            title="Page margin"
-          >
-            <Monitor className="h-4 w-4" />
-            <span className="ml-2 text-xs font-medium">Margin</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-56">
-          <DropdownMenuLabel>Page Margin</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => onChangePageMargin?.(32)}>
-            Narrow (32px)
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onChangePageMargin?.(64)}>
-            Normal (64px)
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onChangePageMargin?.(96)}>
-            Wide (96px)
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <div className="px-3 py-2">
-            <label className="text-xs text-muted-foreground">Custom (px)</label>
-            <input
-              type="number"
-              min={0}
-              className="w-full mt-1 p-1 border rounded text-sm"
-              value={String(pageMargin)}
-              onChange={(e) => {
-                const v = Number(e.target.value || 0);
-                if (!Number.isNaN(v)) onChangePageMargin?.(v);
-              }}
-            />
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Layout Mode Selector */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            size="sm"
-            variant={isPageLayout || isMultiPageMode ? "default" : "secondary"}
-            aria-label="Select layout mode"
-            title="Choose editor layout mode"
-          >
-            <Layout className="h-4 w-4" />
-            <span className="ml-2 text-xs font-medium">{getLayoutModeLabel()}</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-64">
-          <DropdownMenuLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-            Editor Layout
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          
-          <DropdownMenuRadioGroup 
-            value={getCurrentLayoutMode()} 
-            onValueChange={(value) => handleLayoutChange(value as 'normal' | 'a4' | 'multipage')}
-          >
-            <DropdownMenuRadioItem value="normal" className="flex items-center gap-3 py-2">
-              <div className="flex items-center justify-center w-8 h-8 rounded bg-gray-100 dark:bg-gray-800">
-                <Monitor className="h-4 w-4 text-gray-600" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-medium">Normal</span>
-                <span className="text-xs text-gray-500">Full-width editor</span>
-              </div>
-            </DropdownMenuRadioItem>
-            
-            <DropdownMenuRadioItem value="a4" className="flex items-center gap-3 py-2">
-              <div className="flex items-center justify-center w-8 h-8 rounded bg-gray-100 dark:bg-gray-800">
-                <Square className="h-4 w-4 text-gray-600" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-medium">A4 Layout</span>
-                <span className="text-xs text-gray-500">Single A4 page view</span>
-              </div>
-            </DropdownMenuRadioItem>
-            
-            <DropdownMenuRadioItem value="multipage" className="flex items-center gap-3 py-2">
-              <div className="flex items-center justify-center w-8 h-8 rounded bg-gray-100 dark:bg-gray-800">
-                <FileText className="h-4 w-4 text-gray-600" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-medium">Multi-Page</span>
-                <span className="text-xs text-gray-500">Google Docs style with multiple pages</span>
-              </div>
-            </DropdownMenuRadioItem>
-          </DropdownMenuRadioGroup>
-          
-          <DropdownMenuSeparator />
-          <div className="px-2 py-1.5 text-xs text-gray-500">
-            Switch between different editor layouts to match your workflow
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Export actions: PDF and Word */}
-      <div className="ml-auto flex items-center gap-2 pl-4 border-l border-gray-200 dark:border-gray-700">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={handleExportPDF}
-          aria-label="Export as PDF"
-          title="Export as PDF"
-          className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:text-red-400 dark:border-red-800"
-        >
-          <FileDown className="h-4 w-4 mr-2" />
-          PDF
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={handleExportWord}
-          aria-label="Export as Word (.doc)"
-          title="Export as Word (.doc)"
-          className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800"
-        >
-          <FileText className="h-4 w-4 mr-2" />
-          Word
         </Button>
       </div>
 
