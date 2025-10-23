@@ -61,6 +61,10 @@ import {
   Layout,
   FileX,
   FileText,
+  File,
+  FileCode,
+  FileOutput,
+  FileType2,
   Monitor,
   Square,
   PaintRoller,
@@ -993,6 +997,123 @@ export function EditorToolbar({
     }
   };
 
+  const convertHtmlToMarkdown = (html: string): string => {
+    // Normalize whitespace
+    let md = html
+      .replace(/\r\n|\r/g, "\n")
+      .replace(/\n{3,}/g, "\n\n");
+    // Headings
+    md = md.replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, (_m, p1) => `# ${p1}\n\n`);
+    md = md.replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, (_m, p1) => `## ${p1}\n\n`);
+    md = md.replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, (_m, p1) => `### ${p1}\n\n`);
+    md = md.replace(/<h4[^>]*>([\s\S]*?)<\/h4>/gi, (_m, p1) => `#### ${p1}\n\n`);
+    // Paragraphs and line breaks
+    md = md.replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, (_m, p1) => `${p1}\n\n`);
+    md = md.replace(/<br\s*\/?>/gi, "\n");
+    // Strong/Emphasis/Underline
+    md = md.replace(/<(strong|b)[^>]*>([\s\S]*?)<\/(strong|b)>/gi, (_m, _t, p1) => `**${p1}**`);
+    md = md.replace(/<(em|i)[^>]*>([\s\S]*?)<\/(em|i)>/gi, (_m, _t, p1) => `_${p1}_`);
+    md = md.replace(/<u[^>]*>([\s\S]*?)<\/u>/gi, (_m, p1) => `${p1}`);
+    // Inline code
+    md = md.replace(/<code[^>]*>([\s\S]*?)<\/code>/gi, (_m, p1) => `\`${p1}\``);
+    // Code blocks
+    md = md.replace(/<pre[^>]*>([\s\S]*?)<\/pre>/gi, (_m, p1) => `\n\n\`\`\`\n${p1}\n\`\`\`\n\n`);
+    // Blockquotes
+    md = md.replace(/<blockquote[^>]*>([\s\S]*?)<\/blockquote>/gi, (_m, p1) => {
+      const inner = p1.replace(/\n/g, "\n> ");
+      return `> ${inner}\n\n`;
+    });
+    // Links
+    md = md.replace(/<a[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, (_m, href, text) => `[${text}](${href})`);
+    // Images
+    md = md.replace(/<img[^>]*alt=["']([^"']*)["'][^>]*src=["']([^"']+)["'][^>]*\/?\s*>/gi, (_m, alt, src) => `![${alt}](${src})`);
+    // Unordered lists
+    md = md.replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (_m, p1) => {
+      const items = p1.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_m2, li) => `- ${li}\n`);
+      return `\n${items}\n`;
+    });
+    // Ordered lists (numbers simplified to 1.)
+    md = md.replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (_m, p1) => {
+      const items = p1.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_m2, li) => `1. ${li}\n`);
+      return `\n${items}\n`;
+    });
+    // Tables -> fallback to text rows
+    md = md.replace(/<table[\s\S]*?<\/table>/gi, (tbl) => {
+      const rows = tbl
+        .replace(/<thead[\s\S]*?<\/thead>/gi, (thead) => thead.replace(/<th[^>]*>([\s\S]*?)<\/th>/gi, (_m, th) => `| ${th.trim()} `) + "|\n")
+        .replace(/<tbody[\s\S]*?<\/tbody>/gi, (tbody) => tbody)
+        .replace(/<tr[^>]*>([\s\S]*?)<\/tr>/gi, (_m, cells) => {
+          const line = cells.replace(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi, (_m2, cell) => `| ${String(cell).trim()} `) + "|\n";
+          return line;
+        });
+      return `\n${rows}\n`;
+    });
+    // Remove remaining tags
+    md = md.replace(/<[^>]+>/g, "");
+    // Decode basic HTML entities
+    md = md
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'");
+    // Trim excess whitespace
+    return md.replace(/\s+$/g, "").replace(/\n{3,}/g, "\n\n");
+  };
+
+  const handleExportMarkdown = async () => {
+    const htmlContent = editor.getHTML();
+    const textContent = editor.getText().trim();
+    const isDefaultContent =
+      htmlContent === "<h1>Welcome<\/h1><p>Start typing…<\/p>" ||
+      htmlContent === "<h1>Welcome<\/h1><p>Start typing...<\/p>" ||
+      textContent === "WelcomeStart typing…" ||
+      textContent === "WelcomeStart typing..." ||
+      textContent.length < 5;
+
+    if (editor.isEmpty || isDefaultContent) {
+      toast.error("Document is empty", {
+        description: "Please add some content to the document before exporting to Markdown.",
+      });
+      return;
+    }
+
+    try {
+      const md = convertHtmlToMarkdown(htmlContent);
+      downloadBlob(md, "document.md", "text/markdown;charset=utf-8");
+      toast.success("Markdown exported successfully", {
+        description: "Your document has been downloaded as .md.",
+      });
+    } catch (err) {
+      console.error("[v0] Export Markdown error:", err);
+      toast.error("Export failed", {
+        description: "An error occurred while exporting to Markdown.",
+      });
+    }
+  };
+
+  const handleExportText = async () => {
+    const textContent = editor.getText().trim();
+    if (!textContent || textContent.length < 1) {
+      toast.error("Document is empty", {
+        description: "Please add some content to the document before exporting to Text.",
+      });
+      return;
+    }
+    try {
+      downloadBlob(textContent + "\n", "document.txt", "text/plain;charset=utf-8");
+      toast.success("Text exported successfully", {
+        description: "Your document has been downloaded as .txt.",
+      });
+    } catch (err) {
+      console.error("[v0] Export Text error:", err);
+      toast.error("Export failed", {
+        description: "An error occurred while exporting to Text.",
+      });
+    }
+  };
+
   const handleClear = () => {
     const confirmed = window.confirm(
       "Clear all content from the document? You can undo with Ctrl+Z."
@@ -1137,12 +1258,20 @@ export function EditorToolbar({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
             <DropdownMenuItem onClick={handleExportPDF}>
-              <FileDown className="h-4 w-4 mr-2" />
+              <FileOutput className="h-4 w-4 mr-2" />
               Save as PDF
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleExportWord}>
               <FileText className="h-4 w-4 mr-2" />
               Save as Word
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExportMarkdown}>
+              <FileCode className="h-4 w-4 mr-2" />
+              Save as Markdown
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExportText}>
+              <FileType2 className="h-4 w-4 mr-2" />
+              Save as Text
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={toggleFocusMode}>
