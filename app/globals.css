@@ -482,4 +482,13 @@ html {
   .dark .resize-handle:hover {
     background: #3b82f6;
   } */
+
+  /* Hide scrollbars but keep scroll functionality */
+  .scrollbar-none {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
 }

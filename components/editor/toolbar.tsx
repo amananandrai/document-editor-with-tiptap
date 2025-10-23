@@ -2,11 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Picker from "@emoji-mart/react";
 import data from "@emoji-mart/data";
-import type { Editor } from "@tiptap/react";import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import type { Editor } from "@tiptap/react";
 import { Button } from "@/components/ui/button";
 import html2canvas from "html2canvas-pro";
 import html2PDF from "jspdf-html2canvas-pro";
@@ -96,7 +92,6 @@ export function EditorToolbar({
   onChangePageMargin
 }: Props) {
   const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const { isFocusMode, toggleFocusMode } = useFocusMode();
   // Text Color Picker Props
   const textColorRef = useRef<HTMLDivElement>(null);
@@ -1267,10 +1262,31 @@ export function EditorToolbar({
               <Link className="h-4 w-4 mr-2" />
               Add/Edit Link
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setShowEmojiPicker(true)}>
-              <SmilePlus className="h-4 w-4 mr-2" />
-              Emoji
-            </DropdownMenuItem>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <SmilePlus className="h-4 w-4 mr-2" />
+                Emoji
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent
+                sideOffset={8}
+                avoidCollisions={false}
+                className="p-0 bg-transparent text-foreground max-h-none overflow-visible border-0 shadow-none ring-0 outline-none"
+                style={{ overflow: 'visible', maxHeight: 'none', boxShadow: 'none', borderWidth: 0 }}
+              >
+                <div
+                  className="p-0 bg-white max-h-[420px] overflow-auto scrollbar-none"
+                  onWheelCapture={(e) => { e.stopPropagation(); }}
+                >
+                  <Picker
+                    data={data}
+                    theme="light"
+                    onEmojiSelect={addEmoji}
+                    previewPosition="none"
+                    skinTonePosition="none"
+                  />
+                </div>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
                 <Table className="h-4 w-4 mr-2" />
@@ -1827,21 +1843,7 @@ export function EditorToolbar({
         </Button>
       </div>
 
-      {/* Hidden anchor for Emoji Popover */}
-      <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
-        <PopoverTrigger asChild>
-          <button aria-hidden className="hidden" />
-        </PopoverTrigger>
-        <PopoverContent
-          align="start"
-          className="p-0 w-auto border-0"
-          onFocusOutside={(e) => {
-            e.preventDefault();
-          }}
-        >
-          <Picker data={data} onEmojiSelect={addEmoji} theme="dark" />
-        </PopoverContent>
-      </Popover>
+      
 
       
 
