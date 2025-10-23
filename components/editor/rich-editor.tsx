@@ -11,6 +11,11 @@ import Superscript from "@tiptap/extension-superscript";
 import { Table } from "@tiptap/extension-table";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
+import {
+  getHierarchicalIndexes,
+  TableOfContents,
+  type TableOfContentDataItem,
+} from "@tiptap/extension-table-of-contents";
 import { TableRow } from "@tiptap/extension-table-row";
 import { TextAlign } from "@tiptap/extension-text-align";
 import { FontSize, TextStyle } from "@tiptap/extension-text-style";
@@ -37,6 +42,8 @@ export function RichEditor() {
   const [isMultiPageMode, setIsMultiPageMode] = useState(false);
   // page margin in pixels (applies as padding inside page container)
   const [pageMargin, setPageMargin] = useState<number>(64); // default: 64px (p-16)
+
+  const [items, setItems] = useState<TableOfContentDataItem[]>([]);
 
   const togglePageLayout = () => {
     setIsPageLayout(!isPageLayout);
@@ -124,6 +131,14 @@ export function RichEditor() {
 
       // Page break
       PageBreak,
+
+      // Table of Contents
+      TableOfContents.configure({
+        getIndex: getHierarchicalIndexes,
+        onUpdate(content) {
+          setItems(content);
+        },
+      }),
     ],
     // Prevent immediate DOM rendering on initial (server) render to avoid hydration mismatch
     immediatelyRender: false,
@@ -146,6 +161,31 @@ export function RichEditor() {
   const { handleDrop, handleDragOver, handleDragLeave, handlePaste } =
     useImageUpload(editor);
 
+  const handleItemClick = (
+    e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+    id: string
+  ) => {
+    e.preventDefault();
+
+    // Find the heading element in the document by id
+    const element = document.getElementById(id);
+    
+    if (!editor) {
+      return;
+    }
+
+    if (element) {
+      // Smooth scroll
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+
+      // Focus the editor after clicking
+      editor.chain().focus().run();
+    }
+  };
+
   return (
     <div className="flex flex-col">
       <div className="sticky top-0 z-40 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
@@ -159,40 +199,77 @@ export function RichEditor() {
           onChangePageMargin={(m: number) => setPageMargin(m)}
         />
       </div>
-      {isMultiPageMode ? (
-        <PageManagerProvider editor={editor}>
-          <MultiPageEditor
-            editor={editor}
-            pageMargin={pageMargin}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onPaste={handlePaste}
-          />
-        </PageManagerProvider>
-      ) : isPageLayout ? (
-        <A4PageLayout pageMargin={pageMargin}>
-          <div
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onPaste={handlePaste}
-          >
-            <EditorContent editor={editor} />
+
+      {/* sidebar + editor) */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Table of Contents Sidebar */}
+        <aside className="flex-none w-64 border-r border-gray-200 dark:border-gray-700 overflow-y-auto p-4 z-10">
+          <h2 className="text-lg font-semibold mb-4">Table of Contents</h2>
+          <div>
+            <ul className="space-y-1">
+              {items.length > 0 ? (
+                items.map((item) => (
+                  <li key={item.id}>
+                    <a
+                      href={`#${item.id}`} // functional link
+                      onClick={(e) => handleItemClick(e, item.id)}
+                      style={{ paddingLeft: `${item.level * 1}rem` }}
+                      // highlight the current section
+                      className={`
+                        block w-full rounded-md px-2 py-2 text-sm
+                        hover:bg-gray-100 dark:hover:bg-gray-800
+                        
+                      `}
+                    >
+                      {item.textContent}
+                    </a>
+                  </li>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500">No headings found.</p>
+              )}
+            </ul>
           </div>
-        </A4PageLayout>
-      ) : (
-        <div
-          className="w-full h-full mx-auto bg-white"
-          style={{ padding: `${pageMargin}px` }}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onPaste={handlePaste}
-        >
-          <EditorContent editor={editor} />
-        </div>
-      )}
+        </aside>
+
+        {/* Editor */}
+        <main className="flex-1 overflow-auto bg-white">
+          {isMultiPageMode ? (
+            <PageManagerProvider editor={editor}>
+              <MultiPageEditor
+                editor={editor}
+                pageMargin={pageMargin}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onPaste={handlePaste}
+              />
+            </PageManagerProvider>
+          ) : isPageLayout ? (
+            <A4PageLayout pageMargin={pageMargin}>
+              <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onPaste={handlePaste}
+              >
+                <EditorContent editor={editor} />
+              </div>
+            </A4PageLayout>
+          ) : (
+            <div
+              className="w-full h-full mx-auto bg-white"
+              style={{ padding: `${pageMargin}px` }}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onPaste={handlePaste}
+            >
+              <EditorContent editor={editor} />
+            </div>
+          )}
+        </main>
+      </div>
       {/* Status bar */}
       <StatusBar editor={editor} />
 
