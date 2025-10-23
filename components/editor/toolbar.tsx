@@ -1274,7 +1274,7 @@ export function EditorToolbar({
                 style={{ overflow: 'visible', maxHeight: 'none', boxShadow: 'none', borderWidth: 0 }}
               >
                 <div
-                  className="p-0 bg-white max-h-[420px] overflow-auto scrollbar-none"
+                  className="p-0 bg-white max-h-[420px] overflow-auto scrollbar-none border border-input rounded-md shadow-md"
                   onWheelCapture={(e) => { e.stopPropagation(); }}
                 >
                   <Picker
