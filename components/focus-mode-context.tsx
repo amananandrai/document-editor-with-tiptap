@@ -60,11 +60,12 @@ export const FocusModeProvider = ({ children }: { children: ReactNode }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.3 }}
-            className="fixed bottom-6 right-6 z-[9999]"
+            className="fixed top-6 right-6 z-[9999]"
           >
             <Button
               onClick={toggleFocusMode}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium hover:opacity-90 shadow-md transition"
+              variant="default"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium shadow-lg hover:shadow-xl transition-shadow"
             >
               <Eye size={18} />
               Exit Focus

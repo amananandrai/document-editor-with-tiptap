@@ -1245,7 +1245,7 @@ export function EditorToolbar({
 
   return (
     <div
-      className="flex flex-wrap items-center gap-2 p-4 bg-white dark:bg-slate-800"
+      className="flex flex-wrap items-center gap-2 p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm"
       role="toolbar"
       aria-label="Editor toolbar"
     >

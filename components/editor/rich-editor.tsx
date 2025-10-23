@@ -203,8 +203,8 @@ export function RichEditor() {
       {/* sidebar + editor) */}
       <div className="flex flex-1 overflow-hidden">
         {/* Table of Contents Sidebar */}
-        <aside className="flex-none w-64 border-r border-gray-200 dark:border-gray-700 overflow-y-auto p-4 z-10">
-          <h2 className="text-lg font-semibold mb-4">Table of Contents</h2>
+        <aside className="flex-none w-64 border-r border-gray-200 dark:border-gray-700 dark:bg-slate-900 overflow-y-auto p-4 z-10">
+          <h2 className="text-lg font-semibold mb-4 dark:text-gray-100">Table of Contents</h2>
           <div>
             <ul className="space-y-1">
               {items.length > 0 ? (
@@ -218,7 +218,7 @@ export function RichEditor() {
                       className={`
                         block w-full rounded-md px-2 py-2 text-sm
                         hover:bg-gray-100 dark:hover:bg-gray-800
-                        
+                        dark:text-gray-300 dark:hover:text-white
                       `}
                     >
                       {item.textContent}
@@ -226,7 +226,7 @@ export function RichEditor() {
                   </li>
                 ))
               ) : (
-                <p className="text-sm text-gray-500">No headings found.</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">No headings found.</p>
               )}
             </ul>
           </div>
