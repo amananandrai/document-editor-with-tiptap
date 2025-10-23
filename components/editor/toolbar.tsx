@@ -74,6 +74,7 @@ import {
 import { Eye } from "lucide-react";
 import CustomColorPicker from '../ui/colorpicker'
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 
 type Props = {
   editor: Editor | null;
@@ -112,6 +113,8 @@ export function EditorToolbar({
 
   // Table state to check if table is active or not
   const [isTableActive, setIsTableActive] = useState(false)
+
+  const [manualFontSize, setManualFontSize] = useState<string>("");
 
   // Close pickers when clicking outside
   useEffect(() => {
@@ -1306,16 +1309,51 @@ export function EditorToolbar({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           <DropdownMenuLabel>Font Size</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={clearFontSize}>Default</DropdownMenuItem>
-          <DropdownMenuSeparator />
+          <div className="px-2 py-2 flex items-center gap-2">
+            <Input
+              type="number"
+              min={8}
+              max={200}
+              placeholder="Size"
+              value={manualFontSize}
+              onChange={(e) => setManualFontSize(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  const raw = (manualFontSize || '').trim();
+                  const n = Math.max(8, Math.min(200, parseInt(raw, 10)));
+                  if (!Number.isNaN(n)) setFontSize(`${n}px`);
+                }
+              }}
+              className="h-8 w-24"
+            />
+            <Button
+              size="sm"
+              onClick={() => {
+                const raw = (manualFontSize || '').trim();
+                const n = Math.max(8, Math.min(200, parseInt(raw, 10)));
+                if (!Number.isNaN(n)) setFontSize(`${n}px`);
+              }}
+            >
+              Apply
+            </Button>
+          </div>
           <DropdownMenuRadioGroup
             value={String(editor.getAttributes("textStyle")?.fontSize || "")}
             onValueChange={(v) => setFontSize(v)}
+            className="px-2"
           >
             {fontSizes.map((s) => (
-              <DropdownMenuRadioItem key={s} value={`${s}px`}>
-                {s}px
+              <DropdownMenuRadioItem
+                key={s}
+                value={`${s}px`}
+                className="justify-start pl-0"
+              >
+                <span className="block w-full text-left">
+                  {s}px
+                  {s === "16" && (
+                    <span className="text-muted-foreground ml-2">Default</span>
+                  )}
+                </span>
               </DropdownMenuRadioItem>
             ))}
           </DropdownMenuRadioGroup>
