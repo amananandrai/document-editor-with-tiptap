@@ -187,7 +187,7 @@ export function RichEditor() {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen">
+    <div className="flex flex-col">
       <div className="sticky top-0 z-40 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
         <EditorToolbar
           editor={editor}
@@ -218,11 +218,7 @@ export function RichEditor() {
                       className={`
                         block w-full rounded-md px-2 py-2 text-sm
                         hover:bg-gray-100 dark:hover:bg-gray-800
-                        ${
-                          item.isActive
-                            ? "bg-gray-100 dark:bg-gray-800 font-semibold"
-                            : ""
-                        }
+                        
                       `}
                     >
                       {item.textContent}
