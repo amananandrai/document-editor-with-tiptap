@@ -116,6 +116,12 @@ export function EditorToolbar({
 
   const [manualFontSize, setManualFontSize] = useState<string>("");
 
+  // Manual table insert inputs (empty -> show placeholder "3")
+  const [manualTableRows, setManualTableRows] = useState<string>("");
+  const [manualTableCols, setManualTableCols] = useState<string>("");
+  const [tableHover, setTableHover] = useState<{ rows: number; cols: number }>({ rows: 0, cols: 0 });
+  const [selectedTable, setSelectedTable] = useState<{ rows: number; cols: number } | null>(null);
+
   // Close pickers when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -482,6 +488,27 @@ export function EditorToolbar({
       .focus()
       .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
       .run();
+  };
+
+  const insertTableWithDims = (rowsStr?: string, colsStr?: string) => {
+    const rawR = (rowsStr ?? (selectedTable?.rows?.toString() ?? manualTableRows)).trim();
+    const rawC = (colsStr ?? (selectedTable?.cols?.toString() ?? manualTableCols)).trim();
+    const parsedR = parseInt(rawR, 10);
+    const parsedC = parseInt(rawC, 10);
+    const baseR = Number.isNaN(parsedR) || rawR === "" ? 3 : parsedR;
+    const baseC = Number.isNaN(parsedC) || rawC === "" ? 3 : parsedC;
+    const r = Math.max(1, Math.min(20, baseR));
+    const c = Math.max(1, Math.min(20, baseC));
+    editor
+      .chain()
+      .focus()
+      .insertTable({ rows: r, cols: c, withHeaderRow: false })
+      .run();
+    // reset selection & inputs after insertion
+    setSelectedTable(null);
+    setManualTableRows("");
+    setManualTableCols("");
+    setTableHover({ rows: 0, cols: 0 });
   };
 
   const addColumnBefore = () => {
@@ -1228,7 +1255,14 @@ export function EditorToolbar({
           <DropdownMenuTrigger asChild>
             <Button variant="secondary" size="sm" title="Insert">Insert</Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
+          <DropdownMenuContent
+            align="start"
+            side="bottom"
+            sideOffset={8}
+            avoidCollisions={false}
+            className="max-h-none overflow-visible"
+            style={{ overflow: 'visible', maxHeight: 'none' }}
+          >
             <DropdownMenuItem onClick={setLink}>
               <Link className="h-4 w-4 mr-2" />
               Add/Edit Link
@@ -1237,10 +1271,171 @@ export function EditorToolbar({
               <SmilePlus className="h-4 w-4 mr-2" />
               Emoji
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={insertTable}>
-              <Table className="h-4 w-4 mr-2" />
-              Table
-            </DropdownMenuItem>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Table className="h-4 w-4 mr-2" />
+                Insert Table
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent
+                sideOffset={8}
+                avoidCollisions={false}
+                className="w-64 max-h-none overflow-visible"
+                style={{ overflow: 'visible', maxHeight: 'none' }}
+              >
+                <DropdownMenuLabel>Insert Table</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <div className="px-2 pt-2">
+                  <div
+                    className="grid grid-cols-10 gap-1 select-none"
+                    onMouseLeave={() => {
+                      setTableHover({ rows: 0, cols: 0 });
+                      // revert to default placeholders when leaving without selection
+                      if (!selectedTable) {
+                        setManualTableRows("");
+                        setManualTableCols("");
+                      }
+                    }}
+                  >
+                    {Array.from({ length: 10 }).map((_, r) => (
+                      <React.Fragment key={r}>
+                        {Array.from({ length: 10 }).map((_, c) => {
+                          const active = selectedTable
+                            ? r < selectedTable.rows && c < selectedTable.cols
+                            : r < tableHover.rows && c < tableHover.cols;
+                          return (
+                            <button
+                              key={`${r}-${c}`}
+                              type="button"
+                              className={`h-4 w-4 border ${active ? 'bg-muted border-foreground' : 'border-input'} rounded-sm`}
+                              onMouseEnter={() => {
+                                setTableHover({ rows: r + 1, cols: c + 1 });
+                                setManualTableRows(String(r + 1));
+                                setManualTableCols(String(c + 1));
+                              }}
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                // select but do not insert; inputs reflect selection
+                                setSelectedTable({ rows: r + 1, cols: c + 1 });
+                                setManualTableRows(String(r + 1));
+                                setManualTableCols(String(c + 1));
+                              }}
+                              aria-label={`Insert ${r + 1} by ${c + 1} table`}
+                            />
+                          );
+                        })}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-2 text-center min-h-4">
+                    {tableHover.rows > 0 && tableHover.cols > 0 ? `${tableHover.rows} × ${tableHover.cols} table` : ''}
+                  </div>
+                </div>
+                <div className="px-2 pb-2 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-16 text-sm text-muted-foreground">Rows</span>
+                    <div className="relative w-28">
+                      <Input
+                        type="tel"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        placeholder="3"
+                        value={manualTableRows}
+                        onChange={(e) => setManualTableRows(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            insertTableWithDims(e.currentTarget.value, undefined);
+                          }
+                        }}
+                        className="h-8 w-full text-center pl-7 pr-7"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        className="absolute left-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 flex items-center justify-center bg-transparent text-foreground transition-none duration-0 hover:bg-transparent active:bg-transparent focus:outline-none focus-visible:ring-0 select-none"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const n = Math.max(1, Math.min(20, (parseInt(manualTableRows, 10) || 1) - 1));
+                          setManualTableRows(String(n));
+                        }}
+                        aria-label="Decrement rows"
+                        title="Decrease rows"
+                      >
+                        -
+                      </button>
+                      <button
+                        type="button"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 flex items-center justify-center bg-transparent text-foreground transition-none duration-0 hover:bg-transparent active:bg-transparent focus:outline-none focus-visible:ring-0 select-none"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const n = Math.max(1, Math.min(20, (parseInt(manualTableRows, 10) || 1) + 1));
+                          setManualTableRows(String(n));
+                        }}
+                        aria-label="Increment rows"
+                        title="Increase rows"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-16 text-sm text-muted-foreground">Columns</span>
+                    <div className="relative w-28">
+                      <Input
+                        type="tel"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        placeholder="3"
+                        value={manualTableCols}
+                        onChange={(e) => setManualTableCols(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            insertTableWithDims(undefined, e.currentTarget.value);
+                          }
+                        }}
+                        className="h-8 w-full text-center pl-7 pr-7"
+                      />
+                      <button
+                        type="button"
+                        className="absolute left-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 flex items-center justify-center bg-transparent text-foreground transition-none duration-0 hover:bg-transparent active:bg-transparent focus:outline-none focus-visible:ring-0 select-none"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const n = Math.max(1, Math.min(20, (parseInt(manualTableCols, 10) || 1) - 1));
+                          setManualTableCols(String(n));
+                        }}
+                        aria-label="Decrement columns"
+                        title="Decrease columns"
+                      >
+                        -
+                      </button>
+                      <button
+                        type="button"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 flex items-center justify-center bg-transparent text-foreground transition-none duration-0 hover:bg-transparent active:bg-transparent focus:outline-none focus-visible:ring-0 select-none"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const n = Math.max(1, Math.min(20, (parseInt(manualTableCols, 10) || 1) + 1));
+                          setManualTableCols(String(n));
+                        }}
+                        aria-label="Increment columns"
+                        title="Increase columns"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" onClick={(e) => { e.preventDefault(); insertTableWithDims(); }}>Insert</Button>
+                    <Button size="sm" variant="secondary" onClick={() => { setManualTableRows(""); setManualTableCols(""); setTableHover({ rows: 0, cols: 0 }); }}>Reset</Button>
+                  </div>
+                </div>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
             <DropdownMenuItem onClick={insertPageBreak}>
               <FileX className="h-4 w-4 mr-2" />
               Page Break
@@ -1263,6 +1458,65 @@ export function EditorToolbar({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* Table (moved from toolbar into menu bar) */}
+        {isTableActive && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="secondary" size="sm" title="Table">Table</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuLabel>Table Options</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+
+              <DropdownMenuLabel>Columns</DropdownMenuLabel>
+              <DropdownMenuItem onClick={addColumnBefore}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Column Before
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={addColumnAfter}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Column After
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={deleteColumn}>
+                <Minus className="h-4 w-4 mr-2" />
+                Delete Column
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Rows</DropdownMenuLabel>
+              <DropdownMenuItem onClick={addRowBefore}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Row Before
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={addRowAfter}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Row After
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={deleteRow}>
+                <Minus className="h-4 w-4 mr-2" />
+                Delete Row
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Cells</DropdownMenuLabel>
+              <DropdownMenuItem onClick={mergeCells}>Merge Cells</DropdownMenuItem>
+              <DropdownMenuItem onClick={splitCell}>Split Cell</DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Headers</DropdownMenuLabel>
+              <DropdownMenuItem onClick={toggleHeaderRow}>Toggle Header Row</DropdownMenuItem>
+              <DropdownMenuItem onClick={toggleHeaderColumn}>Toggle Header Column</DropdownMenuItem>
+              <DropdownMenuItem onClick={toggleHeaderCell}>Toggle Header Cell</DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={deleteTable} className="text-red-600">
+                <Minus className="h-4 w-4 mr-2" />
+                Delete Table
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       {/* Headings */}
@@ -1637,83 +1891,7 @@ export function EditorToolbar({
         </Button>
       </div>
 
-      {/* Tables */}
-      <div className="flex items-center gap-2">
-        {isTableActive && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="secondary"
-                size="sm"
-                aria-label="Table options"
-                title="Table options"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuLabel>Table Options</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-
-              <DropdownMenuLabel>Columns</DropdownMenuLabel>
-              <DropdownMenuItem onClick={addColumnBefore}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Column Before
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={addColumnAfter}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Column After
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={deleteColumn}>
-                <Minus className="h-4 w-4 mr-2" />
-                Delete Column
-              </DropdownMenuItem>
-
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>Rows</DropdownMenuLabel>
-              <DropdownMenuItem onClick={addRowBefore}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Row Before
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={addRowAfter}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Row After
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={deleteRow}>
-                <Minus className="h-4 w-4 mr-2" />
-                Delete Row
-              </DropdownMenuItem>
-
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>Cells</DropdownMenuLabel>
-              <DropdownMenuItem onClick={mergeCells}>
-                Merge Cells
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={splitCell}>
-                Split Cell
-              </DropdownMenuItem>
-
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>Headers</DropdownMenuLabel>
-              <DropdownMenuItem onClick={toggleHeaderRow}>
-                Toggle Header Row
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={toggleHeaderColumn}>
-                Toggle Header Column
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={toggleHeaderCell}>
-                Toggle Header Cell
-              </DropdownMenuItem>
-
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={deleteTable} className="text-red-600">
-                <Minus className="h-4 w-4 mr-2" />
-                Delete Table
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-      </div>
+      
 
       {/* Colors */}
       {/* Colors */}
