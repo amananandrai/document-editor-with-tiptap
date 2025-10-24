@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Toaster } from "sonner";
+import BackToTopButton from "@/components/BackToTopButton"; // 👈 add this import
 
 export default function RootLayoutClient({
   children,
@@ -17,11 +18,17 @@ export default function RootLayoutClient({
     <div className="min-h-screen flex flex-col">
       {/* ✅ Hide navbar/footer only for editor route */}
       {!isEditor && <Navbar />}
+
       <main className="flex-1">
         {children}
         <Toaster />
       </main>
+
       {!isEditor && <Footer />}
+
+      {/* 👇 Show Back To Top button only outside editor pages */}
+      {!isEditor && <BackToTopButton />}
     </div>
   );
 }
+
