@@ -24,6 +24,7 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useState } from "react";
 import { A4PageLayout } from "./a4-page-layout";
+import { useFocusMode } from "@/components/focus-mode-context"; // ✅ 1. Import the hook
 import { ImageResize } from "./image-extension";
 import { MultiPageEditor } from "./multi-page-editor";
 import { PageBreak } from "./page-break-extension";
@@ -44,6 +45,16 @@ export function RichEditor() {
   const [pageMargin, setPageMargin] = useState<number>(64); // default: 64px (p-16)
 
   const [items, setItems] = useState<TableOfContentDataItem[]>([]);
+
+  // ✅ 2. Safely get focus mode state
+  let isFocusMode = false;
+  try {
+    const focus = useFocusMode();
+    isFocusMode = focus.isFocusMode;
+  } catch (error) {
+    // FocusModeProvider not found, default to false
+    // This is safe and prevents errors if the editor is used elsewhere
+  }
 
   const togglePageLayout = () => {
     setIsPageLayout(!isPageLayout);
@@ -166,7 +177,7 @@ export function RichEditor() {
 
     // Find the heading element in the document by id
     const element = document.getElementById(id);
-    
+
     if (!editor) {
       return;
     }
@@ -201,7 +212,9 @@ export function RichEditor() {
       <div className="flex flex-1 overflow-hidden">
         {/* Table of Contents Sidebar */}
         <aside className="flex-none w-64 border-r border-gray-200 dark:border-gray-700 dark:bg-slate-900 overflow-y-auto p-4 z-10">
-          <h2 className="text-lg font-semibold mb-4 dark:text-gray-100">Table of Contents</h2>
+          <h2 className="text-lg font-semibold mb-4 dark:text-gray-100">
+            Table of Contents
+          </h2>
           <div>
             <ul className="space-y-1">
               {items.length > 0 ? (
@@ -223,7 +236,9 @@ export function RichEditor() {
                   </li>
                 ))
               ) : (
-                <p className="text-sm text-gray-500 dark:text-gray-400">No headings found.</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  No headings found.
+                </p>
               )}
             </ul>
           </div>
@@ -270,17 +285,19 @@ export function RichEditor() {
       {/* Status bar */}
       <StatusBar editor={editor} />
 
-      {/* Help text */}
-      <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-8 py-4">
-        <p className="text-sm text-gray-600 dark:text-gray-300 text-center">
-          💡 <strong>Pro Tips:</strong> Use Ctrl/Cmd + B/I/U for quick
-          formatting • Ctrl/Cmd + S to save • Right-click for context menu • Use
-          Tab/Shift+Tab for indentation • Insert tables, blockquotes, code
-          blocks, and links • Create multilevel nested lists with proper
-          indentation • Drag & drop images or use the image button to upload •
-          Click images to resize with corner handles or remove them
-        </p>
-      </div>
+      {/* ✅ 3. Conditionally render the "Help text" div */}
+      {!isFocusMode && (
+        <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-8 py-4">
+          <p className="text-sm text-gray-600 dark:text-gray-300 text-center">
+            💡 <strong>Pro Tips:</strong> Use Ctrl/Cmd + B/I/U for quick
+            formatting • Ctrl/Cmd + S to save • Right-click for context menu • Use
+            Tab/Shift+Tab for indentation • Insert tables, blockquotes, code
+            blocks, and links • Create multilevel nested lists with proper
+            indentation • Drag & drop images or use the image button to upload •
+            Click images to resize with corner handles or remove them
+          </p>
+        </div>
+      )}
     </div>
   );
 }
