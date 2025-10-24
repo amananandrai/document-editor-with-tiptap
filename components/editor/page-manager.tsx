@@ -1,7 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
 import type { Editor } from "@tiptap/react";
+import React, { createContext, useCallback, useContext, useState } from "react";
 
 export interface Page {
   id: string;
@@ -23,6 +23,24 @@ interface PageManagerContextType {
   canGoNext: boolean;
   canGoPrev: boolean;
   currentPage: Page | null;
+  // Global header/footer (shared across all pages)
+  headerContent: string;
+  footerContent: string;
+  updateHeaderContent: (content: string) => void;
+  updateFooterContent: (content: string) => void;
+  showHeader: boolean;
+  showFooter: boolean;
+  showPageNumbers: boolean;
+  toggleHeader: () => void;
+  toggleFooter: () => void;
+  togglePageNumbers: () => void;
+  // Active editor tracking
+  activeEditor: Editor | null;
+  activeEditorType: "main" | "header" | "footer" | null;
+  setActiveEditor: (
+    editor: Editor | null,
+    type: "main" | "header" | "footer" | null
+  ) => void;
 }
 
 const PageManagerContext = createContext<PageManagerContextType | null>(null);
@@ -40,7 +58,10 @@ interface PageManagerProviderProps {
   editor: Editor | null;
 }
 
-export function PageManagerProvider({ children, editor }: PageManagerProviderProps) {
+export function PageManagerProvider({
+  children,
+  editor,
+}: PageManagerProviderProps) {
   const [pages, setPages] = useState<Page[]>([
     {
       id: "page-1",
@@ -51,6 +72,20 @@ export function PageManagerProvider({ children, editor }: PageManagerProviderPro
     },
   ]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
+
+  // Global header and footer content (shared across all pages)
+  const [headerContent, setHeaderContent] = useState("");
+  const [footerContent, setFooterContent] = useState("");
+
+  const [showHeader, setShowHeader] = useState(false);
+  const [showFooter, setShowFooter] = useState(false);
+  const [showPageNumbers, setShowPageNumbers] = useState(false);
+
+  // Active editor tracking
+  const [activeEditor, setActiveEditorState] = useState<Editor | null>(null);
+  const [activeEditorType, setActiveEditorType] = useState<
+    "main" | "header" | "footer" | null
+  >(null);
 
   const addPage = useCallback((content = "<p>New page content...</p>") => {
     // Use functional updates so we always derive from the latest state
@@ -82,7 +117,8 @@ export function PageManagerProvider({ children, editor }: PageManagerProviderPro
       // Clamp or shift the current page index relative to the deleted page
       setCurrentPageIndex((idx: number) => {
         if (idx > deletedIndex) return idx - 1; // shift left if a previous page was removed
-        if (idx === deletedIndex) return Math.max(0, Math.min(idx, newPages.length - 1));
+        if (idx === deletedIndex)
+          return Math.max(0, Math.min(idx, newPages.length - 1));
         return idx; // unchanged if deletion was after current index
       });
 
@@ -91,18 +127,50 @@ export function PageManagerProvider({ children, editor }: PageManagerProviderPro
   }, []);
 
   const updatePageContent = useCallback((pageId: string, content: string) => {
-    setPages((prev: Page[]) => prev.map((page: Page) => 
-      page.id === pageId 
-        ? { ...page, content, updatedAt: new Date() }
-        : page
-    ));
+    setPages((prev: Page[]) =>
+      prev.map((page: Page) =>
+        page.id === pageId ? { ...page, content, updatedAt: new Date() } : page
+      )
+    );
   }, []);
 
-  const setCurrentPage = useCallback((index: number) => {
-    if (index >= 0 && index < pages.length) {
-      setCurrentPageIndex(index);
-    }
-  }, [pages.length]);
+  // Global header and footer update functions
+  const updateHeaderContent = useCallback((content: string) => {
+    setHeaderContent(content);
+  }, []);
+
+  const updateFooterContent = useCallback((content: string) => {
+    setFooterContent(content);
+  }, []);
+
+  const toggleHeader = useCallback(() => {
+    setShowHeader((prev) => !prev);
+  }, []);
+
+  const toggleFooter = useCallback(() => {
+    setShowFooter((prev) => !prev);
+  }, []);
+
+  const togglePageNumbers = useCallback(() => {
+    setShowPageNumbers((prev) => !prev);
+  }, []);
+
+  const setActiveEditor = useCallback(
+    (editor: Editor | null, type: "main" | "header" | "footer" | null) => {
+      setActiveEditorState(editor);
+      setActiveEditorType(type);
+    },
+    []
+  );
+
+  const setCurrentPage = useCallback(
+    (index: number) => {
+      if (index >= 0 && index < pages.length) {
+        setCurrentPageIndex(index);
+      }
+    },
+    [pages.length]
+  );
 
   const nextPage = useCallback(() => {
     if (currentPageIndex < pages.length - 1) {
@@ -138,9 +206,9 @@ export function PageManagerProvider({ children, editor }: PageManagerProviderPro
         updatePageContent(currentPage.id, content);
       };
 
-      editor.on('update', handleUpdate);
+      editor.on("update", handleUpdate);
       return () => {
-        editor.off('update', handleUpdate);
+        editor.off("update", handleUpdate);
       };
     }
   }, [editor, currentPage, updatePageContent]);
@@ -157,6 +225,19 @@ export function PageManagerProvider({ children, editor }: PageManagerProviderPro
     canGoNext,
     canGoPrev,
     currentPage,
+    headerContent,
+    footerContent,
+    updateHeaderContent,
+    updateFooterContent,
+    showHeader,
+    showFooter,
+    showPageNumbers,
+    toggleHeader,
+    toggleFooter,
+    togglePageNumbers,
+    activeEditor,
+    activeEditorType,
+    setActiveEditor,
   };
 
   return (

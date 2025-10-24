@@ -1,11 +1,5 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
-import Picker from "@emoji-mart/react";
-import data from "@emoji-mart/data";
-import type { Editor } from "@tiptap/react";
 import { Button } from "@/components/ui/button";
-import html2canvas from "html2canvas-pro";
-import html2PDF from "jspdf-html2canvas-pro";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,67 +8,66 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
   DropdownMenuSub,
-  DropdownMenuSubTrigger,
   DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { FindReplaceModal } from "./find-replace-modal";
-import { LinkModal } from "./link-modal";
-import { useFocusMode } from "../focus-mode-context";
+import { Input } from "@/components/ui/input";
+import data from "@emoji-mart/data";
+import Picker from "@emoji-mart/react";
+import type { Editor } from "@tiptap/react";
 import {
-  BoldIcon,
-  ItalicIcon,
-  UnderlineIcon,
-  SuperscriptIcon,
-  SubscriptIcon,
-  ListIcon,
-  ListOrderedIcon,
-  IndentIncrease,
-  IndentDecrease,
-  HeadingIcon,
-  TextIcon,
-  TypeIcon,
-  Type,
-  Hash,
+  AlignCenter,
+  AlignJustify,
+  AlignLeft,
+  AlignRight,
   BetweenVerticalStart,
-  PaletteIcon,
-  HighlighterIcon,
-  FileDown,
-  Quote,
+  BoldIcon,
+  Check,
   Code,
   CodeXml,
-  Link,
-  Table,
-  Plus,
-  Minus,
-  MoreHorizontal,
-  Image,
-  Upload,
-  Search,
   Eraser,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignJustify,
-  CodeXmlIcon,
-  Layout,
-  FileX,
-  FileText,
-  File,
+  Eye,
   FileCode,
   FileOutput,
+  FileText,
   FileType2,
+  FileX,
+  Hash,
+  HeadingIcon,
+  HighlighterIcon,
+  Image,
+  IndentDecrease,
+  IndentIncrease,
+  ItalicIcon,
+  Layout,
+  Link,
+  ListIcon,
+  ListOrderedIcon,
+  Minus,
   Monitor,
-  Square,
   PaintRoller,
+  PaletteIcon,
+  Plus,
+  Quote,
   RotateCcw,
-  SmilePlus
+  Search,
+  SeparatorHorizontal,
+  SmilePlus,
+  Square,
+  SubscriptIcon,
+  SuperscriptIcon,
+  Table,
+  TypeIcon,
+  UnderlineIcon,
 } from "lucide-react";
-import { Eye } from "lucide-react";
-import CustomColorPicker from '../ui/colorpicker'
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
+import { useFocusMode } from "../focus-mode-context";
+import CustomColorPicker from "../ui/colorpicker";
+import { FindReplaceModal } from "./find-replace-modal";
+import { LinkModal } from "./link-modal";
 
 type Props = {
   editor: Editor | null;
@@ -84,16 +77,30 @@ type Props = {
   onToggleMultiPageMode?: () => void;
   pageMargin?: number;
   onChangePageMargin?: (marginPx: number) => void;
+  showHeader?: boolean;
+  showFooter?: boolean;
+  showPageNumbers?: boolean;
+  onToggleHeader?: () => void;
+  onToggleFooter?: () => void;
+  onTogglePageNumbers?: () => void;
+  activeEditorType?: "main" | "header" | "footer" | null;
 };
 
-export function EditorToolbar({ 
-  editor, 
-  isPageLayout = false, 
+export function EditorToolbar({
+  editor,
+  isPageLayout = false,
   onTogglePageLayout,
   isMultiPageMode = false,
-  onToggleMultiPageMode
-  ,pageMargin = 64,
-  onChangePageMargin
+  onToggleMultiPageMode,
+  pageMargin = 64,
+  onChangePageMargin,
+  showHeader = false,
+  showFooter = false,
+  showPageNumbers = false,
+  onToggleHeader,
+  onToggleFooter,
+  onTogglePageNumbers,
+  activeEditorType = null,
 }: Props) {
   const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
   const { isFocusMode, toggleFocusMode } = useFocusMode();
@@ -111,37 +118,37 @@ export function EditorToolbar({
   const [isFormatPainterActive, setIsFormatPainterActive] = useState(false);
 
   // Table state to check if table is active or not
-  const [isTableActive, setIsTableActive] = useState(false)
+  const [isTableActive, setIsTableActive] = useState(false);
 
   const [manualFontSize, setManualFontSize] = useState<string>("");
 
   // Manual table insert inputs (empty -> show placeholder "3")
   const [manualTableRows, setManualTableRows] = useState<string>("");
   const [manualTableCols, setManualTableCols] = useState<string>("");
-  const [tableHover, setTableHover] = useState<{ rows: number; cols: number }>({ rows: 0, cols: 0 });
-  const [selectedTable, setSelectedTable] = useState<{ rows: number; cols: number } | null>(null);
+  const [tableHover, setTableHover] = useState<{ rows: number; cols: number }>({
+    rows: 0,
+    cols: 0,
+  });
+  const [selectedTable, setSelectedTable] = useState<{
+    rows: number;
+    cols: number;
+  } | null>(null);
 
   // Close pickers when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
-  
+
       // If clicked outside both pickers and their buttons
-      if (
-        textColorRef.current &&
-        !textColorRef.current.contains(target)
-      ) {
+      if (textColorRef.current && !textColorRef.current.contains(target)) {
         setShowTextColorPicker(false);
       }
-  
-      if (
-        bgColorRef.current &&
-        !bgColorRef.current.contains(target)
-      ) {
+
+      if (bgColorRef.current && !bgColorRef.current.contains(target)) {
         setShowBGColorPicker(false);
       }
     };
-  
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -149,22 +156,22 @@ export function EditorToolbar({
   }, []);
 
   useEffect(() => {
-    if(!editor) return
+    if (!editor) return;
     const updateTableActiveState = () => {
-      setIsTableActive(editor.isActive("table"))
-    }
-    editor.on("transaction", updateTableActiveState)
-    editor.on("focus", updateTableActiveState)
-    editor.on("blur", updateTableActiveState)
-    editor.on("selectionUpdate", updateTableActiveState)
+      setIsTableActive(editor.isActive("table"));
+    };
+    editor.on("transaction", updateTableActiveState);
+    editor.on("focus", updateTableActiveState);
+    editor.on("blur", updateTableActiveState);
+    editor.on("selectionUpdate", updateTableActiveState);
 
     return () => {
-      editor.off('transaction', updateTableActiveState);
-      editor.off('focus', updateTableActiveState);
-      editor.off('blur', updateTableActiveState);
-      editor.off('selectionUpdate', updateTableActiveState);
-    }
-  }, [editor])
+      editor.off("transaction", updateTableActiveState);
+      editor.off("focus", updateTableActiveState);
+      editor.off("blur", updateTableActiveState);
+      editor.off("selectionUpdate", updateTableActiveState);
+    };
+  }, [editor]);
 
   // Add click handler to editor for format painter
   useEffect(() => {
@@ -208,15 +215,26 @@ export function EditorToolbar({
               }
               break;
             case "color":
-              if (value && typeof value === "string") chain = chain.setColor(value);
+              if (value && typeof value === "string")
+                chain = chain.setColor(value);
               break;
             case "highlight":
-              if (value && typeof value === "object" && "color" in value && value.color) {
+              if (
+                value &&
+                typeof value === "object" &&
+                "color" in value &&
+                value.color
+              ) {
                 chain = chain.toggleHighlight({ color: value.color as string });
               }
               break;
             case "link":
-              if (value && typeof value === "object" && "href" in value && value.href) {
+              if (
+                value &&
+                typeof value === "object" &&
+                "href" in value &&
+                value.href
+              ) {
                 chain = chain.setLink({ href: value.href as string });
               }
               break;
@@ -259,10 +277,10 @@ export function EditorToolbar({
     };
 
     const editorElement = editor.view.dom;
-    editorElement.addEventListener('click', handleClick);
+    editorElement.addEventListener("click", handleClick);
 
     return () => {
-      editorElement.removeEventListener('click', handleClick);
+      editorElement.removeEventListener("click", handleClick);
     };
   }, [editor, isFormatPainterActive, copiedFormat]);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
@@ -277,6 +295,10 @@ export function EditorToolbar({
   });
 
   if (!editor) return null;
+
+  // Check if we're editing header/footer (disable certain features)
+  const isHeaderFooterMode =
+    activeEditorType === "header" || activeEditorType === "footer";
 
   const addEmoji = (emoji: any) => {
     editor.chain().focus().insertContent(emoji.native).run();
@@ -304,42 +326,41 @@ export function EditorToolbar({
   const lineHeights = ["1", "1.15", "1.5", "2"];
 
   // Heading options
-  const headingOptions: Array<{ label: string; level: number | "paragraph", size: string }> =
-    [
-      { label: "Paragraph", level: "paragraph", size: "16" },
-      { label: "Heading 1", level: 1, size: "32" },
-      { label: "Heading 2", level: 2, size: "24" },
-      { label: "Heading 3", level: 3, size: "18" },
-      { label: "Heading 4", level: 4, size: "16" },
-    ];
+  const headingOptions: Array<{
+    label: string;
+    level: number | "paragraph";
+    size: string;
+  }> = [
+    { label: "Paragraph", level: "paragraph", size: "16" },
+    { label: "Heading 1", level: 1, size: "32" },
+    { label: "Heading 2", level: 2, size: "24" },
+    { label: "Heading 3", level: 3, size: "18" },
+    { label: "Heading 4", level: 4, size: "16" },
+  ];
 
   const setHeading = (lvl: number | "paragraph", size: string) => {
     editor.chain().focus().unsetFontSize();
     if (lvl === "paragraph") {
-    editor
-      .chain()
-      .focus()
-      .setParagraph()
-      // Apply the font size for the paragraph
-      .setMark("textStyle", { fontSize: `${size}px` })
-      .run();
-  } else {
-    editor
-      .chain()
-      .focus()
-      .toggleHeading({ level: lvl as 1 | 2 | 3 | 4 })
-      // Apply the font size for the heading
-      .setMark("textStyle", { fontSize: `${size}px` })
-      .run();
-  }
+      editor
+        .chain()
+        .focus()
+        .setParagraph()
+        // Apply the font size for the paragraph
+        .setMark("textStyle", { fontSize: `${size}px` })
+        .run();
+    } else {
+      editor
+        .chain()
+        .focus()
+        .toggleHeading({ level: lvl as 1 | 2 | 3 | 4 })
+        // Apply the font size for the heading
+        .setMark("textStyle", { fontSize: `${size}px` })
+        .run();
+    }
   };
 
   const setFontSize = (sizePx: string) => {
-    editor
-      .chain()
-      .focus()
-      .setMark("textStyle", { fontSize: sizePx })
-      .run();
+    editor.chain().focus().setMark("textStyle", { fontSize: sizePx }).run();
   };
 
   const clearFontSize = () => {
@@ -443,10 +464,12 @@ export function EditorToolbar({
   const setLink = () => {
     const previousUrl = editor.getAttributes("link").href;
     const hasSelection = !editor.state.selection.empty;
-    const selectedText = hasSelection ? editor.state.doc.textBetween(
-      editor.state.selection.from,
-      editor.state.selection.to
-    ) : "";
+    const selectedText = hasSelection
+      ? editor.state.doc.textBetween(
+          editor.state.selection.from,
+          editor.state.selection.to
+        )
+      : "";
 
     setLinkModalData({
       initialUrl: previousUrl || "",
@@ -473,7 +496,11 @@ export function EditorToolbar({
       // No selection - insert new link with provided text
       const linkText = text || "Link";
       const currentPos = editor.state.selection.from;
-      editor.chain().focus().insertContent(`<a href="${url}">${linkText}</a>`).run();
+      editor
+        .chain()
+        .focus()
+        .insertContent(`<a href="${url}">${linkText}</a>`)
+        .run();
       // Move cursor after the inserted link
       const newPos = currentPos + linkText.length + 2; // +2 for <a> tags
       editor.commands.setTextSelection(newPos);
@@ -490,8 +517,16 @@ export function EditorToolbar({
   };
 
   const insertTableWithDims = (rowsStr?: string, colsStr?: string) => {
-    const rawR = (rowsStr ?? (selectedTable?.rows?.toString() ?? manualTableRows)).trim();
-    const rawC = (colsStr ?? (selectedTable?.cols?.toString() ?? manualTableCols)).trim();
+    const rawR = (
+      rowsStr ??
+      selectedTable?.rows?.toString() ??
+      manualTableRows
+    ).trim();
+    const rawC = (
+      colsStr ??
+      selectedTable?.cols?.toString() ??
+      manualTableCols
+    ).trim();
     const parsedR = parseInt(rawR, 10);
     const parsedC = parseInt(rawC, 10);
     const baseR = Number.isNaN(parsedR) || rawR === "" ? 3 : parsedR;
@@ -679,11 +714,16 @@ export function EditorToolbar({
       const color = styles.color;
       const backgroundColor = styles.backgroundColor;
 
-      const inlineStyle = el.getAttribute('style') || '';
+      const inlineStyle = el.getAttribute("style") || "";
       if (color && !/color\s*:/.test(inlineStyle)) {
         el.style.color = color;
       }
-      if (backgroundColor && backgroundColor !== 'rgba(0, 0, 0, 0)' && backgroundColor !== 'transparent' && !/background(-color)?\s*:/.test(inlineStyle)) {
+      if (
+        backgroundColor &&
+        backgroundColor !== "rgba(0, 0, 0, 0)" &&
+        backgroundColor !== "transparent" &&
+        !/background(-color)?\s*:/.test(inlineStyle)
+      ) {
         el.style.backgroundColor = backgroundColor;
       }
 
@@ -693,11 +733,12 @@ export function EditorToolbar({
 
   // Convert any rgb()/rgba() color tokens inside a style string to #rrggbb hex
   const replaceRgbWithHex = (styleText: string): string => {
-    const rgbRegex = /rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*([0-9.]+))?\s*\)/gi;
+    const rgbRegex =
+      /rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*([0-9.]+))?\s*\)/gi;
     return styleText.replace(rgbRegex, (_m, r, g, b) => {
       const toHex = (n: string) => {
         const v = Math.max(0, Math.min(255, parseInt(n, 10)));
-        return v.toString(16).padStart(2, '0');
+        return v.toString(16).padStart(2, "0");
       };
       return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
     });
@@ -707,7 +748,7 @@ export function EditorToolbar({
     // Get the HTML content
     const htmlContent = editor.getHTML();
     const textContent = editor.getText().trim();
-  
+
     // Check if it's the default initial content
     const isDefaultContent =
       htmlContent === "<h1>Welcome</h1><p>Start typing…</p>" ||
@@ -715,7 +756,7 @@ export function EditorToolbar({
       textContent === "WelcomeStart typing…" ||
       textContent === "WelcomeStart typing..." ||
       textContent.length < 5;
-  
+
     if (editor.isEmpty || isDefaultContent) {
       toast.error("Document is empty", {
         description:
@@ -723,7 +764,7 @@ export function EditorToolbar({
       });
       return;
     }
-  
+
     try {
       const liveDom = editor.view.dom as HTMLElement;
       const cloned = liveDom.cloneNode(true) as HTMLElement;
@@ -731,13 +772,13 @@ export function EditorToolbar({
       let html = cloned.innerHTML;
       // Process HTML for better Word compatibility
       const parser = new DOMParser();
-      const doc = parser.parseFromString(html, 'text/html');
+      const doc = parser.parseFromString(html, "text/html");
       // Convert <mark> tags with data-color to spans with background-color
-      const marks = doc.querySelectorAll('mark[data-color]');
+      const marks = doc.querySelectorAll("mark[data-color]");
       marks.forEach((mark) => {
-        const span = doc.createElement('span');
-        const bgColor = mark.getAttribute('data-color');
-        span.style.backgroundColor = bgColor || '#ffff00';
+        const span = doc.createElement("span");
+        const bgColor = mark.getAttribute("data-color");
+        span.style.backgroundColor = bgColor || "#ffff00";
         // Preserve all content and nested elements
         span.innerHTML = mark.innerHTML;
         // Replace mark with span
@@ -747,33 +788,36 @@ export function EditorToolbar({
       spansWithBg.forEach((span) => {
         const currentBg = (span as HTMLElement).style.backgroundColor;
         if (currentBg) {
-          const existing = span.getAttribute('style') || '';
+          const existing = span.getAttribute("style") || "";
           if (!/background(-color)?\s*:/.test(existing)) {
-            span.setAttribute('style', `${existing}; background-color: ${currentBg};`);
+            span.setAttribute(
+              "style",
+              `${existing}; background-color: ${currentBg};`
+            );
           }
         }
       });
 
-       // Fix the "Welcome" H1 issue - convert H1 to paragraph if it's the default content
-       const h1Elements = doc.querySelectorAll('h1');
-       h1Elements.forEach((h1) => {
-         if (h1.textContent?.trim() === 'Welcome') {
-           const p = doc.createElement('p');
-           p.innerHTML = h1.innerHTML;
-           if (h1.getAttribute('style')) {
-             p.setAttribute('style', h1.getAttribute('style') || '');
-           }
-           h1.parentNode?.replaceChild(p, h1);
-         }
-       });
+      // Fix the "Welcome" H1 issue - convert H1 to paragraph if it's the default content
+      const h1Elements = doc.querySelectorAll("h1");
+      h1Elements.forEach((h1) => {
+        if (h1.textContent?.trim() === "Welcome") {
+          const p = doc.createElement("p");
+          p.innerHTML = h1.innerHTML;
+          if (h1.getAttribute("style")) {
+            p.setAttribute("style", h1.getAttribute("style") || "");
+          }
+          h1.parentNode?.replaceChild(p, h1);
+        }
+      });
       // Convert all headings (h1-h4) to paragraphs, preserving existing inline styles/classes and content
       const replaceHeadingWithParagraph = (selector: string) => {
         Array.from(doc.querySelectorAll(selector)).forEach((h) => {
           const el = h as HTMLElement;
-          const p = doc.createElement('p');
+          const p = doc.createElement("p");
           // Preserve existing inline styles
-          const existingStyle = el.getAttribute('style') || '';
-          if (existingStyle) p.setAttribute('style', existingStyle);
+          const existingStyle = el.getAttribute("style") || "";
+          if (existingStyle) p.setAttribute("style", existingStyle);
           // Preserve classes (alignment, etc.)
           if (el.className) p.className = el.className;
           // Move content
@@ -781,16 +825,18 @@ export function EditorToolbar({
           el.parentNode?.replaceChild(p, el);
         });
       };
-      replaceHeadingWithParagraph('h1');
-      replaceHeadingWithParagraph('h2');
-      replaceHeadingWithParagraph('h3');
-      replaceHeadingWithParagraph('h4');
+      replaceHeadingWithParagraph("h1");
+      replaceHeadingWithParagraph("h2");
+      replaceHeadingWithParagraph("h3");
+      replaceHeadingWithParagraph("h4");
       // Process images
-      const images = Array.from(doc.querySelectorAll('img')) as HTMLImageElement[];
+      const images = Array.from(
+        doc.querySelectorAll("img")
+      ) as HTMLImageElement[];
       // Helper: fetch URL -> data URL
       const fetchToDataUrl = async (url: string): Promise<string | null> => {
         try {
-          const resp = await fetch(url, { mode: 'cors' as RequestMode });
+          const resp = await fetch(url, { mode: "cors" as RequestMode });
           if (!resp.ok) return null;
           const blob = await resp.blob();
           return await new Promise<string>((resolve, reject) => {
@@ -804,28 +850,30 @@ export function EditorToolbar({
         }
       };
       for (const img of images) {
-        const src = img.getAttribute('src') || '';
+        const src = img.getAttribute("src") || "";
         if (!src) continue;
-        if (!src.startsWith('data:')) {
+        if (!src.startsWith("data:")) {
           const dataUrl = await fetchToDataUrl(src);
           if (dataUrl) {
-            img.setAttribute('src', dataUrl);
+            img.setAttribute("src", dataUrl);
           }
         }
-        img.style.maxWidth = '100%';
-        img.style.height = 'auto';
-        img.style.display = 'block';
-        img.style.margin = '8pt 0';
+        img.style.maxWidth = "100%";
+        img.style.height = "auto";
+        img.style.display = "block";
+        img.style.margin = "8pt 0";
       }
-      const imgsPostProcess = Array.from(doc.querySelectorAll('img')) as HTMLImageElement[];
+      const imgsPostProcess = Array.from(
+        doc.querySelectorAll("img")
+      ) as HTMLImageElement[];
       for (const img of imgsPostProcess) {
-        const src = img.getAttribute('src') || '';
-        if (!src || !src.startsWith('data:')) {
+        const src = img.getAttribute("src") || "";
+        if (!src || !src.startsWith("data:")) {
           img.remove();
           continue;
         }
-        img.setAttribute('alt', '');
-        img.setAttribute('title', '');
+        img.setAttribute("alt", "");
+        img.setAttribute("title", "");
       }
       // Get processed HTML
       html = doc.body.innerHTML;
@@ -984,7 +1032,7 @@ export function EditorToolbar({
       </div>
     </body>
   </html>`;
-      
+
       downloadBlob(docHtml, "document.doc", "application/msword");
       toast.success("Word document exported successfully", {
         description: "Your document has been downloaded as .doc file.",
@@ -999,51 +1047,84 @@ export function EditorToolbar({
 
   const convertHtmlToMarkdown = (html: string): string => {
     // Normalize whitespace
-    let md = html
-      .replace(/\r\n|\r/g, "\n")
-      .replace(/\n{3,}/g, "\n\n");
+    let md = html.replace(/\r\n|\r/g, "\n").replace(/\n{3,}/g, "\n\n");
     // Headings
     md = md.replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, (_m, p1) => `# ${p1}\n\n`);
     md = md.replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, (_m, p1) => `## ${p1}\n\n`);
     md = md.replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, (_m, p1) => `### ${p1}\n\n`);
-    md = md.replace(/<h4[^>]*>([\s\S]*?)<\/h4>/gi, (_m, p1) => `#### ${p1}\n\n`);
+    md = md.replace(
+      /<h4[^>]*>([\s\S]*?)<\/h4>/gi,
+      (_m, p1) => `#### ${p1}\n\n`
+    );
     // Paragraphs and line breaks
     md = md.replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, (_m, p1) => `${p1}\n\n`);
     md = md.replace(/<br\s*\/?>/gi, "\n");
     // Strong/Emphasis/Underline
-    md = md.replace(/<(strong|b)[^>]*>([\s\S]*?)<\/(strong|b)>/gi, (_m, _t, p1) => `**${p1}**`);
-    md = md.replace(/<(em|i)[^>]*>([\s\S]*?)<\/(em|i)>/gi, (_m, _t, p1) => `_${p1}_`);
+    md = md.replace(
+      /<(strong|b)[^>]*>([\s\S]*?)<\/(strong|b)>/gi,
+      (_m, _t, p1) => `**${p1}**`
+    );
+    md = md.replace(
+      /<(em|i)[^>]*>([\s\S]*?)<\/(em|i)>/gi,
+      (_m, _t, p1) => `_${p1}_`
+    );
     md = md.replace(/<u[^>]*>([\s\S]*?)<\/u>/gi, (_m, p1) => `${p1}`);
     // Inline code
     md = md.replace(/<code[^>]*>([\s\S]*?)<\/code>/gi, (_m, p1) => `\`${p1}\``);
     // Code blocks
-    md = md.replace(/<pre[^>]*>([\s\S]*?)<\/pre>/gi, (_m, p1) => `\n\n\`\`\`\n${p1}\n\`\`\`\n\n`);
+    md = md.replace(
+      /<pre[^>]*>([\s\S]*?)<\/pre>/gi,
+      (_m, p1) => `\n\n\`\`\`\n${p1}\n\`\`\`\n\n`
+    );
     // Blockquotes
     md = md.replace(/<blockquote[^>]*>([\s\S]*?)<\/blockquote>/gi, (_m, p1) => {
       const inner = p1.replace(/\n/g, "\n> ");
       return `> ${inner}\n\n`;
     });
     // Links
-    md = md.replace(/<a[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, (_m, href, text) => `[${text}](${href})`);
+    md = md.replace(
+      /<a[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi,
+      (_m, href, text) => `[${text}](${href})`
+    );
     // Images
-    md = md.replace(/<img[^>]*alt=["']([^"']*)["'][^>]*src=["']([^"']+)["'][^>]*\/?\s*>/gi, (_m, alt, src) => `![${alt}](${src})`);
+    md = md.replace(
+      /<img[^>]*alt=["']([^"']*)["'][^>]*src=["']([^"']+)["'][^>]*\/?\s*>/gi,
+      (_m, alt, src) => `![${alt}](${src})`
+    );
     // Unordered lists
     md = md.replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (_m, p1) => {
-      const items = p1.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_m2, li) => `- ${li}\n`);
+      const items = p1.replace(
+        /<li[^>]*>([\s\S]*?)<\/li>/gi,
+        (_m2: any, li: any) => `- ${li}\n`
+      );
       return `\n${items}\n`;
     });
     // Ordered lists (numbers simplified to 1.)
     md = md.replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (_m, p1) => {
-      const items = p1.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_m2, li) => `1. ${li}\n`);
+      const items = p1.replace(
+        /<li[^>]*>([\s\S]*?)<\/li>/gi,
+        (_m2: any, li: any) => `1. ${li}\n`
+      );
       return `\n${items}\n`;
     });
     // Tables -> fallback to text rows
     md = md.replace(/<table[\s\S]*?<\/table>/gi, (tbl) => {
       const rows = tbl
-        .replace(/<thead[\s\S]*?<\/thead>/gi, (thead) => thead.replace(/<th[^>]*>([\s\S]*?)<\/th>/gi, (_m, th) => `| ${th.trim()} `) + "|\n")
+        .replace(
+          /<thead[\s\S]*?<\/thead>/gi,
+          (thead) =>
+            thead.replace(
+              /<th[^>]*>([\s\S]*?)<\/th>/gi,
+              (_m, th) => `| ${th.trim()} `
+            ) + "|\n"
+        )
         .replace(/<tbody[\s\S]*?<\/tbody>/gi, (tbody) => tbody)
         .replace(/<tr[^>]*>([\s\S]*?)<\/tr>/gi, (_m, cells) => {
-          const line = cells.replace(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi, (_m2, cell) => `| ${String(cell).trim()} `) + "|\n";
+          const line =
+            cells.replace(
+              /<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi,
+              (_m2: any, cell: any) => `| ${String(cell).trim()} `
+            ) + "|\n";
           return line;
         });
       return `\n${rows}\n`;
@@ -1066,15 +1147,16 @@ export function EditorToolbar({
     const htmlContent = editor.getHTML();
     const textContent = editor.getText().trim();
     const isDefaultContent =
-      htmlContent === "<h1>Welcome<\/h1><p>Start typing…<\/p>" ||
-      htmlContent === "<h1>Welcome<\/h1><p>Start typing...<\/p>" ||
+      htmlContent === "<h1>Welcome</h1><p>Start typing…</p>" ||
+      htmlContent === "<h1>Welcome</h1><p>Start typing...</p>" ||
       textContent === "WelcomeStart typing…" ||
       textContent === "WelcomeStart typing..." ||
       textContent.length < 5;
 
     if (editor.isEmpty || isDefaultContent) {
       toast.error("Document is empty", {
-        description: "Please add some content to the document before exporting to Markdown.",
+        description:
+          "Please add some content to the document before exporting to Markdown.",
       });
       return;
     }
@@ -1097,12 +1179,17 @@ export function EditorToolbar({
     const textContent = editor.getText().trim();
     if (!textContent || textContent.length < 1) {
       toast.error("Document is empty", {
-        description: "Please add some content to the document before exporting to Text.",
+        description:
+          "Please add some content to the document before exporting to Text.",
       });
       return;
     }
     try {
-      downloadBlob(textContent + "\n", "document.txt", "text/plain;charset=utf-8");
+      downloadBlob(
+        textContent + "\n",
+        "document.txt",
+        "text/plain;charset=utf-8"
+      );
       toast.success("Text exported successfully", {
         description: "Your document has been downloaded as .txt.",
       });
@@ -1126,24 +1213,24 @@ export function EditorToolbar({
     editor.chain().focus().setPageBreak().run();
   };
 
-  const handleLayoutChange = (mode: 'normal' | 'a4' | 'multipage') => {
+  const handleLayoutChange = (mode: "normal" | "a4" | "multipage") => {
     // Reset all modes first
     if (isPageLayout) onTogglePageLayout?.();
     if (isMultiPageMode) onToggleMultiPageMode?.();
-    
+
     // Set the desired mode
-    if (mode === 'a4') {
+    if (mode === "a4") {
       onTogglePageLayout?.();
-    } else if (mode === 'multipage') {
+    } else if (mode === "multipage") {
       onToggleMultiPageMode?.();
     }
     // 'normal' mode is already set by resetting all modes
   };
 
   const getCurrentLayoutMode = () => {
-    if (isMultiPageMode) return 'multipage';
-    if (isPageLayout) return 'a4';
-    return 'normal';
+    if (isMultiPageMode) return "multipage";
+    if (isPageLayout) return "a4";
+    return "normal";
   };
 
   const getLayoutModeLabel = () => {
@@ -1164,7 +1251,7 @@ export function EditorToolbar({
     }
 
     const selection = editor.state.selection;
-    
+
     // Check if there's a selection
     if (selection.empty) {
       // No selection, just toggle the format painter state
@@ -1184,7 +1271,7 @@ export function EditorToolbar({
     if (editor.isActive("subscript")) marks.subscript = true;
     if (editor.isActive("code")) marks.code = true;
     if (editor.isActive("link")) marks.link = editor.getAttributes("link");
-    
+
     // Get text style attributes (color, font family, font size)
     const textStyle = editor.getAttributes("textStyle");
     if (textStyle && Object.keys(textStyle).length > 0) {
@@ -1211,8 +1298,9 @@ export function EditorToolbar({
     }
 
     // Get text alignment
-    const textAlign = editor.getAttributes("paragraph")?.textAlign || 
-                     editor.getAttributes("heading")?.textAlign;
+    const textAlign =
+      editor.getAttributes("paragraph")?.textAlign ||
+      editor.getAttributes("heading")?.textAlign;
     if (textAlign) attributes.textAlign = textAlign;
 
     setCopiedFormat({ marks, attributes });
@@ -1249,12 +1337,28 @@ export function EditorToolbar({
       role="toolbar"
       aria-label="Editor toolbar"
     >
+      {/* Header/Footer indicator */}
+      {isHeaderFooterMode && (
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 rounded-md text-sm font-medium text-blue-700 dark:text-blue-300">
+          <SeparatorHorizontal
+            className={`h-4 w-4 ${
+              activeEditorType === "footer" ? "rotate-180" : ""
+            }`}
+          />
+          <span>
+            Editing {activeEditorType === "header" ? "Header" : "Footer"}
+          </span>
+        </div>
+      )}
+
       {/* Top menu bar */}
       <div className="w-full flex items-center gap-1 pb-2">
         {/* File */}
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
-            <Button variant="secondary" size="sm" title="File">File</Button>
+            <Button variant="secondary" size="sm" title="File">
+              File
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
             <DropdownMenuItem onClick={handleExportPDF}>
@@ -1283,54 +1387,79 @@ export function EditorToolbar({
         {/* View */}
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
-            <Button variant="secondary" size="sm" title="View">View</Button>
+            <Button variant="secondary" size="sm" title="View">
+              View
+            </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56 max-h-none overflow-visible">
+          <DropdownMenuContent
+            align="start"
+            className="w-56 max-h-none overflow-visible"
+          >
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
                 <Layout className="h-4 w-4 mr-2" />
                 Editor Layout
               </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent sideOffset={8} className="w-64 max-h-none overflow-visible">
+              <DropdownMenuSubContent
+                sideOffset={8}
+                className="w-64 max-h-none overflow-visible"
+              >
                 <DropdownMenuLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Editor Layout
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuRadioGroup 
-                  value={getCurrentLayoutMode()} 
-                  onValueChange={(value) => handleLayoutChange(value as 'normal' | 'a4' | 'multipage')}
+                <DropdownMenuRadioGroup
+                  value={getCurrentLayoutMode()}
+                  onValueChange={(value) =>
+                    handleLayoutChange(value as "normal" | "a4" | "multipage")
+                  }
                 >
-                  <DropdownMenuRadioItem value="normal" className="flex items-center gap-3 py-2">
+                  <DropdownMenuRadioItem
+                    value="normal"
+                    className="flex items-center gap-3 py-2"
+                  >
                     <div className="flex items-center justify-center w-8 h-8 rounded bg-gray-100 dark:bg-gray-800">
                       <Monitor className="h-4 w-4 text-gray-600" />
                     </div>
                     <div className="flex flex-col">
                       <span className="font-medium">Normal</span>
-                      <span className="text-xs text-gray-500">Full-width editor</span>
+                      <span className="text-xs text-gray-500">
+                        Full-width editor
+                      </span>
                     </div>
                   </DropdownMenuRadioItem>
-                  
-                  <DropdownMenuRadioItem value="a4" className="flex items-center gap-3 py-2">
+
+                  <DropdownMenuRadioItem
+                    value="a4"
+                    className="flex items-center gap-3 py-2"
+                  >
                     <div className="flex items-center justify-center w-8 h-8 rounded bg-gray-100 dark:bg-gray-800">
                       <Square className="h-4 w-4 text-gray-600" />
                     </div>
                     <div className="flex flex-col">
                       <span className="font-medium">A4 Layout</span>
-                      <span className="text-xs text-gray-500">Single A4 page view</span>
+                      <span className="text-xs text-gray-500">
+                        Single A4 page view
+                      </span>
                     </div>
                   </DropdownMenuRadioItem>
-                  
-                  <DropdownMenuRadioItem value="multipage" className="flex items-center gap-3 py-2">
+
+                  <DropdownMenuRadioItem
+                    value="multipage"
+                    className="flex items-center gap-3 py-2"
+                  >
                     <div className="flex items-center justify-center w-8 h-8 rounded bg-gray-100 dark:bg-gray-800">
                       <FileText className="h-4 w-4 text-gray-600" />
                     </div>
                     <div className="flex flex-col">
                       <span className="font-medium">Multi-Page</span>
-                      <span className="text-xs text-gray-500">Google Docs style with multiple pages</span>
+                      <span className="text-xs text-gray-500">
+                        Google Docs style with multiple pages
+                      </span>
                     </div>
                   </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
-                
+
                 <DropdownMenuSeparator />
                 <div className="px-2 py-1.5 text-xs text-gray-500">
                   Switch between different editor layouts to match your workflow
@@ -1344,7 +1473,10 @@ export function EditorToolbar({
                 <Monitor className="h-4 w-4 mr-2" />
                 Page Margin
               </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent sideOffset={8} className="w-64 max-h-none overflow-visible">
+              <DropdownMenuSubContent
+                sideOffset={8}
+                className="w-64 max-h-none overflow-visible"
+              >
                 <DropdownMenuLabel>Page Margin</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => onChangePageMargin?.(32)}>
@@ -1358,7 +1490,9 @@ export function EditorToolbar({
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <div className="px-3 py-2">
-                  <label className="text-xs text-muted-foreground">Custom (px)</label>
+                  <label className="text-xs text-muted-foreground">
+                    Custom (px)
+                  </label>
                   <input
                     type="number"
                     min={0}
@@ -1372,12 +1506,39 @@ export function EditorToolbar({
                 </div>
               </DropdownMenuSubContent>
             </DropdownMenuSub>
+
+            {/* Header and Footer options - show in multi-page mode and A4 layout */}
+            {(isMultiPageMode || isPageLayout) && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Page Elements
+                </DropdownMenuLabel>
+                <DropdownMenuItem onClick={onToggleHeader}>
+                  <SeparatorHorizontal className="h-4 w-4 mr-2" />
+                  {showHeader && <Check className="h-3 w-3 mr-1" />}
+                  Header
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onToggleFooter}>
+                  <SeparatorHorizontal className="h-4 w-4 mr-2 rotate-180" />
+                  {showFooter && <Check className="h-3 w-3 mr-1" />}
+                  Footer
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onTogglePageNumbers}>
+                  <Hash className="h-4 w-4 mr-2" />
+                  {showPageNumbers && <Check className="h-3 w-3 mr-1" />}
+                  Page Numbers
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
         {/* Insert */}
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
-            <Button variant="secondary" size="sm" title="Insert">Insert</Button>
+            <Button variant="secondary" size="sm" title="Insert">
+              Insert
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="start"
@@ -1385,216 +1546,300 @@ export function EditorToolbar({
             sideOffset={8}
             avoidCollisions={false}
             className="max-h-none overflow-visible"
-            style={{ overflow: 'visible', maxHeight: 'none' }}
+            style={{ overflow: "visible", maxHeight: "none" }}
           >
             <DropdownMenuItem onClick={setLink}>
               <Link className="h-4 w-4 mr-2" />
               Add/Edit Link
             </DropdownMenuItem>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <SmilePlus className="h-4 w-4 mr-2" />
-                Emoji
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent
-                sideOffset={8}
-                avoidCollisions={false}
-                className="p-0 bg-transparent text-foreground max-h-none overflow-visible border-0 shadow-none ring-0 outline-none"
-                style={{ overflow: 'visible', maxHeight: 'none', boxShadow: 'none', borderWidth: 0 }}
-              >
-                <div
-                  className="p-0 bg-white max-h-[420px] overflow-auto scrollbar-none border border-input rounded-md shadow-md"
-                  onWheelCapture={(e) => { e.stopPropagation(); }}
+
+            {/* Emoji - Disabled in header/footer mode */}
+            {!isHeaderFooterMode && (
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <SmilePlus className="h-4 w-4 mr-2" />
+                  Emoji
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent
+                  sideOffset={8}
+                  avoidCollisions={false}
+                  className="p-0 bg-transparent text-foreground max-h-none overflow-visible border-0 shadow-none ring-0 outline-none"
+                  style={{
+                    overflow: "visible",
+                    maxHeight: "none",
+                    boxShadow: "none",
+                    borderWidth: 0,
+                  }}
                 >
-                  <Picker
-                    data={data}
-                    theme="light"
-                    onEmojiSelect={addEmoji}
-                    previewPosition="none"
-                    skinTonePosition="none"
-                  />
-                </div>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <Table className="h-4 w-4 mr-2" />
-                Insert Table
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent
-                sideOffset={8}
-                avoidCollisions={false}
-                className="w-64 max-h-none overflow-visible"
-                style={{ overflow: 'visible', maxHeight: 'none' }}
-              >
-                <DropdownMenuLabel>Insert Table</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <div className="px-2 pt-2">
                   <div
-                    className="grid grid-cols-10 gap-1 select-none"
-                    onMouseLeave={() => {
-                      setTableHover({ rows: 0, cols: 0 });
-                      // revert to default placeholders when leaving without selection
-                      if (!selectedTable) {
-                        setManualTableRows("");
-                        setManualTableCols("");
-                      }
+                    className="p-0 bg-white max-h-[420px] overflow-auto scrollbar-none border border-input rounded-md shadow-md"
+                    onWheelCapture={(e) => {
+                      e.stopPropagation();
                     }}
                   >
-                    {Array.from({ length: 10 }).map((_, r) => (
-                      <React.Fragment key={r}>
-                        {Array.from({ length: 10 }).map((_, c) => {
-                          const active = selectedTable
-                            ? r < selectedTable.rows && c < selectedTable.cols
-                            : r < tableHover.rows && c < tableHover.cols;
-                          return (
-                            <button
-                              key={`${r}-${c}`}
-                              type="button"
-                              className={`h-4 w-4 border ${active ? 'bg-muted border-foreground' : 'border-input'} rounded-sm`}
-                              onMouseEnter={() => {
-                                setTableHover({ rows: r + 1, cols: c + 1 });
-                                setManualTableRows(String(r + 1));
-                                setManualTableCols(String(c + 1));
-                              }}
-                              onMouseDown={(e) => e.preventDefault()}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                // select but do not insert; inputs reflect selection
-                                setSelectedTable({ rows: r + 1, cols: c + 1 });
-                                setManualTableRows(String(r + 1));
-                                setManualTableCols(String(c + 1));
-                              }}
-                              aria-label={`Insert ${r + 1} by ${c + 1} table`}
-                            />
-                          );
-                        })}
-                      </React.Fragment>
-                    ))}
+                    <Picker
+                      data={data}
+                      theme="light"
+                      onEmojiSelect={addEmoji}
+                      previewPosition="none"
+                      skinTonePosition="none"
+                    />
                   </div>
-                  <div className="text-xs text-muted-foreground mt-2 text-center min-h-4">
-                    {tableHover.rows > 0 && tableHover.cols > 0 ? `${tableHover.rows} × ${tableHover.cols} table` : ''}
-                  </div>
-                </div>
-                <div className="px-2 pb-2 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="w-16 text-sm text-muted-foreground">Rows</span>
-                    <div className="relative w-28">
-                      <Input
-                        type="tel"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        placeholder="3"
-                        value={manualTableRows}
-                        onChange={(e) => setManualTableRows(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            insertTableWithDims(e.currentTarget.value, undefined);
-                          }
-                        }}
-                        className="h-8 w-full text-center pl-7 pr-7"
-                        autoFocus
-                      />
-                      <button
-                        type="button"
-                        className="absolute left-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 flex items-center justify-center bg-transparent text-foreground transition-none duration-0 hover:bg-transparent active:bg-transparent focus:outline-none focus-visible:ring-0 select-none"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          const n = Math.max(1, Math.min(20, (parseInt(manualTableRows, 10) || 1) - 1));
-                          setManualTableRows(String(n));
-                        }}
-                        aria-label="Decrement rows"
-                        title="Decrease rows"
-                      >
-                        -
-                      </button>
-                      <button
-                        type="button"
-                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 flex items-center justify-center bg-transparent text-foreground transition-none duration-0 hover:bg-transparent active:bg-transparent focus:outline-none focus-visible:ring-0 select-none"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          const n = Math.max(1, Math.min(20, (parseInt(manualTableRows, 10) || 1) + 1));
-                          setManualTableRows(String(n));
-                        }}
-                        aria-label="Increment rows"
-                        title="Increase rows"
-                      >
-                        +
-                      </button>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            )}
+
+            {/* Table - Disabled in header/footer mode */}
+            {!isHeaderFooterMode && (
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Table className="h-4 w-4 mr-2" />
+                  Insert Table
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent
+                  sideOffset={8}
+                  avoidCollisions={false}
+                  className="w-64 max-h-none overflow-visible"
+                  style={{ overflow: "visible", maxHeight: "none" }}
+                >
+                  <DropdownMenuLabel>Insert Table</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <div className="px-2 pt-2">
+                    <div
+                      className="grid grid-cols-10 gap-1 select-none"
+                      onMouseLeave={() => {
+                        setTableHover({ rows: 0, cols: 0 });
+                        // revert to default placeholders when leaving without selection
+                        if (!selectedTable) {
+                          setManualTableRows("");
+                          setManualTableCols("");
+                        }
+                      }}
+                    >
+                      {Array.from({ length: 10 }).map((_, r) => (
+                        <React.Fragment key={r}>
+                          {Array.from({ length: 10 }).map((_, c) => {
+                            const active = selectedTable
+                              ? r < selectedTable.rows && c < selectedTable.cols
+                              : r < tableHover.rows && c < tableHover.cols;
+                            return (
+                              <button
+                                key={`${r}-${c}`}
+                                type="button"
+                                className={`h-4 w-4 border ${
+                                  active
+                                    ? "bg-muted border-foreground"
+                                    : "border-input"
+                                } rounded-sm`}
+                                onMouseEnter={() => {
+                                  setTableHover({ rows: r + 1, cols: c + 1 });
+                                  setManualTableRows(String(r + 1));
+                                  setManualTableCols(String(c + 1));
+                                }}
+                                onMouseDown={(e) => e.preventDefault()}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  // select but do not insert; inputs reflect selection
+                                  setSelectedTable({
+                                    rows: r + 1,
+                                    cols: c + 1,
+                                  });
+                                  setManualTableRows(String(r + 1));
+                                  setManualTableCols(String(c + 1));
+                                }}
+                                aria-label={`Insert ${r + 1} by ${c + 1} table`}
+                              />
+                            );
+                          })}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-2 text-center min-h-4">
+                      {tableHover.rows > 0 && tableHover.cols > 0
+                        ? `${tableHover.rows} × ${tableHover.cols} table`
+                        : ""}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-16 text-sm text-muted-foreground">Columns</span>
-                    <div className="relative w-28">
-                      <Input
-                        type="tel"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        placeholder="3"
-                        value={manualTableCols}
-                        onChange={(e) => setManualTableCols(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
+                  <div className="px-2 pb-2 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-16 text-sm text-muted-foreground">
+                        Rows
+                      </span>
+                      <div className="relative w-28">
+                        <Input
+                          type="tel"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          placeholder="3"
+                          value={manualTableRows}
+                          onChange={(e) => setManualTableRows(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              insertTableWithDims(
+                                e.currentTarget.value,
+                                undefined
+                              );
+                            }
+                          }}
+                          className="h-8 w-full text-center pl-7 pr-7"
+                          autoFocus
+                        />
+                        <button
+                          type="button"
+                          className="absolute left-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 flex items-center justify-center bg-transparent text-foreground transition-none duration-0 hover:bg-transparent active:bg-transparent focus:outline-none focus-visible:ring-0 select-none"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={(e) => {
                             e.preventDefault();
-                            insertTableWithDims(undefined, e.currentTarget.value);
-                          }
-                        }}
-                        className="h-8 w-full text-center pl-7 pr-7"
-                      />
-                      <button
-                        type="button"
-                        className="absolute left-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 flex items-center justify-center bg-transparent text-foreground transition-none duration-0 hover:bg-transparent active:bg-transparent focus:outline-none focus-visible:ring-0 select-none"
-                        onMouseDown={(e) => e.preventDefault()}
+                            const n = Math.max(
+                              1,
+                              Math.min(
+                                20,
+                                (parseInt(manualTableRows, 10) || 1) - 1
+                              )
+                            );
+                            setManualTableRows(String(n));
+                          }}
+                          aria-label="Decrement rows"
+                          title="Decrease rows"
+                        >
+                          -
+                        </button>
+                        <button
+                          type="button"
+                          className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 flex items-center justify-center bg-transparent text-foreground transition-none duration-0 hover:bg-transparent active:bg-transparent focus:outline-none focus-visible:ring-0 select-none"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const n = Math.max(
+                              1,
+                              Math.min(
+                                20,
+                                (parseInt(manualTableRows, 10) || 1) + 1
+                              )
+                            );
+                            setManualTableRows(String(n));
+                          }}
+                          aria-label="Increment rows"
+                          title="Increase rows"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-16 text-sm text-muted-foreground">
+                        Columns
+                      </span>
+                      <div className="relative w-28">
+                        <Input
+                          type="tel"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          placeholder="3"
+                          value={manualTableCols}
+                          onChange={(e) => setManualTableCols(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              insertTableWithDims(
+                                undefined,
+                                e.currentTarget.value
+                              );
+                            }
+                          }}
+                          className="h-8 w-full text-center pl-7 pr-7"
+                        />
+                        <button
+                          type="button"
+                          className="absolute left-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 flex items-center justify-center bg-transparent text-foreground transition-none duration-0 hover:bg-transparent active:bg-transparent focus:outline-none focus-visible:ring-0 select-none"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const n = Math.max(
+                              1,
+                              Math.min(
+                                20,
+                                (parseInt(manualTableCols, 10) || 1) - 1
+                              )
+                            );
+                            setManualTableCols(String(n));
+                          }}
+                          aria-label="Decrement columns"
+                          title="Decrease columns"
+                        >
+                          -
+                        </button>
+                        <button
+                          type="button"
+                          className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 flex items-center justify-center bg-transparent text-foreground transition-none duration-0 hover:bg-transparent active:bg-transparent focus:outline-none focus-visible:ring-0 select-none"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const n = Math.max(
+                              1,
+                              Math.min(
+                                20,
+                                (parseInt(manualTableCols, 10) || 1) + 1
+                              )
+                            );
+                            setManualTableCols(String(n));
+                          }}
+                          aria-label="Increment columns"
+                          title="Increase columns"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
                         onClick={(e) => {
                           e.preventDefault();
-                          const n = Math.max(1, Math.min(20, (parseInt(manualTableCols, 10) || 1) - 1));
-                          setManualTableCols(String(n));
+                          insertTableWithDims();
                         }}
-                        aria-label="Decrement columns"
-                        title="Decrease columns"
                       >
-                        -
-                      </button>
-                      <button
-                        type="button"
-                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 flex items-center justify-center bg-transparent text-foreground transition-none duration-0 hover:bg-transparent active:bg-transparent focus:outline-none focus-visible:ring-0 select-none"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          const n = Math.max(1, Math.min(20, (parseInt(manualTableCols, 10) || 1) + 1));
-                          setManualTableCols(String(n));
+                        Insert
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => {
+                          setManualTableRows("");
+                          setManualTableCols("");
+                          setTableHover({ rows: 0, cols: 0 });
                         }}
-                        aria-label="Increment columns"
-                        title="Increase columns"
                       >
-                        +
-                      </button>
+                        Reset
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button size="sm" onClick={(e) => { e.preventDefault(); insertTableWithDims(); }}>Insert</Button>
-                    <Button size="sm" variant="secondary" onClick={() => { setManualTableRows(""); setManualTableCols(""); setTableHover({ rows: 0, cols: 0 }); }}>Reset</Button>
-                  </div>
-                </div>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-            <DropdownMenuItem onClick={insertPageBreak}>
-              <FileX className="h-4 w-4 mr-2" />
-              Page Break
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleImageUpload}>
-              <Image className="h-4 w-4 mr-2" />
-              Image
-            </DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            )}
+
+            {/* Page Break and Image - Disabled in header/footer mode */}
+            {!isHeaderFooterMode && (
+              <>
+                <DropdownMenuItem onClick={insertPageBreak}>
+                  <FileX className="h-4 w-4 mr-2" />
+                  Page Break
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleImageUpload}>
+                  <Image className="h-4 w-4 mr-2" />
+                  Image
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
         {/* Tools */}
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
-            <Button variant="secondary" size="sm" title="Tools">Tools</Button>
+            <Button variant="secondary" size="sm" title="Tools">
+              Tools
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
             <DropdownMenuItem onClick={() => setIsFindReplaceOpen(true)}>
@@ -1608,7 +1853,9 @@ export function EditorToolbar({
         {isTableActive && (
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
-              <Button variant="secondary" size="sm" title="Table">Table</Button>
+              <Button variant="secondary" size="sm" title="Table">
+                Table
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
               <DropdownMenuLabel>Table Options</DropdownMenuLabel>
@@ -1645,14 +1892,24 @@ export function EditorToolbar({
 
               <DropdownMenuSeparator />
               <DropdownMenuLabel>Cells</DropdownMenuLabel>
-              <DropdownMenuItem onClick={mergeCells}>Merge Cells</DropdownMenuItem>
-              <DropdownMenuItem onClick={splitCell}>Split Cell</DropdownMenuItem>
+              <DropdownMenuItem onClick={mergeCells}>
+                Merge Cells
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={splitCell}>
+                Split Cell
+              </DropdownMenuItem>
 
               <DropdownMenuSeparator />
               <DropdownMenuLabel>Headers</DropdownMenuLabel>
-              <DropdownMenuItem onClick={toggleHeaderRow}>Toggle Header Row</DropdownMenuItem>
-              <DropdownMenuItem onClick={toggleHeaderColumn}>Toggle Header Column</DropdownMenuItem>
-              <DropdownMenuItem onClick={toggleHeaderCell}>Toggle Header Cell</DropdownMenuItem>
+              <DropdownMenuItem onClick={toggleHeaderRow}>
+                Toggle Header Row
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={toggleHeaderColumn}>
+                Toggle Header Column
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={toggleHeaderCell}>
+                Toggle Header Cell
+              </DropdownMenuItem>
 
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={deleteTable} className="text-red-600">
@@ -1664,34 +1921,34 @@ export function EditorToolbar({
         )}
       </div>
 
-      {/* Headings */}
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="secondary"
-            size="sm"
-            aria-label="Heading"
-            title="Heading"
-          >
-            <HeadingIcon className="h-4 w-4" />
-            <span className="sr-only">Headings</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          <DropdownMenuLabel>Headings</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {headingOptions.map((opt) => (
-            <DropdownMenuItem
-              key={opt.label}
-              onClick={() => setHeading(opt.level, opt.size)}
+      {/* Headings - Disabled in header/footer mode */}
+      {!isHeaderFooterMode && (
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="secondary"
+              size="sm"
+              aria-label="Heading"
+              title="Heading"
             >
-              <span style={{ fontSize: `${opt.size}px` }}>
-                {opt.label}
-              </span>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+              <HeadingIcon className="h-4 w-4" />
+              <span className="sr-only">Headings</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuLabel>Headings</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {headingOptions.map((opt) => (
+              <DropdownMenuItem
+                key={opt.label}
+                onClick={() => setHeading(opt.level, opt.size)}
+              >
+                <span style={{ fontSize: `${opt.size}px` }}>{opt.label}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
 
       {/* Font size */}
       <DropdownMenu modal={false}>
@@ -1717,8 +1974,8 @@ export function EditorToolbar({
               value={manualFontSize}
               onChange={(e) => setManualFontSize(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  const raw = (manualFontSize || '').trim();
+                if (e.key === "Enter") {
+                  const raw = (manualFontSize || "").trim();
                   const n = Math.max(8, Math.min(200, parseInt(raw, 10)));
                   if (!Number.isNaN(n)) setFontSize(`${n}px`);
                 }
@@ -1728,7 +1985,7 @@ export function EditorToolbar({
             <Button
               size="sm"
               onClick={() => {
-                const raw = (manualFontSize || '').trim();
+                const raw = (manualFontSize || "").trim();
                 const n = Math.max(8, Math.min(200, parseInt(raw, 10)));
                 if (!Number.isNaN(n)) setFontSize(`${n}px`);
               }}
@@ -1890,8 +2147,10 @@ export function EditorToolbar({
           size="sm"
           variant={editor.isActive("superscript") ? "default" : "secondary"}
           onClick={() => {
-            editor.chain().focus().unsetSubscript().run()
-            editor.chain().focus().toggleSuperscript().run()
+            if (editor.isActive("subscript")) {
+              editor.chain().focus().toggleSubscript().run();
+            }
+            editor.chain().focus().toggleSuperscript().run();
           }}
           aria-pressed={editor.isActive("superscript")}
           aria-label="Superscript"
@@ -1903,8 +2162,10 @@ export function EditorToolbar({
           size="sm"
           variant={editor.isActive("subscript") ? "default" : "secondary"}
           onClick={() => {
-            editor.chain().focus().unsetSuperscript().run()
-            editor.chain().focus().toggleSubscript().run()
+            if (editor.isActive("superscript")) {
+              editor.chain().focus().toggleSuperscript().run();
+            }
+            editor.chain().focus().toggleSubscript().run();
           }}
           aria-pressed={editor.isActive("subscript")}
           aria-label="Subscript"
@@ -1922,7 +2183,11 @@ export function EditorToolbar({
           onClick={toggleFormatPainter}
           aria-label="Format Painter"
           title="Copy formatting from one text and apply to another (like MS Word)"
-          className={isFormatPainterActive ? "bg-blue-100 border-blue-300 text-blue-700" : ""}
+          className={
+            isFormatPainterActive
+              ? "bg-blue-100 border-blue-300 text-blue-700"
+              : ""
+          }
         >
           <PaintRoller className="h-4 w-4" />
         </Button>
@@ -1938,91 +2203,91 @@ export function EditorToolbar({
         </Button>
       </div>
 
-      {/* Content blocks */}
-      <div className="flex items-center gap-2">
-        <Button
-          size="sm"
-          variant={editor.isActive("blockquote") ? "default" : "secondary"}
-          onClick={toggleBlockquote}
-          aria-pressed={editor.isActive("blockquote")}
-          aria-label="Blockquote"
-          title="Blockquote"
-        >
-          <Quote className="h-4 w-4" />
-        </Button>
-        <Button
-          size="sm"
-          variant={editor.isActive("code") ? "default" : "secondary"}
-          onClick={toggleCode}
-          aria-pressed={editor.isActive("code")}
-          aria-label="Inline code"
-          title="Inline code"
-        >
-          <Code className="h-4 w-4" />
-        </Button>
-        <Button
-          size="sm"
-          variant={editor.isActive("codeBlock") ? "default" : "secondary"}
-          onClick={toggleCodeBlock}
-          aria-pressed={editor.isActive("codeBlock")}
-          aria-label="Code block"
-          title="Code block"
-        >
-          <CodeXml className="h-4 w-4" />
-        </Button>
-      </div>
+      {/* Content blocks - Disabled in header/footer mode */}
+      {!isHeaderFooterMode && (
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant={editor.isActive("blockquote") ? "default" : "secondary"}
+            onClick={toggleBlockquote}
+            aria-pressed={editor.isActive("blockquote")}
+            aria-label="Blockquote"
+            title="Blockquote"
+          >
+            <Quote className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant={editor.isActive("code") ? "default" : "secondary"}
+            onClick={toggleCode}
+            aria-pressed={editor.isActive("code")}
+            aria-label="Inline code"
+            title="Inline code"
+          >
+            <Code className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant={editor.isActive("codeBlock") ? "default" : "secondary"}
+            onClick={toggleCodeBlock}
+            aria-pressed={editor.isActive("codeBlock")}
+            aria-label="Code block"
+            title="Code block"
+          >
+            <CodeXml className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
-      
+      {/* Lists - Disabled in header/footer mode */}
+      {!isHeaderFooterMode && (
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant={editor.isActive("bulletList") ? "default" : "secondary"}
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            aria-pressed={editor.isActive("bulletList")}
+            aria-label="Bullet list"
+            title="Bullet list"
+          >
+            <ListIcon className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant={editor.isActive("orderedList") ? "default" : "secondary"}
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            aria-pressed={editor.isActive("orderedList")}
+            aria-label="Ordered list"
+            title="Ordered list"
+          >
+            <ListOrderedIcon className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
-      
-
-      {/* Lists */}
-      <div className="flex items-center gap-2">
-        <Button
-          size="sm"
-          variant={editor.isActive("bulletList") ? "default" : "secondary"}
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          aria-pressed={editor.isActive("bulletList")}
-          aria-label="Bullet list"
-          title="Bullet list"
-        >
-          <ListIcon className="h-4 w-4" />
-        </Button>
-        <Button
-          size="sm"
-          variant={editor.isActive("orderedList") ? "default" : "secondary"}
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          aria-pressed={editor.isActive("orderedList")}
-          aria-label="Ordered list"
-          title="Ordered list"
-        >
-          <ListOrderedIcon className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Indentation */}
-      <div className="flex items-center gap-2">
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={indent}
-          aria-label="Increase indent"
-          title="Increase indent"
-        >
-          <IndentIncrease className="h-4 w-4" />
-        </Button>
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={outdent}
-          aria-label="Decrease indent"
-          title="Decrease indent"
-        >
-          <IndentDecrease className="h-4 w-4" />
-        </Button>
-      </div>
-
-      
+      {/* Indentation - Disabled in header/footer mode */}
+      {!isHeaderFooterMode && (
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={indent}
+            aria-label="Increase indent"
+            title="Increase indent"
+          >
+            <IndentIncrease className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={outdent}
+            aria-label="Decrease indent"
+            title="Decrease indent"
+          >
+            <IndentDecrease className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
       {/* Colors */}
       {/* Colors */}
@@ -2045,15 +2310,18 @@ export function EditorToolbar({
               style={{ backgroundColor: activeTextColor }}
             ></span>
           </button>
-          {
-            showTextColorPicker&&(
-              <div className="absolute top-10 left-0 z-10">
-                <CustomColorPicker value={activeTextColor} onChange={(newColor) => {setTextColor(newColor); setActiveTextColor(newColor);}}/>
-              </div>
-            )
-          }
+          {showTextColorPicker && (
+            <div className="absolute top-10 left-0 z-10">
+              <CustomColorPicker
+                value={activeTextColor}
+                onChange={(newColor) => {
+                  setTextColor(newColor);
+                  setActiveTextColor(newColor);
+                }}
+              />
+            </div>
+          )}
         </div>
-        
 
         <label
           className="text-xs text-muted-foreground flex items-center gap-1"
@@ -2073,28 +2341,29 @@ export function EditorToolbar({
               style={{ backgroundColor: activeBGColor }}
             ></span>
           </button>
-          {
-            showBGColorPicker&&(
-              <div className="absolute top-10 left-0 z-10">
-                <CustomColorPicker
-                  value={activeBGColor} 
-                  onChange={(newColor) => {setBackgroundColor(newColor); setActiveBGColor(newColor);}}
-                  children={
-                      <button
-                        type="button"
-                        onClick={removeBackgroundColor}
-                        className="w-full p-1.5 mt-1.5 cursor-pointer rounded border text-sm border-gray-200 dark:border-gray-700 dark:hover:bg-gray-600 hover:bg-gray-300"
-                        aria-label="Remove highlight"
-                        title="Remove highlight"
-                      >
-                        {/* You can replace this emoji with an icon component */}
-                        🚫 Clear Background color
-                      </button>
-                  }
-                />
-              </div>
-            )
-          }
+          {showBGColorPicker && (
+            <div className="absolute top-10 left-0 z-10">
+              <CustomColorPicker
+                value={activeBGColor}
+                onChange={(newColor) => {
+                  setBackgroundColor(newColor);
+                  setActiveBGColor(newColor);
+                }}
+                children={
+                  <button
+                    type="button"
+                    onClick={removeBackgroundColor}
+                    className="w-full p-1.5 mt-1.5 cursor-pointer rounded border text-sm border-gray-200 dark:border-gray-700 dark:hover:bg-gray-600 hover:bg-gray-300"
+                    aria-label="Remove highlight"
+                    title="Remove highlight"
+                  >
+                    {/* You can replace this emoji with an icon component */}
+                    🚫 Clear Background color
+                  </button>
+                }
+              />
+            </div>
+          )}
         </div>
 
         {/* ✨ ADD THIS BUTTON
@@ -2108,9 +2377,6 @@ export function EditorToolbar({
           🚫
         </button> */}
       </div>
-
-
-      
 
       {/* Clear content */}
       <div className="flex items-center gap-2">
