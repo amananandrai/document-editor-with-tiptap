@@ -45,7 +45,7 @@ export function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 shadow-lg">
+    <nav className="sticky top-0 z-50 w-full bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 shadow-lg">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-1">
         <div className="flex h-16 items-center justify-between">
           {/* Logo and Brand */}
