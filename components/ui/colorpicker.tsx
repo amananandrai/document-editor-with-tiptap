@@ -19,8 +19,10 @@ export default function CustomColorPicker({ value, onChange, children }: CustomC
 
   // Handler for color picker changes
   const handleChange = (color: any) => {
-    setColor(color.hex);
-    onChange(color.hex);
+    const { r, g, b, a } = color.rgb;
+    const rgbaColor = `rgba(${r}, ${g}, ${b}, ${a})`;
+    setColor(rgbaColor);
+    onChange(rgbaColor);
   };
 
   return (
