@@ -192,9 +192,12 @@ export function PageManagerProvider({
   React.useEffect(() => {
     if (editor && currentPage) {
       // Small delay to ensure editor is ready
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         editor.commands.setContent(currentPage.content);
       }, 50);
+      
+      // Cleanup: Cancel timeout if page changes again before timeout executes
+      return () => clearTimeout(timeoutId);
     }
   }, [currentPageIndex]); // Only depend on currentPageIndex, not currentPage object
 
