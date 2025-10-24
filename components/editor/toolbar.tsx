@@ -2077,18 +2077,22 @@ export function EditorToolbar({
             showBGColorPicker&&(
               <div className="absolute top-10 left-0 z-10">
                 <CustomColorPicker
-                  value={activeBGColor} 
+                  value={activeBGColor}
                   onChange={(newColor) => {setBackgroundColor(newColor); setActiveBGColor(newColor);}}
                   children={
                       <button
                         type="button"
-                        onClick={removeBackgroundColor}
-                        className="w-full p-1.5 mt-1.5 cursor-pointer rounded border text-sm border-gray-200 dark:border-gray-700 dark:hover:bg-gray-600 hover:bg-gray-300"
+                        onClick={() => {
+                          const transparentColor = 'rgba(0, 0, 0, 0)';
+                          setBackgroundColor(transparentColor);
+                          setActiveBGColor(transparentColor);
+                          removeBackgroundColor();
+                        }}
+                        className="w-full p-1.5 mt-1.5 cursor-pointer rounded border text-sm border-gray-200 dark:border-gray-700 dark:hover:bg-gray-600 hover:bg-gray-300 flex items-center justify-center gap-1"
                         aria-label="Remove highlight"
                         title="Remove highlight"
                       >
-                        {/* You can replace this emoji with an icon component */}
-                        🚫 Clear Background color
+                        🚫 Clear
                       </button>
                   }
                 />
