@@ -18,7 +18,7 @@ export const features = [
     icon: <Zap size={35} />,
     title: "Fast & Intuitive",
     description:
-      "Lightning-fast interactions, smart keyboard shortcuts, and smooth animations.",
+      "Lightning-fast, keyboard-smart, and smoothly animated.",
   },
   {
     icon: <FileText size={35} />,
