@@ -1,4 +1,9 @@
 "use client";
+import {
+  debounce,
+  loadEditorState,
+  saveEditorState,
+} from "@/lib/local-storage";
 import { cn } from "@/lib/utils";
 import Blockquote from "@tiptap/extension-blockquote";
 import Code from "@tiptap/extension-code";
@@ -138,7 +143,7 @@ function RichEditorContent({
           isMultiPageMode={isMultiPageMode}
           onToggleMultiPageMode={toggleMultiPageMode}
           pageMargin={pageMargin}
-          onChangePageMargin={(m: number) => setPageMargin(m)}
+          onChangePageMargin={setPageMargin}
           showHeader={pageManager?.showHeader || false}
           showFooter={pageManager?.showFooter || false}
           showPageNumbers={pageManager?.showPageNumbers || false}
@@ -291,19 +296,42 @@ function RichEditorContent({
 }
 
 export function RichEditor() {
-  const [isPageLayout, setIsPageLayout] = useState(false);
-  const [isMultiPageMode, setIsMultiPageMode] = useState(false);
+  // Load saved state from localStorage on mount
+  const [isPageLayout, setIsPageLayout] = useState(() => {
+    const saved = loadEditorState();
+    return saved?.isPageLayout ?? false;
+  });
+  const [isMultiPageMode, setIsMultiPageMode] = useState(() => {
+    const saved = loadEditorState();
+    return saved?.isMultiPageMode ?? false;
+  });
   // page margin in pixels (applies as padding inside page container)
-  const [pageMargin, setPageMargin] = useState<number>(64); // default: 64px (p-16)
+  const [pageMargin, setPageMargin] = useState<number>(() => {
+    const saved = loadEditorState();
+    return saved?.pageMargin ?? 64; // default: 64px (p-16)
+  });
 
   const [items, setItems] = useState<TableOfContentDataItem[]>([]);
 
   const togglePageLayout = () => {
-    setIsPageLayout(!isPageLayout);
+    setIsPageLayout((prev) => {
+      const newValue = !prev;
+      saveEditorState({ isPageLayout: newValue });
+      return newValue;
+    });
   };
 
   const toggleMultiPageMode = () => {
-    setIsMultiPageMode(!isMultiPageMode);
+    setIsMultiPageMode((prev) => {
+      const newValue = !prev;
+      saveEditorState({ isMultiPageMode: newValue });
+      return newValue;
+    });
+  };
+
+  const handlePageMarginChange = (m: number) => {
+    setPageMargin(m);
+    saveEditorState({ pageMargin: m });
   };
 
   const editor = useEditor({
@@ -405,7 +433,30 @@ export function RichEditor() {
       },
     },
     content: `<h1>Welcome</h1><p>Start typing…</p>`,
+    onCreate: ({ editor }) => {
+      // Load saved content on editor creation
+      const saved = loadEditorState();
+      if (saved?.content) {
+        editor.commands.setContent(saved.content);
+      }
+    },
   });
+
+  // Auto-save editor content to localStorage with debouncing
+  useEffect(() => {
+    if (!editor) return;
+
+    const debouncedSave = debounce(() => {
+      const content = editor.getHTML();
+      saveEditorState({ content });
+    }, 1000); // Save 1 second after user stops typing
+
+    editor.on("update", debouncedSave);
+
+    return () => {
+      editor.off("update", debouncedSave);
+    };
+  }, [editor]);
 
   // Image upload functionality
   const { handleDrop, handleDragOver, handleDragLeave, handlePaste } =
@@ -445,7 +496,7 @@ export function RichEditor() {
         isMultiPageMode={isMultiPageMode}
         toggleMultiPageMode={toggleMultiPageMode}
         pageMargin={pageMargin}
-        setPageMargin={setPageMargin}
+        setPageMargin={handlePageMarginChange}
         items={items}
         handleItemClick={handleItemClick}
         handleDrop={handleDrop}
@@ -462,7 +513,7 @@ export function RichEditor() {
       isMultiPageMode={isMultiPageMode}
       toggleMultiPageMode={toggleMultiPageMode}
       pageMargin={pageMargin}
-      setPageMargin={setPageMargin}
+      setPageMargin={handlePageMarginChange}
       items={items}
       handleItemClick={handleItemClick}
       handleDrop={handleDrop}
