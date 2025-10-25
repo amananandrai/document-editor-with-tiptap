@@ -25,6 +25,7 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import React, { useCallback, useEffect, useState } from "react";
 import { A4PageLayout } from "./a4-page-layout";
+import { useFocusMode } from "@/components/focus-mode-context"; // 1. Import the hook
 import { HeaderFooterEditor } from "./header-footer";
 import { ImageResize } from "./image-extension";
 import { MultiPageEditor } from "./multi-page-editor";
@@ -298,6 +299,16 @@ export function RichEditor() {
 
   const [items, setItems] = useState<TableOfContentDataItem[]>([]);
 
+  // ✅ 2. Safely get focus mode state
+  let isFocusMode = false;
+  try {
+    const focus = useFocusMode();
+    isFocusMode = focus.isFocusMode;
+  } catch (error) {
+    // FocusModeProvider not found, default to false
+    // This is safe and prevents errors if the editor is used elsewhere
+  }
+
   const togglePageLayout = () => {
     setIsPageLayout(!isPageLayout);
   };
@@ -436,6 +447,111 @@ export function RichEditor() {
     }
   };
 
+  return (
+    <div className="flex flex-col">
+      <div className="sticky top-0 z-40 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+        <EditorToolbar
+          editor={editor}
+          isPageLayout={isPageLayout}
+          onTogglePageLayout={togglePageLayout}
+          isMultiPageMode={isMultiPageMode}
+          onToggleMultiPageMode={toggleMultiPageMode}
+          pageMargin={pageMargin}
+          onChangePageMargin={(m: number) => setPageMargin(m)}
+        />
+      </div>
+
+      {/* sidebar + editor) */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Table of Contents Sidebar */}
+        <aside className="flex-none w-64 border-r border-gray-200 dark:border-gray-700 dark:bg-slate-900 overflow-y-auto p-4 z-10">
+          <h2 className="text-lg font-semibold mb-4 dark:text-gray-100">
+            Table of Contents
+          </h2>
+          <div>
+            <ul className="space-y-1">
+              {items.length > 0 ? (
+                items.map((item) => (
+                  <li key={item.id}>
+                    <a
+                      href={`#${item.id}`} // functional link
+                      onClick={(e) => handleItemClick(e, item.id)}
+                      style={{ paddingLeft: `${item.level * 1}rem` }}
+                      // highlight the current section
+                      className={`
+                        block w-full rounded-md px-2 py-2 text-sm
+                        hover:bg-gray-100 dark:hover:bg-gray-800
+                        dark:text-gray-300 dark:hover:text-white
+                      `}
+                    >
+                      {item.textContent}
+                    </a>
+                  </li>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  No headings found.
+                </p>
+              )}
+            </ul>
+          </div>
+        </aside>
+
+        {/* Editor */}
+        <main className="flex-1 overflow-auto bg-white">
+          {isMultiPageMode ? (
+            <PageManagerProvider editor={editor}>
+              <MultiPageEditor
+                editor={editor}
+                pageMargin={pageMargin}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onPaste={handlePaste}
+              />
+            </PageManagerProvider>
+          ) : isPageLayout ? (
+            <A4PageLayout pageMargin={pageMargin}>
+              <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onPaste={handlePaste}
+              >
+                <EditorContent editor={editor} />
+              </div>
+            </A4PageLayout>
+          ) : (
+            <div
+              className="w-full h-full mx-auto bg-white"
+              style={{ padding: `${pageMargin}px` }}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onPaste={handlePaste}
+            >
+              <EditorContent editor={editor} />
+            </div>
+          )}
+        </main>
+      </div>
+      {/* Status bar */}
+      <StatusBar editor={editor} />
+
+      {/* ✅ 3. Conditionally render the "Help text" div */}
+      {!isFocusMode && (
+        <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-8 py-4">
+          <p className="text-sm text-gray-600 dark:text-gray-300 text-center">
+            💡 <strong>Pro Tips:</strong> Use Ctrl/Cmd + B/I/U for quick
+            formatting • Ctrl/Cmd + S to save • Right-click for context menu • Use
+            Tab/Shift+Tab for indentation • Insert tables, blockquotes, code
+            blocks, and links • Create multilevel nested lists with proper
+            indentation • Drag & drop images or use the image button to upload •
+            Click images to resize with corner handles or remove them
+          </p>
+        </div>
+      )}
+    </div>
   return isMultiPageMode || isPageLayout ? (
     <PageManagerProvider editor={editor}>
       <RichEditorContent
