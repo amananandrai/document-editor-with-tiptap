@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  debounce,
+  loadPageManagerState,
+  savePageManagerState,
+} from "@/lib/local-storage";
 import type { Editor } from "@tiptap/react";
 import React, { createContext, useCallback, useContext, useState } from "react";
 
@@ -62,24 +67,58 @@ export function PageManagerProvider({
   children,
   editor,
 }: PageManagerProviderProps) {
-  const [pages, setPages] = useState<Page[]>([
-    {
-      id: "page-1",
-      content: "<h1>Welcome</h1><p>Start typing your document...</p>",
-      title: "Page 1",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  ]);
-  const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  // Load saved state from localStorage or use defaults
+  const [pages, setPages] = useState<Page[]>(() => {
+    const saved = loadPageManagerState();
+    if (saved?.pages && saved.pages.length > 0) {
+      // Convert date strings back to Date objects
+      return saved.pages.map((p) => ({
+        ...p,
+        createdAt: new Date(p.createdAt),
+        updatedAt: new Date(p.updatedAt),
+      }));
+    }
+    return [
+      {
+        id: "page-1",
+        content: "<h1>Welcome</h1><p>Start typing your document...</p>",
+        title: "Page 1",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
+  });
+
+  const [currentPageIndex, setCurrentPageIndex] = useState(() => {
+    const saved = loadPageManagerState();
+    return saved?.currentPageIndex ?? 0;
+  });
 
   // Global header and footer content (shared across all pages)
-  const [headerContent, setHeaderContent] = useState("");
-  const [footerContent, setFooterContent] = useState("");
+  const [headerContent, setHeaderContent] = useState(() => {
+    const saved = loadPageManagerState();
+    return saved?.headerContent ?? "";
+  });
 
-  const [showHeader, setShowHeader] = useState(false);
-  const [showFooter, setShowFooter] = useState(false);
-  const [showPageNumbers, setShowPageNumbers] = useState(false);
+  const [footerContent, setFooterContent] = useState(() => {
+    const saved = loadPageManagerState();
+    return saved?.footerContent ?? "";
+  });
+
+  const [showHeader, setShowHeader] = useState(() => {
+    const saved = loadPageManagerState();
+    return saved?.showHeader ?? false;
+  });
+
+  const [showFooter, setShowFooter] = useState(() => {
+    const saved = loadPageManagerState();
+    return saved?.showFooter ?? false;
+  });
+
+  const [showPageNumbers, setShowPageNumbers] = useState(() => {
+    const saved = loadPageManagerState();
+    return saved?.showPageNumbers ?? false;
+  });
 
   // Active editor tracking
   const [activeEditor, setActiveEditorState] = useState<Editor | null>(null);
@@ -137,22 +176,36 @@ export function PageManagerProvider({
   // Global header and footer update functions
   const updateHeaderContent = useCallback((content: string) => {
     setHeaderContent(content);
+    savePageManagerState({ headerContent: content });
   }, []);
 
   const updateFooterContent = useCallback((content: string) => {
     setFooterContent(content);
+    savePageManagerState({ footerContent: content });
   }, []);
 
   const toggleHeader = useCallback(() => {
-    setShowHeader((prev) => !prev);
+    setShowHeader((prev) => {
+      const newValue = !prev;
+      savePageManagerState({ showHeader: newValue });
+      return newValue;
+    });
   }, []);
 
   const toggleFooter = useCallback(() => {
-    setShowFooter((prev) => !prev);
+    setShowFooter((prev) => {
+      const newValue = !prev;
+      savePageManagerState({ showFooter: newValue });
+      return newValue;
+    });
   }, []);
 
   const togglePageNumbers = useCallback(() => {
-    setShowPageNumbers((prev) => !prev);
+    setShowPageNumbers((prev) => {
+      const newValue = !prev;
+      savePageManagerState({ showPageNumbers: newValue });
+      return newValue;
+    });
   }, []);
 
   const setActiveEditor = useCallback(
@@ -167,6 +220,7 @@ export function PageManagerProvider({
     (index: number) => {
       if (index >= 0 && index < pages.length) {
         setCurrentPageIndex(index);
+        savePageManagerState({ currentPageIndex: index });
       }
     },
     [pages.length]
@@ -174,19 +228,38 @@ export function PageManagerProvider({
 
   const nextPage = useCallback(() => {
     if (currentPageIndex < pages.length - 1) {
-      setCurrentPageIndex((prev: number) => prev + 1);
+      const newIndex = currentPageIndex + 1;
+      setCurrentPageIndex(newIndex);
+      savePageManagerState({ currentPageIndex: newIndex });
     }
   }, [currentPageIndex, pages.length]);
 
   const prevPage = useCallback(() => {
     if (currentPageIndex > 0) {
-      setCurrentPageIndex((prev: number) => prev - 1);
+      const newIndex = currentPageIndex - 1;
+      setCurrentPageIndex(newIndex);
+      savePageManagerState({ currentPageIndex: newIndex });
     }
   }, [currentPageIndex]);
 
   const canGoNext = currentPageIndex < pages.length - 1;
   const canGoPrev = currentPageIndex > 0;
   const currentPage = pages[currentPageIndex] || null;
+
+  // Save pages to localStorage whenever they change (debounced)
+  React.useEffect(() => {
+    const debouncedSave = debounce(() => {
+      savePageManagerState({
+        pages: pages.map((p) => ({
+          ...p,
+          createdAt: p.createdAt.toISOString(),
+          updatedAt: p.updatedAt.toISOString(),
+        })),
+      });
+    }, 500);
+
+    debouncedSave();
+  }, [pages]);
 
   // Update editor content when page changes
   React.useEffect(() => {
@@ -195,7 +268,7 @@ export function PageManagerProvider({
       const timeoutId = setTimeout(() => {
         editor.commands.setContent(currentPage.content);
       }, 50);
-      
+
       // Cleanup: Cancel timeout if page changes again before timeout executes
       return () => clearTimeout(timeoutId);
     }
