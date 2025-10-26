@@ -25,7 +25,7 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import React, { useCallback, useEffect, useState } from "react";
 import { A4PageLayout } from "./a4-page-layout";
-// import { useFocusMode } from "@/components/focus-mode-context"; // 1. REMOVED: Hook is now used in parent RichEditor
+import { useFocusMode } from "@/components/focus-mode-context"; // 1. Import hook in parent
 import { HeaderFooterEditor } from "./header-footer";
 import { ImageResize } from "./image-extension";
 import { MultiPageEditor } from "./multi-page-editor";
@@ -205,7 +205,7 @@ function RichEditorContent({
               header={
                 pageManager?.showHeader || pageManager?.showPageNumbers ? (
                   <HeaderFooterEditor
-                    headerContent={pageManager?.headerContent || ""}
+          D           headerContent={pageManager?.headerContent || ""}
                     footerContent=""
                     onHeaderChange={
                       pageManager?.updateHeaderContent || (() => {})
@@ -219,26 +219,26 @@ function RichEditorContent({
                     onFooterEditorReady={handleFooterEditorReady}
                     onHeaderFocus={handleHeaderFocus}
                     onFooterFocus={handleFooterFocus}
-                    onHeaderBlur={handleHeaderBlur}
+S                   onHeaderBlur={handleHeaderBlur}
                     onFooterBlur={handleFooterBlur}
                   />
                 ) : undefined
               }
               footer={
                 pageManager?.showFooter ||
-                (pageManager?.showPageNumbers && !pageManager?.showHeader) ? (
+content.                 (pageManager?.showPageNumbers && !pageManager?.showHeader) ? (
                   <HeaderFooterEditor
                     headerContent=""
                     footerContent={pageManager?.footerContent || ""}
                     onHeaderChange={() => {}}
                     onFooterChange={
-                      pageManager?.updateFooterContent || (() => {})
+    TA                 pageManager?.updateFooterContent || (() => {})
                     }
                     showHeader={false}
-                    showFooter={pageManager?.showFooter || false}
+s                   showFooter={pageManager?.showFooter || false}
                     showPageNumbers={
                       (pageManager?.showPageNumbers &&
-                        !pageManager?.showHeader) ||
+s                       !pageManager?.showHeader) ||
                       false
                     }
                     pageNumber={1}
@@ -247,17 +247,16 @@ function RichEditorContent({
                     onHeaderFocus={handleHeaderFocus}
                     onFooterFocus={handleFooterFocus}
                     onHeaderBlur={handleHeaderBlur}
-                    onFooterBlur={handleFooterBlur}
+    Two             onFooterBlur={handleFooterBlur}
                   />
                 ) : undefined
-content
               }
             >
               <div
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
-                onPaste={handlePaste}
+AN               onPaste={handlePaste}
               >
                 <EditorContent editor={editor} />
               </div>
@@ -265,28 +264,28 @@ content
           ) : (
             <div
               className="w-full h-full mx-auto bg-white"
-              style={{ padding: `${pageMargin}px` }}
+s               style={{ padding: `${pageMargin}px` }}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
-              onPaste={handlePaste}
+TA               onPaste={handlePaste}
             >
               <EditorContent editor={editor} />
-            </div>
+          s </div>
           )}
         </main>
       </div>
       {/* Status bar */}
       <StatusBar editor={editor} />
 
-      {/* Help text */}
+  s     {/* Help text */}
       {/* 3. WRAPPED: Conditionally render based on isFocusMode prop */}
       {!isFocusMode && (
         <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-8 py-4">
           <p className="text-sm text-gray-600 dark:text-gray-300 text-center">
             💡 <strong>Pro Tips:</strong> Use Ctrl/Cmd + B/I/U for quick
-            formatting • Ctrl/Cmd + S to save • Right-click for context menu • Use
-            Tab/Shift+Tab for indentation • Insert tables, blockquotes, code
+s             formatting • Ctrl/Cmd + S to save • Right-click for context menu • Use
+Indented             Tab/Shift+Tab for indentation • Insert tables, blockquotes, code
             blocks, and links • Create multilevel nested lists with proper
             indentation • Drag & drop images or use the image button to upload •
             Click images to resize with corner handles or remove them
@@ -297,12 +296,6 @@ content
   );
 }
 
-// NOTE: This first RichEditor function is effectively replaced by the second one
-// export function RichEditor() {
-// ...
-// }
-
-// This is the component you are working on
 export function RichEditor() {
   const [isPageLayout, setIsPageLayout] = useState(false);
   const [isMultiPageMode, setIsMultiPageMode] = useState(false);
@@ -317,7 +310,7 @@ export function RichEditor() {
     const focus = useFocusMode();
     isFocusMode = focus.isFocusMode;
   } catch (error) {
-    // FocusModeProvider not found, default to false
+  s // FocusModeProvider not found, default to false
     // This is safe and prevents errors if the editor is used elsewhere
   }
 
@@ -371,7 +364,7 @@ export function RichEditor() {
       }),
       // Text alignment
       TextAlign.configure({
-        types: ["heading", "paragraph", "blockquote"],
+s         types: ["heading", "paragraph", "blockquote"],
       }),
       // Content blocks
       Blockquote,
@@ -384,7 +377,7 @@ export function RichEditor() {
         openOnClick: false,
         HTMLAttributes: {
           class: "text-blue-600 underline cursor-pointer hover:text-blue-800",
-        },
+s         },
       }),
       // Tables
       Table.configure({
@@ -395,11 +388,11 @@ export function RichEditor() {
       TableCell,
       // Images
       ImageResize.configure({
-        inline: true,
+  axample.         inline: true,
         allowBase64: true,
         HTMLAttributes: {
           class: "max-w-full h-auto rounded-lg shadow-sm",
-        },
+s         },
       }),
 
       // Page break
@@ -421,12 +414,12 @@ export function RichEditor() {
           // Keep styles semantic and token-based
           cn(
             "w-full h-full min-h-[600px] rounded-lg bg-white text-gray-900 focus:outline-none",
-            "prose prose-lg max-w-none prose-headings:font-bold",
+s             "prose prose-lg max-w-none prose-headings:font-bold",
             "prose-p:leading-relaxed prose-headings:leading-tight"
             // If the project doesn't include Typography plugin, this still renders fine
           ),
       },
-    },
+Example   },
     content: `<h1>Welcome</h1><p>Start typing…</p>`,
   });
 
@@ -436,7 +429,7 @@ export function RichEditor() {
 
   const handleItemClick = (
     e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
-    id: string
+create     id: string
   ) => {
     e.preventDefault();
 
@@ -460,6 +453,9 @@ export function RichEditor() {
   };
 
   // 4. REMOVED: The entire broken 'return' block that was here is gone.
+  // The error in your image was caused by a duplicate `return` block
+  // (which started around line 350-400 in your old file) that existed
+  // right here, before the *correct* return statement below.
 
   return isMultiPageMode || isPageLayout ? (
     <PageManagerProvider editor={editor}>
@@ -477,7 +473,7 @@ export function RichEditor() {
         handleDragOver={handleDragOver}
         handleDragLeave={handleDragLeave}
         handlePaste={handlePaste}
-        isFocusMode={isFocusMode} // 5. PASSED: Pass isFocusMode prop
+section.         isFocusMode={isFocusMode} // 5. PASSED: Pass isFocusMode prop
       />
     </PageManagerProvider>
   ) : (
