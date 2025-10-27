@@ -7,6 +7,34 @@ A powerful, feature-rich document editor built with modern web technologies. Cre
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
 ![TipTap](https://img.shields.io/badge/TipTap-Latest-green?style=for-the-badge)
 
+---
+- [✨ Features](#-features)
+    - [🎨 Rich Text Editing](#-rich-text-editing)
+    - [🎯 Advanced Features](#-advanced-features)
+    - [🛠️ Technical Features](#️-technical-features)
+  - [🚀 Quick Start](#-quick-start)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+  - [📁 Project Folder Structure](#-project-folder-structure)
+  - [🎨 Customization](#-customization)
+    - [Theme Customization](#theme-customization)
+    - [Adding New Extensions](#adding-new-extensions)
+    - [Styling Components](#styling-components)
+  - [🚀 Deployment](#-deployment)
+    - [Vercel (Recommended)](#vercel-recommended)
+    - [Other Platforms](#other-platforms)
+  - [📦 Available Scripts](#-available-scripts)
+  - [🧪 Testing](#-testing)
+  - [📚 API Reference](#-api-reference)
+    - [Editor Component](#editor-component)
+    - [Custom Extensions](#custom-extensions)
+  - [🤝 Contributing](#-contributing)
+  - [📄 License](#-license)
+  - [🙏 Acknowledgments](#-acknowledgments)
+  - [📞 Support](#-support)
+
+---
+
 ## ✨ Features
 
 ### 🎨 Rich Text Editing
@@ -36,6 +64,8 @@ A powerful, feature-rich document editor built with modern web technologies. Cre
 - **UI Components**: Radix UI primitives with shadcn/ui
 - **Styling**: Tailwind CSS with OKLCH color system
 - **Performance**: Optimized with dynamic imports and proper SSR handling
+
+---
 
 ## 🚀 Quick Start
 
@@ -68,6 +98,9 @@ A powerful, feature-rich document editor built with modern web technologies. Cre
 4. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
+---
+
+
 ## 📁 Project Folder Structure
 
 > **Note:** This is just the main folder structure. Some subfolders and files may be omitted for brevity.
@@ -96,6 +129,8 @@ A powerful, feature-rich document editor built with modern web technologies. Cre
 ├── styles/
 │   └── globals.css                         # Global CSS styles
 ```
+
+---
 
 ## 🎨 Customization
 
@@ -128,6 +163,8 @@ export const CustomExtension = Extension.create({
 
 The project uses Tailwind CSS with custom design tokens. Components are styled using the `cn()` utility function for conditional classes.
 
+---
+
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
@@ -145,12 +182,16 @@ The project can be deployed to any platform that supports Next.js:
 - Railway
 - DigitalOcean App Platform
 
+---
+
 ## 📦 Available Scripts
 
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
+
+---
 
 ## 🧪 Testing
 
@@ -161,6 +202,8 @@ npm run test
 # Run tests in watch mode
 npm run test:watch
 ```
+
+---
 
 ## 📚 API Reference
 
@@ -186,14 +229,19 @@ const editor = useEditor({
   extensions: [StarterKit, IndentExtension, LineHeightExtension],
 });
 ```
+---
 
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on how to contribute to this project.
 
+---
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
 
 ## 🙏 Acknowledgments
 
@@ -203,11 +251,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
 - [shadcn/ui](https://ui.shadcn.com/) - Beautifully designed components
 
+---
+
 ## 📞 Support
 
 - 📧 Email: support@docueditpro.com
 - 🐛 Issues: [GitHub Issues](https://github.com/amananandrai/document-editor-with-tiptap/issues)
 - 💬 Discussions: [GitHub Discussions](https://github.com/amananandrai/document-editor-with-tiptap/discussions)
+
+---
+- [🔝 Back to Top](#-docuedit-pro)
 
 ---
 
