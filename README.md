@@ -8,6 +8,8 @@ A powerful, feature-rich document editor built with modern web technologies. Cre
 ![TipTap](https://img.shields.io/badge/TipTap-Latest-green?style=for-the-badge)
 
 ---
+## Table of Content 
+
 - [✨ Features](#-features)
     - [🎨 Rich Text Editing](#-rich-text-editing)
     - [🎯 Advanced Features](#-advanced-features)
