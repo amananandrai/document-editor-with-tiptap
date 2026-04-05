@@ -82,7 +82,7 @@
     "jspdf-html2canvas-pro": "^1.5.221",
     "lowlight": "^3.3.0",
     "lucide-react": "^0.454.0",
-    "next": "15.2.4",
+    "next": "15.2.8",
     "next-themes": "latest",
     "react": "^18.3.1",
     "react-color": "^2.19.3",
