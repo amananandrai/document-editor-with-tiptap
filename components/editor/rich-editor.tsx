@@ -427,7 +427,51 @@ export function RichEditor() {
             // If the project doesn't include Typography plugin, this still renders fine
           ),
       },
+      // Preserve inline formatting styles (bold, italic, colors, font sizes, etc.)
+      // when pasting from external sources like Google Docs, Word, or web pages.
+      transformPastedHTML(html) {
+        // Parse the pasted HTML and allow key inline style properties through
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+
+        // Walk all elements and keep allowed inline style properties
+        const allowedStyleProps = [
+          "font-family",
+          "font-size",
+          "font-weight",
+          "font-style",
+          "color",
+          "background-color",
+          "text-decoration",
+          "text-align",
+          "line-height",
+          "letter-spacing",
+        ];
+
+        doc.querySelectorAll("[style]").forEach((el) => {
+          const htmlEl = el as HTMLElement;
+          const existing = htmlEl.getAttribute("style") || "";
+          // Re-build style keeping only allowed props
+          const filtered = existing
+            .split(";")
+            .map((s) => s.trim())
+            .filter((s) => {
+              if (!s) return false;
+              const prop = s.split(":")[0]?.trim().toLowerCase();
+              return allowedStyleProps.some((allowed) => prop === allowed);
+            })
+            .join("; ");
+          if (filtered) {
+            htmlEl.setAttribute("style", filtered);
+          } else {
+            htmlEl.removeAttribute("style");
+          }
+        });
+
+        return doc.body.innerHTML;
+      },
     },
+
     content: `<h1>Welcome</h1><p>Start typing…</p>`,
     onCreate: ({ editor }) => {
       // Load saved content on editor creation

@@ -79,16 +79,24 @@ export function useImageUpload(editor: Editor | null) {
     const items = event.clipboardData?.items
     if (!items) return
 
+    // Collect image file items only
+    const imageFiles: File[] = []
     Array.from(items).forEach(item => {
       if (item.type.startsWith('image/')) {
         const file = item.getAsFile()
-        if (file) {
-          event.preventDefault()
-          handleImageUpload(file)
-        }
+        if (file) imageFiles.push(file)
       }
     })
+
+    // Only intercept the paste event when there are real image files.
+    // For text/HTML pastes, let Tiptap's own paste handling run (including
+    // the transformPastedHTML hook that preserves formatting).
+    if (imageFiles.length === 0) return
+
+    event.preventDefault()
+    imageFiles.forEach(file => handleImageUpload(file))
   }, [handleImageUpload])
+
 
   return {
     handleDrop,
