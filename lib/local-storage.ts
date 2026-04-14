@@ -8,18 +8,6 @@ export interface EditorState {
   isPageLayout: boolean;
   isMultiPageMode: boolean;
   pageMargin: number;
-  lastSaved: string;
-}
-
-export interface PageManagerState {
-  pages: Array<{
-    id: string;
-    content: string;
-    title?: string;
-    createdAt: string;
-    updatedAt: string;
-  }>;
-  currentPageIndex: number;
   headerContent: string;
   footerContent: string;
   showHeader: boolean;
@@ -30,7 +18,6 @@ export interface PageManagerState {
 
 const STORAGE_KEYS = {
   EDITOR_STATE: "tiptap-editor-state",
-  PAGE_MANAGER_STATE: "tiptap-page-manager-state",
 } as const;
 
 /**
@@ -90,7 +77,6 @@ function removeItem(key: string): void {
  */
 export function clearEditorStorage(): void {
   removeItem(STORAGE_KEYS.EDITOR_STATE);
-  removeItem(STORAGE_KEYS.PAGE_MANAGER_STATE);
 }
 
 /**
@@ -112,42 +98,14 @@ export function saveEditorState(state: Partial<EditorState>): boolean {
     isMultiPageMode:
       state.isMultiPageMode ?? currentState?.isMultiPageMode ?? false,
     pageMargin: state.pageMargin ?? currentState?.pageMargin ?? 64,
-    lastSaved: new Date().toISOString(),
-  };
-  return setItem(STORAGE_KEYS.EDITOR_STATE, newState);
-}
-
-/**
- * Load page manager state from localStorage
- */
-export function loadPageManagerState(): PageManagerState | null {
-  const state = getItem<PageManagerState | null>(
-    STORAGE_KEYS.PAGE_MANAGER_STATE,
-    null
-  );
-  return state;
-}
-
-/**
- * Save page manager state to localStorage
- */
-export function savePageManagerState(
-  state: Partial<PageManagerState>
-): boolean {
-  const currentState = loadPageManagerState();
-  const newState: PageManagerState = {
-    pages: state.pages ?? currentState?.pages ?? [],
-    currentPageIndex:
-      state.currentPageIndex ?? currentState?.currentPageIndex ?? 0,
     headerContent: state.headerContent ?? currentState?.headerContent ?? "",
     footerContent: state.footerContent ?? currentState?.footerContent ?? "",
     showHeader: state.showHeader ?? currentState?.showHeader ?? false,
     showFooter: state.showFooter ?? currentState?.showFooter ?? false,
-    showPageNumbers:
-      state.showPageNumbers ?? currentState?.showPageNumbers ?? false,
+    showPageNumbers: state.showPageNumbers ?? currentState?.showPageNumbers ?? false,
     lastSaved: new Date().toISOString(),
   };
-  return setItem(STORAGE_KEYS.PAGE_MANAGER_STATE, newState);
+  return setItem(STORAGE_KEYS.EDITOR_STATE, newState);
 }
 
 /**

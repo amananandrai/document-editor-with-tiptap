@@ -27,6 +27,7 @@ import { FontSize } from "@tiptap/extension-text-style";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { HeaderFooter } from "./header-footer";
 import { ImageResize } from "./image-extension";
 import { PageBreak } from "./page-break-extension";
 import { StatusBar } from "./status-bar";
@@ -43,6 +44,40 @@ export function RichEditor() {
   const [items, setItems] = useState<TableOfContentDataItem[]>([]);
   const [editorHeight, setEditorHeight] = useState(1124);
   const viewRef = useRef<HTMLDivElement>(null);
+
+  // Header/Footer State
+  const [showHeader, setShowHeader] = useState(() => loadEditorState()?.showHeader ?? false);
+  const [showFooter, setShowFooter] = useState(() => loadEditorState()?.showFooter ?? false);
+  const [showPageNumbers, setShowPageNumbers] = useState(() => loadEditorState()?.showPageNumbers ?? false);
+  const [headerContent, setHeaderContent] = useState(() => loadEditorState()?.headerContent ?? "");
+  const [footerContent, setFooterContent] = useState(() => loadEditorState()?.footerContent ?? "");
+
+  const toggleHeader = () => {
+    setShowHeader((prev) => {
+      saveEditorState({ showHeader: !prev });
+      return !prev;
+    });
+  };
+  const toggleFooter = () => {
+    setShowFooter((prev) => {
+      saveEditorState({ showFooter: !prev });
+      return !prev;
+    });
+  };
+  const togglePageNumbers = () => {
+    setShowPageNumbers((prev) => {
+      saveEditorState({ showPageNumbers: !prev });
+      return !prev;
+    });
+  };
+  const updateHeaderContent = (content: string) => {
+    setHeaderContent(content);
+    saveEditorState({ headerContent: content });
+  };
+  const updateFooterContent = (content: string) => {
+    setFooterContent(content);
+    saveEditorState({ footerContent: content });
+  };
 
   const editor = useEditor({
     extensions: [
@@ -261,7 +296,15 @@ export function RichEditor() {
   return (
     <div className="flex flex-col h-full bg-gray-100 dark:bg-gray-800">
       <div className="sticky top-0 z-40 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
-        <EditorToolbar editor={editor} />
+        <EditorToolbar 
+          editor={editor} 
+          showHeader={showHeader}
+          showFooter={showFooter}
+          showPageNumbers={showPageNumbers}
+          onToggleHeader={toggleHeader}
+          onToggleFooter={toggleFooter}
+          onTogglePageNumbers={togglePageNumbers}
+        />
       </div>
 
       <div className="flex flex-1 overflow-hidden relative">
@@ -314,8 +357,36 @@ export function RichEditor() {
                 {Array.from({ length: numberOfPages }).map((_, i) => (
                   <div 
                     key={i} 
-                    className="w-full h-[1124px] shrink-0 bg-white shadow-md border border-gray-200/60" 
-                  />
+                    className="relative w-full h-[1124px] shrink-0 bg-white shadow-md border border-gray-200/60 pointer-events-auto" 
+                  >
+                    {/* Embedded Header Editor */}
+                    {(showHeader || showPageNumbers) && (
+                      <div className="absolute top-0 left-0 right-0 h-[96px] px-16 pt-8 z-20">
+                        <HeaderFooter
+                          content={headerContent}
+                          onChange={updateHeaderContent}
+                          placeholder="Header (click to edit)"
+                          type="header"
+                          showPageNumber={showPageNumbers}
+                          pageNumber={i + 1}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Embedded Footer Editor */}
+                    {(showFooter || (showPageNumbers && !showHeader)) && (
+                      <div className="absolute bottom-0 left-0 right-0 h-[96px] px-16 pb-6 z-20 flex flex-col justify-end">
+                        <HeaderFooter
+                          content={footerContent}
+                          onChange={updateFooterContent}
+                          placeholder="Footer (click to edit)"
+                          type="footer"
+                          showPageNumber={showPageNumbers && !showHeader}
+                          pageNumber={i + 1}
+                        />
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
 

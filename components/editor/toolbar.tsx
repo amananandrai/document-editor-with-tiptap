@@ -72,11 +72,23 @@ import { LinkModal } from "./link-modal";
 type Props = {
   editor: Editor | null;
   pageMargin?: number;
+  showHeader?: boolean;
+  showFooter?: boolean;
+  showPageNumbers?: boolean;
+  onToggleHeader?: () => void;
+  onToggleFooter?: () => void;
+  onTogglePageNumbers?: () => void;
 };
 
 export function EditorToolbar({
   editor,
-  pageMargin = 96, // Default 1-inch margins
+  pageMargin = 96,
+  showHeader = false,
+  showFooter = false,
+  showPageNumbers = false,
+  onToggleHeader,
+  onToggleFooter,
+  onTogglePageNumbers,
 }: Props) {
   const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
   const { isFocusMode, toggleFocusMode } = useFocusMode();
@@ -1600,6 +1612,27 @@ export function EditorToolbar({
                 </DropdownMenuItem>
               </>
             )}
+
+            {/* Page Elements */}
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              Page Elements
+            </DropdownMenuLabel>
+            <DropdownMenuItem onClick={onToggleHeader}>
+              <SeparatorHorizontal className="h-4 w-4 mr-2" />
+              {showHeader && <Check className="h-3 w-3 mr-1 text-blue-500" />}
+              <span className={showHeader ? "ml-1" : "ml-4"}>Header</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onToggleFooter}>
+              <SeparatorHorizontal className="h-4 w-4 mr-2 rotate-180" />
+              {showFooter && <Check className="h-3 w-3 mr-1 text-blue-500" />}
+              <span className={showFooter ? "ml-1" : "ml-4"}>Footer</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onTogglePageNumbers}>
+              <Hash className="h-4 w-4 mr-2" />
+              {showPageNumbers && <Check className="h-3 w-3 mr-1 text-blue-500" />}
+              <span className={showPageNumbers ? "ml-1" : "ml-4"}>Page Numbers</span>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         {/* Tools */}
