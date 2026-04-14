@@ -89,17 +89,14 @@ export default function CustomColorPicker({ value, onChange, children }: CustomC
       display: 'flex' as const,
     },
     activeColor: {
-      background: '#334155', // slate-700
       borderRadius: '2px 2px 0 0',
     },
     color: {
-      background: '#334155', // slate-700
       borderRadius: '2px',
     },
-    swatch: {
-      background: '#334155', // slate-700
-    },
+    swatch: {},
   } : {
+
     picker: {
       boxShadow: 'none',
       width: '280px',
@@ -111,7 +108,13 @@ export default function CustomColorPicker({ value, onChange, children }: CustomC
   };
 
   return (
-    <div className="relative">
+    <div className="relative dark-picker-override">
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        .dark .dark-picker-override input { color: #e2e8f0 !important; }
+        .dark .dark-picker-override span { color: #cbd5e1 !important; }
+        `
+      }} />
       <div className="bg-white dark:bg-slate-800 rounded-md shadow-lg drop-shadow-xl overflow-hidden">
         <SketchPicker
           color={color}
