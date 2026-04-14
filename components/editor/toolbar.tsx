@@ -71,36 +71,12 @@ import { LinkModal } from "./link-modal";
 
 type Props = {
   editor: Editor | null;
-  isPageLayout?: boolean;
-  onTogglePageLayout?: () => void;
-  isMultiPageMode?: boolean;
-  onToggleMultiPageMode?: () => void;
   pageMargin?: number;
-  onChangePageMargin?: (marginPx: number) => void;
-  showHeader?: boolean;
-  showFooter?: boolean;
-  showPageNumbers?: boolean;
-  onToggleHeader?: () => void;
-  onToggleFooter?: () => void;
-  onTogglePageNumbers?: () => void;
-  activeEditorType?: "main" | "header" | "footer" | null;
 };
 
 export function EditorToolbar({
   editor,
-  isPageLayout = false,
-  onTogglePageLayout,
-  isMultiPageMode = false,
-  onToggleMultiPageMode,
-  pageMargin = 64,
-  onChangePageMargin,
-  showHeader = false,
-  showFooter = false,
-  showPageNumbers = false,
-  onToggleHeader,
-  onToggleFooter,
-  onTogglePageNumbers,
-  activeEditorType = null,
+  pageMargin = 96, // Default 1-inch margins
 }: Props) {
   const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
   const { isFocusMode, toggleFocusMode } = useFocusMode();
@@ -296,9 +272,8 @@ export function EditorToolbar({
 
   if (!editor) return null;
 
-  // Check if we're editing header/footer (disable certain features)
-  const isHeaderFooterMode =
-    activeEditorType === "header" || activeEditorType === "footer";
+  // Header/Footer mode is deprecated, disable header/footer checks
+  const isHeaderFooterMode = false;
 
   const addEmoji = (emoji: any) => {
     editor.chain().focus().insertContent(emoji.native).run();
@@ -1190,25 +1165,7 @@ export function EditorToolbar({
     editor.chain().focus().setPageBreak().run();
   };
 
-  const handleLayoutChange = (mode: "normal" | "a4" | "multipage") => {
-    // Reset all modes first
-    if (isPageLayout) onTogglePageLayout?.();
-    if (isMultiPageMode) onToggleMultiPageMode?.();
 
-    // Set the desired mode
-    if (mode === "a4") {
-      onTogglePageLayout?.();
-    } else if (mode === "multipage") {
-      onToggleMultiPageMode?.();
-    }
-    // 'normal' mode is already set by resetting all modes
-  };
-
-  const getCurrentLayoutMode = () => {
-    if (isMultiPageMode) return "multipage";
-    if (isPageLayout) return "a4";
-    return "normal";
-  };
 
   // Copy formatting from current selection (like MS Word Format Painter)
   const toggleFormatPainter = () => {
@@ -1308,19 +1265,7 @@ export function EditorToolbar({
       role="toolbar"
       aria-label="Editor toolbar"
     >
-      {/* Header/Footer indicator */}
-      {isHeaderFooterMode && (
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 rounded-md text-sm font-medium text-blue-700 dark:text-blue-300">
-          <SeparatorHorizontal
-            className={`h-4 w-4 ${
-              activeEditorType === "footer" ? "rotate-180" : ""
-            }`}
-          />
-          <span>
-            Editing {activeEditorType === "header" ? "Header" : "Footer"}
-          </span>
-        </div>
-      )}
+
 
       {/* Top menu bar */}
       <div className="w-full flex items-center gap-1 pb-2">
@@ -1355,155 +1300,7 @@ export function EditorToolbar({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        {/* View */}
-        <DropdownMenu modal={false}>
-          <DropdownMenuTrigger asChild>
-            <Button variant="secondary" size="sm" title="View">
-              View
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="start"
-            className="w-56 max-h-none overflow-visible"
-          >
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <Layout className="h-4 w-4 mr-2" />
-                Editor Layout
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent
-                sideOffset={8}
-                className="w-64 max-h-none overflow-visible"
-              >
-                <DropdownMenuLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Editor Layout
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuRadioGroup
-                  value={getCurrentLayoutMode()}
-                  onValueChange={(value) =>
-                    handleLayoutChange(value as "normal" | "a4" | "multipage")
-                  }
-                >
-                  <DropdownMenuRadioItem
-                    value="normal"
-                    className="flex items-center gap-3 py-2"
-                  >
-                    <div className="flex items-center justify-center w-8 h-8 rounded bg-gray-100 dark:bg-gray-800">
-                      <Monitor className="h-4 w-4 text-gray-600" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-medium">Normal</span>
-                      <span className="text-xs text-gray-500">
-                        Full-width editor
-                      </span>
-                    </div>
-                  </DropdownMenuRadioItem>
 
-                  <DropdownMenuRadioItem
-                    value="a4"
-                    className="flex items-center gap-3 py-2"
-                  >
-                    <div className="flex items-center justify-center w-8 h-8 rounded bg-gray-100 dark:bg-gray-800">
-                      <Square className="h-4 w-4 text-gray-600" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-medium">A4 Layout</span>
-                      <span className="text-xs text-gray-500">
-                        Single A4 page view
-                      </span>
-                    </div>
-                  </DropdownMenuRadioItem>
-
-                  <DropdownMenuRadioItem
-                    value="multipage"
-                    className="flex items-center gap-3 py-2"
-                  >
-                    <div className="flex items-center justify-center w-8 h-8 rounded bg-gray-100 dark:bg-gray-800">
-                      <FileText className="h-4 w-4 text-gray-600" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-medium">Multi-Page</span>
-                      <span className="text-xs text-gray-500">
-                        Google Docs style with multiple pages
-                      </span>
-                    </div>
-                  </DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-
-                <DropdownMenuSeparator />
-                <div className="px-2 py-1.5 text-xs text-gray-500">
-                  Switch between different editor layouts to match your workflow
-                </div>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-
-            {/* Page Margin submenu */}
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <Monitor className="h-4 w-4 mr-2" />
-                Page Margin
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent
-                sideOffset={8}
-                className="w-64 max-h-none overflow-visible"
-              >
-                <DropdownMenuLabel>Page Margin</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onChangePageMargin?.(32)}>
-                  Narrow (32px)
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onChangePageMargin?.(64)}>
-                  Normal (64px)
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onChangePageMargin?.(96)}>
-                  Wide (96px)
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <div className="px-3 py-2">
-                  <label className="text-xs text-muted-foreground">
-                    Custom (px)
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    className="w-full mt-1 p-1 border rounded text-sm"
-                    value={String(pageMargin)}
-                    onChange={(e) => {
-                      const v = Number(e.target.value || 0);
-                      if (!Number.isNaN(v)) onChangePageMargin?.(v);
-                    }}
-                  />
-                </div>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-
-            {/* Header and Footer options - show in multi-page mode and A4 layout */}
-            {(isMultiPageMode || isPageLayout) && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Page Elements
-                </DropdownMenuLabel>
-                <DropdownMenuItem onClick={onToggleHeader}>
-                  <SeparatorHorizontal className="h-4 w-4 mr-2" />
-                  {showHeader && <Check className="h-3 w-3 mr-1" />}
-                  Header
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onToggleFooter}>
-                  <SeparatorHorizontal className="h-4 w-4 mr-2 rotate-180" />
-                  {showFooter && <Check className="h-3 w-3 mr-1" />}
-                  Footer
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onTogglePageNumbers}>
-                  <Hash className="h-4 w-4 mr-2" />
-                  {showPageNumbers && <Check className="h-3 w-3 mr-1" />}
-                  Page Numbers
-                </DropdownMenuItem>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
         {/* Insert */}
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
