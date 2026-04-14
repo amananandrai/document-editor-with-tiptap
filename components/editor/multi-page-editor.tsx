@@ -1,7 +1,6 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { Editor } from "@tiptap/react";
 import { EditorContent } from "@tiptap/react";
 import React from "react";
 import { HeaderFooterEditor } from "./header-footer";
@@ -42,13 +41,9 @@ export function MultiPageEditor({
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   // Handlers for header/footer editor focus
-  const handleHeaderEditorReady = React.useCallback((headerEditor: Editor) => {
-    // Store reference if needed
-  }, []);
+  const handleHeaderEditorReady = React.useCallback(() => {}, []);
 
-  const handleFooterEditorReady = React.useCallback((footerEditor: Editor) => {
-    // Store reference if needed
-  }, []);
+  const handleFooterEditorReady = React.useCallback(() => {}, []);
 
   const handleHeaderFocus = React.useCallback(
     (headerEditor: Editor) => {

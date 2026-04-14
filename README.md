@@ -1,272 +1,136 @@
-# 📝 DocuEdit Pro
+# DocuEdit Pro
 
-A powerful, feature-rich document editor built with modern web technologies. Create, edit, and format documents with professional-grade tools, featuring a beautiful interface and seamless export capabilities.
+A rich document editor built with Next.js, React, TypeScript, and TipTap. It includes formatting tools, page layout controls, image handling, table editing, PDF/Word export, and a polished landing experience.
 
-![DocuEdit Pro](https://img.shields.io/badge/Next.js-15.2.4-black?style=for-the-badge&logo=next.js)
-![React](https://img.shields.io/badge/React-18.3.1-blue?style=for-the-badge&logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
-![TipTap](https://img.shields.io/badge/TipTap-Latest-green?style=for-the-badge)
+## Features
 
----
-## Table of Content 
+- Rich text editing with headings, lists, blockquotes, code, links, tables, and inline formatting
+- Focus mode, A4 layout mode, and multi-page editing tools
+- Header, footer, page number, and table of contents support
+- Image upload with resize controls
+- PDF and Word export options
+- Dark mode and responsive UI
 
-- [✨ Features](#-features)
-    - [🎨 Rich Text Editing](#-rich-text-editing)
-    - [🎯 Advanced Features](#-advanced-features)
-    - [🛠️ Technical Features](#️-technical-features)
-  - [🚀 Quick Start](#-quick-start)
-    - [Prerequisites](#prerequisites)
-    - [Installation](#installation)
-  - [📁 Project Folder Structure](#-project-folder-structure)
-  - [🎨 Customization](#-customization)
-    - [Theme Customization](#theme-customization)
-    - [Adding New Extensions](#adding-new-extensions)
-    - [Styling Components](#styling-components)
-  - [🚀 Deployment](#-deployment)
-    - [Vercel (Recommended)](#vercel-recommended)
-    - [Other Platforms](#other-platforms)
-  - [📦 Available Scripts](#-available-scripts)
-  - [🧪 Testing](#-testing)
-  - [📚 API Reference](#-api-reference)
-    - [Editor Component](#editor-component)
-    - [Custom Extensions](#custom-extensions)
-  - [🤝 Contributing](#-contributing)
-  - [📄 License](#-license)
-  - [🙏 Acknowledgments](#-acknowledgments)
-  - [📞 Support](#-support)
+## Tech Stack
 
----
+- Next.js 15
+- React 18
+- TypeScript
+- TipTap
+- Tailwind CSS
+- Radix UI
 
-## ✨ Features
-
-### 🎨 Rich Text Editing
-
-- **Headings & Paragraphs**: Support for H1-H4 headings with proper hierarchy
-- **Text Formatting**: Bold, italic, underline, superscript, and subscript
-- **Font Customization**: Multiple font families (System, Serif, Monospace) and sizes (12px-48px)
-- **Line Spacing**: Adjustable line height options (1, 1.15, 1.5, 2)
-- **Lists**: Bullet and ordered lists with proper nesting and indentation
-- **Colors**: Text color and background highlighting with color picker
-- **Indentation**: Custom indent system for paragraphs and headings
-
-### 🎯 Advanced Features
-
-- **Keyboard Shortcuts**: Ctrl/Cmd + B/I/U for quick formatting
-- **Export Capabilities**:
-  - PDF export using html2pdf.js
-  - Word document export (.doc format)
-- **Theme Support**: Beautiful dark/light mode with system preference detection
-- **Responsive Design**: Mobile-friendly interface
-- **Accessibility**: ARIA labels and keyboard navigation support
-
-### 🛠️ Technical Features
-
-- **Modern Stack**: Next.js 15, React 18, TypeScript
-- **Rich Editor**: TipTap with custom extensions
-- **UI Components**: Radix UI primitives with shadcn/ui
-- **Styling**: Tailwind CSS with OKLCH color system
-- **Performance**: Optimized with dynamic imports and proper SSR handling
-
----
-
-## 🚀 Quick Start
+## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+
-- bun
+- Node.js 18 or newer
+- npm
 
 ### Installation
 
-1. **Clone the repository**
-
-   ```bash
-   git clone https://github.com/yourusername/document-editor-with-tip-mukutap.git
-   cd document-editor-with-tip-mukutap
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   bun install
-   ```
-
-3. **Run the development server**
-
-   ```bash
-   bun run dev
-   ```
-
-4. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
----
-
-
-## 📁 Project Folder Structure
-
-> **Note:** This is just the main folder structure. Some subfolders and files may be omitted for brevity.
-
-```
-├── app/
-│   ├── editor/
-│   │   ├── editor-client.tsx               # Client-side editor wrapper
-│   │   ├── features.js                     # Editor features and Lucide icons
-│   │   └── page.tsx                        # /editor route (editor page)
-│   ├── layout.tsx                          # Root layout with navbar/footer
-│   ├── globals.css                         # Global styles with design tokens
-│   └── page.tsx                            # Home/landing page
-├── components/
-│   ├── editor/                             # Editor-related components and extensions
-│   ├── ui/                                 # Reusable UI components (buttons, dialogs, etc.)
-│   ├── navbar.tsx                          # Custom navigation bar
-│   ├── footer.tsx                          # Footer component
-│   ├── theme-provider.tsx                  # Theme context provider
-│   ├── theme-toggle.tsx                    # Dark/light mode toggle
-├── docs/
-│   └── blockquote-code-link-guide.md       # Blockquote/code/link feature plan
-├── lib/
-│   └── utils.ts                            # Utility functions
-├── public/                                 # Static assets (images, icons, etc.)
-├── styles/
-│   └── globals.css                         # Global CSS styles
+```bash
+git clone https://github.com/amananandrai/document-editor-with-tiptap.git
+cd document-editor-with-tiptap
+npm install
 ```
 
----
-
-## 🎨 Customization
-
-### Theme Customization
-
-The project uses a custom design system with OKLCH color space for better color consistency. You can customize colors in `app/globals.css`:
-
-```css
-:root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  /* ... more color tokens */
-}
-```
-
-### Adding New Extensions
-
-Create custom TipTap extensions in `components/editor/tiptap-extensions.ts`:
-
-```typescript
-import { Extension } from "@tiptap/core";
-
-export const CustomExtension = Extension.create({
-  name: "customExtension",
-  // Your extension logic here
-});
-```
-
-### Styling Components
-
-The project uses Tailwind CSS with custom design tokens. Components are styled using the `cn()` utility function for conditional classes.
-
----
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-
-1. Push your code to GitHub
-2. Connect your repository to Vercel
-3. Deploy with zero configuration
-
-### Other Platforms
-
-The project can be deployed to any platform that supports Next.js:
-
-- Netlify
-- AWS Amplify
-- Railway
-- DigitalOcean App Platform
-
----
-
-## 📦 Available Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
-
----
-
-## 🧪 Testing
+### Run Locally
 
 ```bash
-# Run tests (when implemented)
-npm run test
+npm run dev
+```
 
-# Run tests in watch mode
+Open [http://localhost:3000](http://localhost:3000).
+
+## Available Scripts
+
+- `npm run dev` starts the development server
+- `npm run build` creates a production build
+- `npm run start` runs the production build
+- `npm run lint` runs ESLint
+- `npm run test` runs Jest tests
+- `npm run test:watch` runs Jest in watch mode
+- `npm run test:coverage` generates coverage output
+- `npm run test:ci` runs tests in CI mode
+
+## Project Structure
+
+```text
+app/
+  contact-us/              # Contact page
+  documentation/           # Documentation page
+  editor/
+    editor-client.tsx      # Client wrapper for the editor experience
+    features.js            # Landing-page feature metadata
+    layout.tsx             # Focus mode provider for editor routes
+    page.tsx               # Main editor page
+  help-center/             # Help center page
+  globals.css              # Global design tokens and base styles
+  layout.tsx               # Root app layout
+  page.tsx                 # Landing page
+
+components/
+  editor/                  # Active editor implementation
+  ui/                      # Reusable UI primitives
+  BackToTopButton.tsx
+  focus-mode-context.tsx
+  footer.tsx
+  navbar.tsx
+  RootLayoutClient.tsx
+  theme-provider.tsx
+  theme-toggle.tsx
+
+docs/
+  blockquote-code-link-guide.md
+
+lib/
+  local-storage.ts
+  utils.ts
+
+public/
+  logo.png
+  placeholder-bg.jpg
+
+__tests__/
+  components/
+  lib/
+  setup/
+```
+
+## Notes
+
+- The active editor lives under `components/editor/`.
+- Legacy standalone editor files and unused placeholder assets were removed during codebase cleanup.
+- Global styling is defined in `app/globals.css`; the old standalone editor stylesheet is no longer used.
+
+## Customization
+
+### Theme Tokens
+
+Update the design tokens in `app/globals.css` to change colors, radius values, and shared theme settings.
+
+### Editor Extensions
+
+Editor extensions are composed in `components/editor/rich-editor.tsx`, with reusable extension helpers in `components/editor/tiptap-extensions.ts`.
+
+### UI Components
+
+Shared UI building blocks live in `components/ui/` and are used across the editor, navigation, dialogs, and controls.
+
+## Testing
+
+```bash
+npm run test
 npm run test:watch
 ```
 
----
+## Deployment
 
-## 📚 API Reference
+This project can be deployed anywhere that supports Next.js, including Vercel, Netlify, Railway, and AWS Amplify.
 
-### Editor Component
+## Support
 
-```typescript
-import { RichEditor } from "@/components/editor/rich-editor";
+- Issues: [GitHub Issues](https://github.com/amananandrai/document-editor-with-tiptap/issues)
+- Discussions: [GitHub Discussions](https://github.com/amananandrai/document-editor-with-tiptap/discussions)
 
-// Basic usage
-<RichEditor />;
-```
-
-### Custom Extensions
-
-```typescript
-import {
-  IndentExtension,
-  LineHeightExtension,
-} from "@/components/editor/tiptap-extensions";
-
-// Use in editor configuration
-const editor = useEditor({
-  extensions: [StarterKit, IndentExtension, LineHeightExtension],
-});
-```
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on how to contribute to this project.
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- [TipTap](https://tiptap.dev/) - The headless editor framework
-- [Next.js](https://nextjs.org/) - The React framework
-- [Radix UI](https://www.radix-ui.com/) - Accessible UI primitives
-- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
-- [shadcn/ui](https://ui.shadcn.com/) - Beautifully designed components
-
----
-
-## 📞 Support
-
-- 📧 Email: support@docueditpro.com
-- 🐛 Issues: [GitHub Issues](https://github.com/amananandrai/document-editor-with-tiptap/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/amananandrai/document-editor-with-tiptap/discussions)
-
----
-- [🔝 Back to Top](#-docuedit-pro)
-
----
-
-<div align="center">
-  <p>Made with ❤️ using Next.js & TipTap</p>
-  <p>© 2025 DocuEdit Pro. All rights reserved.</p>
-</div>

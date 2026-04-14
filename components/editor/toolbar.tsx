@@ -363,17 +363,6 @@ export function EditorToolbar({
     editor.chain().focus().setMark("textStyle", { fontSize: sizePx }).run();
   };
 
-  const clearFontSize = () => {
-    // remove only font-size from textStyle while keeping other styles
-    // Strategy: set fontSize undefined by applying empty then unset
-    editor
-      .chain()
-      .focus()
-      .setMark("textStyle", { fontSize: undefined as unknown as string })
-      .removeEmptyTextStyle()
-      .run();
-  };
-
   const setFontFamily = (family: string) => {
     editor.chain().focus().setMark("textStyle", { fontFamily: family }).run();
   };
@@ -508,14 +497,6 @@ export function EditorToolbar({
   };
 
   // Table functionality
-  const insertTable = () => {
-    editor
-      .chain()
-      .focus()
-      .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-      .run();
-  };
-
   const insertTableWithDims = (rowsStr?: string, colsStr?: string) => {
     const rawR = (
       rowsStr ??
@@ -626,10 +607,6 @@ export function EditorToolbar({
     };
 
     input.click();
-  };
-
-  const removeImage = () => {
-    editor.chain().focus().deleteSelection().run();
   };
 
   const handleExportPDF = async () => {
@@ -1231,12 +1208,6 @@ export function EditorToolbar({
     if (isMultiPageMode) return "multipage";
     if (isPageLayout) return "a4";
     return "normal";
-  };
-
-  const getLayoutModeLabel = () => {
-    if (isMultiPageMode) return "Multi-Page";
-    if (isPageLayout) return "A4 Layout";
-    return "Normal";
   };
 
   // Copy formatting from current selection (like MS Word Format Painter)
