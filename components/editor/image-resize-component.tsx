@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
-import { X, Move, RotateCcw } from 'lucide-react'
+import { X, RotateCcw } from 'lucide-react'
 
 interface ImageResizeComponentProps extends NodeViewProps {}
 
@@ -178,8 +178,8 @@ export const ImageResizeComponent: React.FC<ImageResizeComponentProps> = ({
         <img
           ref={imgRef}
           src={src}
-          alt=""
-          title=""
+          alt={alt ?? ""}
+          title={title ?? ""}
           style={{
             width: width ? `${width}px` : 'auto',
             height: height ? `${height}px` : 'auto',

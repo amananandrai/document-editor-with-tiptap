@@ -25,7 +25,6 @@ import { TableRow } from "@tiptap/extension-table-row";
 import { TextAlign } from "@tiptap/extension-text-align";
 import { FontSize, TextStyle } from "@tiptap/extension-text-style";
 import Underline from "@tiptap/extension-underline";
-import type { Editor } from "@tiptap/react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import React, { useCallback, useEffect, useState } from "react";
@@ -99,13 +98,9 @@ function RichEditorContent({
   }, [editor, pageManager?.setActiveEditor, isMultiPageMode, isPageLayout]);
 
   // Handlers for header/footer editor focus in A4 layout
-  const handleHeaderEditorReady = useCallback((headerEditor: Editor) => {
-    // Store reference if needed
-  }, []);
+  const handleHeaderEditorReady = useCallback(() => {}, []);
 
-  const handleFooterEditorReady = useCallback((footerEditor: Editor) => {
-    // Store reference if needed
-  }, []);
+  const handleFooterEditorReady = useCallback(() => {}, []);
 
   const handleHeaderFocus = useCallback(
     (headerEditor: Editor) => {

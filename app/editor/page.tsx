@@ -2,7 +2,7 @@
 import BackButton from "@/components/ui/backButton";
 import EditorClient from "./editor-client";
 import { useFocusMode } from "@/components/focus-mode-context";
-import { Eye, EyeOff } from "lucide-react";
+import { EyeOff } from "lucide-react";
 
 function EditorContent() {
   const { isFocusMode, toggleFocusMode } = useFocusMode();

@@ -53,13 +53,6 @@ export default function CustomColorPicker({ value, onChange, children }: CustomC
     '#4A4A4A', '#9B9B9B', '#FFFFFF'
   ];
 
-  // Custom rendering with transparent color
-  const handleTransparentClick = () => {
-    const transparentColor = 'rgba(0, 0, 0, 0)';
-    setColor(transparentColor);
-    onChange(transparentColor);
-  };
-
   // Dark mode color scheme matching light mode appearance
   const darkModeStyles = isDark ? {
     picker: {

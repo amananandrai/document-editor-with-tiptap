@@ -34,7 +34,6 @@ export function FindReplaceModal({ editor, isOpen, onClose }: FindReplaceModalPr
   const [matches, setMatches] = useState<Array<{ from: number; to: number }>>([])
   const [caseSensitive, setCaseSensitive] = useState(false)
   const [wholeWord, setWholeWord] = useState(false)
-  const [isReplacing, setIsReplacing] = useState(false)
   
   const searchInputRef = useRef<HTMLInputElement>(null)
   const replaceInputRef = useRef<HTMLInputElement>(null)
@@ -133,8 +132,6 @@ export function FindReplaceModal({ editor, isOpen, onClose }: FindReplaceModalPr
 
   const handleReplaceAll = () => {
     if (!editor || matches.length === 0) return
-
-    setIsReplacing(true)
     
     // Sort matches by position (descending) to avoid index shifting
     const sortedMatches = [...matches].sort((a, b) => b.from - a.from)
@@ -147,7 +144,6 @@ export function FindReplaceModal({ editor, isOpen, onClose }: FindReplaceModalPr
     setMatches([])
     setTotalMatches(0)
     setCurrentMatch(0)
-    setIsReplacing(false)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
