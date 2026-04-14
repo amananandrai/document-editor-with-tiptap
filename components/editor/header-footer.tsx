@@ -46,7 +46,6 @@ export function HeaderFooter({
         blockquote: false,
         codeBlock: false,
       }),
-      TextStyle,
       Color,
       Underline,
       Superscript,

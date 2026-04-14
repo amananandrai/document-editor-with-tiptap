@@ -30,6 +30,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { HeaderFooter } from "./header-footer";
 import { ImageResize } from "./image-extension";
 import { PageBreak } from "./page-break-extension";
+import { MarginRuler } from "./margin-ruler";
 import { StatusBar } from "./status-bar";
 import {
   FontFamilyExtension,
@@ -44,6 +45,8 @@ export function RichEditor() {
   const [items, setItems] = useState<TableOfContentDataItem[]>([]);
   const [editorHeight, setEditorHeight] = useState(1124);
   const viewRef = useRef<HTMLDivElement>(null);
+
+  const [focusedEditor, setFocusedEditor] = useState<Editor | null>(null);
 
   // Header/Footer State
   const [showHeader, setShowHeader] = useState(() => loadEditorState()?.showHeader ?? false);
@@ -70,14 +73,21 @@ export function RichEditor() {
       return !prev;
     });
   };
-  const updateHeaderContent = (content: string) => {
-    setHeaderContent(content);
-    saveEditorState({ headerContent: content });
-  };
-  const updateFooterContent = (content: string) => {
-    setFooterContent(content);
-    saveEditorState({ footerContent: content });
-  };
+  const updateHeaderContent = useCallback(
+    debounce((content: string) => {
+      setHeaderContent(content);
+      saveEditorState({ headerContent: content });
+    }, 1000),
+    []
+  );
+
+  const updateFooterContent = useCallback(
+    debounce((content: string) => {
+      setFooterContent(content);
+      saveEditorState({ footerContent: content });
+    }, 1000),
+    []
+  );
 
   const editor = useEditor({
     extensions: [
@@ -228,6 +238,9 @@ export function RichEditor() {
         return doc.body.innerHTML;
       },
     },
+    onFocus: () => {
+      setFocusedEditor(null);
+    },
 
     content: `<h1>Welcome</h1><p>Start typing…</p>`,
     onCreate: ({ editor }) => {
@@ -259,22 +272,83 @@ export function RichEditor() {
   const { handleDrop, handleDragOver, handleDragLeave, handlePaste } =
     useImageUpload(editor);
 
-  // Measure Tiptap height continuously to spawn new A4 pages
+  // --- Dynamic Block Push Pagination Engine ---
   useEffect(() => {
     if (!editor || !viewRef.current) return;
-    
-    // Select the prose mirror element globally or within the ref
-    const pmElement = viewRef.current.querySelector(".ProseMirror");
-    if (!pmElement) return;
+    const pmDom = viewRef.current.querySelector(".ProseMirror");
+    if (!pmDom) return;
 
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setEditorHeight(entry.target.clientHeight || 1124);
-      }
-    });
+    let rafId: number;
 
-    observer.observe(pmElement);
-    return () => observer.disconnect();
+    const computePagination = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const children = Array.from(pmDom.children) as HTMLElement[];
+        
+        const pushes: { child: HTMLElement, amount: number | '' }[] = [];
+        let diffAccumulator = 0;
+        
+        const pageHeight = 1124;
+        const topMargin = 96;
+        const bottomMargin = 96;
+        const usableHeight = pageHeight - topMargin - bottomMargin;
+
+        // Ensure natural geometry is evaluated with precision.
+        for (let i = 0; i < children.length; i++) {
+          const child = children[i];
+          const existingMargin = parseFloat(child.style.marginTop || '0');
+          
+          // Current accumulated top tracking
+          const newTop = child.offsetTop + diffAccumulator;
+          const contentTop = newTop - existingMargin; // the raw visual top
+          
+          const height = child.offsetHeight;
+          const contentBottom = contentTop + height;
+
+          const pageIndex = Math.floor(contentTop / pageHeight);
+          const pageBoundary = (pageIndex + 1) * pageHeight - bottomMargin;
+
+          if (contentBottom > pageBoundary && height < usableHeight) {
+            // Target the very beginning of the next page block
+            const targetTop = (pageIndex + 1) * pageHeight + topMargin;
+            const requiredMargin = targetTop - contentTop;
+            
+            const delta = requiredMargin - existingMargin;
+            
+            // Allow sub-pixel variations (1px threshold)
+            if (Math.abs(delta) > 1) {
+              pushes.push({ child, amount: requiredMargin });
+            }
+            diffAccumulator += delta;
+          } else {
+            // Remove margin if conditions are met
+            if (existingMargin > 0) {
+              pushes.push({ child, amount: '' });
+              diffAccumulator -= existingMargin;
+            }
+          }
+        }
+
+        // Apply visual updates in single batch
+        pushes.forEach(p => {
+          if (p.amount === '') p.child.style.marginTop = '';
+          else p.child.style.marginTop = `${p.amount}px`;
+        });
+        
+        // Also update standard height for calculating the number of backgrounds
+        setEditorHeight(pmDom.clientHeight || 1124);
+      });
+    };
+
+    const observer = new ResizeObserver(() => computePagination());
+    observer.observe(pmDom);
+    editor.on('update', computePagination);
+
+    return () => {
+      observer.disconnect();
+      editor.off('update', computePagination);
+      cancelAnimationFrame(rafId);
+    };
   }, [editor]);
 
   // Derive how many visual pages we need (padding height included)
@@ -295,9 +369,9 @@ export function RichEditor() {
 
   return (
     <div className="flex flex-col h-full bg-gray-100 dark:bg-gray-800">
-      <div className="sticky top-0 z-40 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
+      <div className="sticky top-0 z-40 bg-white dark:bg-gray-900 shadow-sm flex flex-col">
         <EditorToolbar 
-          editor={editor} 
+          editor={focusedEditor || editor} 
           showHeader={showHeader}
           showFooter={showFooter}
           showPageNumbers={showPageNumbers}
@@ -305,6 +379,7 @@ export function RichEditor() {
           onToggleFooter={toggleFooter}
           onTogglePageNumbers={togglePageNumbers}
         />
+        <MarginRuler />
       </div>
 
       <div className="flex flex-1 overflow-hidden relative">
@@ -386,6 +461,7 @@ export function RichEditor() {
                         <HeaderFooter
                           content={headerContent}
                           onChange={updateHeaderContent}
+                          onFocus={(e) => setFocusedEditor(e)}
                           placeholder="Header (click to edit)"
                           type="header"
                           showPageNumber={showPageNumbers}
@@ -400,6 +476,7 @@ export function RichEditor() {
                         <HeaderFooter
                           content={footerContent}
                           onChange={updateFooterContent}
+                          onFocus={(e) => setFocusedEditor(e)}
                           placeholder="Footer (click to edit)"
                           type="footer"
                           showPageNumber={showPageNumbers && !showHeader}
