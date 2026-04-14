@@ -25,7 +25,7 @@ import { TableRow } from "@tiptap/extension-table-row";
 import { TextAlign } from "@tiptap/extension-text-align";
 import { FontSize } from "@tiptap/extension-text-style";
 import Underline from "@tiptap/extension-underline";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import React, { useCallback, useEffect, useState } from "react";
 import { A4PageLayout } from "./a4-page-layout";
