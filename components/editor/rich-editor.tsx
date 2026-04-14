@@ -353,15 +353,36 @@ export function RichEditor() {
               onPaste={handlePaste}
             >
               {/* 1. Stack of Visual Whitespace Pages (Backgrounds) */}
-              <div className="absolute inset-0 z-0 pointer-events-none flex flex-col gap-4">
+              <div className="absolute inset-0 z-0 pointer-events-none flex flex-col shadow-md border border-gray-200/60">
                 {Array.from({ length: numberOfPages }).map((_, i) => (
                   <div 
                     key={i} 
-                    className="relative w-full h-[1124px] shrink-0 bg-white shadow-md border border-gray-200/60 pointer-events-auto" 
+                    className="w-full h-[1124px] shrink-0 bg-white border-b-2 border-dashed border-gray-200" 
+                  />
+                ))}
+              </div>
+
+              {/* 2. The Transparent Interactive Editor Canvas over the pages */}
+              <div 
+                className="relative z-10 w-full"
+                style={{
+                  // The container height stretches exactly as far as the contiguous backgrounds
+                  minHeight: `${numberOfPages * 1124}px`
+                }}
+              >
+                <EditorContent editor={editor} />
+              </div>
+
+              {/* 3. Headers and Footers Stack Overlay (z-20) */}
+              <div className="absolute inset-0 z-20 pointer-events-none flex flex-col">
+                {Array.from({ length: numberOfPages }).map((_, i) => (
+                  <div 
+                    key={i} 
+                    className="relative w-full h-[1124px] shrink-0 pointer-events-none" 
                   >
                     {/* Embedded Header Editor */}
                     {(showHeader || showPageNumbers) && (
-                      <div className="absolute top-0 left-0 right-0 h-[96px] px-16 pt-8 z-20">
+                      <div className="absolute top-0 left-0 right-0 px-16 pt-8 z-30 pointer-events-auto">
                         <HeaderFooter
                           content={headerContent}
                           onChange={updateHeaderContent}
@@ -375,7 +396,7 @@ export function RichEditor() {
                     
                     {/* Embedded Footer Editor */}
                     {(showFooter || (showPageNumbers && !showHeader)) && (
-                      <div className="absolute bottom-0 left-0 right-0 h-[96px] px-16 pb-6 z-20 flex flex-col justify-end">
+                      <div className="absolute bottom-0 left-0 right-0 px-16 pb-6 z-30 flex flex-col justify-end pointer-events-auto">
                         <HeaderFooter
                           content={footerContent}
                           onChange={updateFooterContent}
@@ -388,18 +409,6 @@ export function RichEditor() {
                     )}
                   </div>
                 ))}
-              </div>
-
-              {/* 2. The Transparent Interactive Editor Canvas over the pages */}
-              <div 
-                className="relative z-10 w-full"
-                style={{
-                  // The container height stretches exactly as far as the backgrounds
-                  // (plus the gaps between them `(numberOfPages - 1) * 16` -> 1rem = 16px)
-                  minHeight: `${(numberOfPages * 1124) + ((numberOfPages - 1) * 16)}px`
-                }}
-              >
-                <EditorContent editor={editor} />
               </div>
             </div>
           </div>
