@@ -7,7 +7,10 @@ export interface EditorState {
   content: string;
   isPageLayout: boolean;
   isMultiPageMode: boolean;
-  pageMargin: number;
+  leftMargin: number;
+  rightMargin: number;
+  topMargin: number;
+  bottomMargin: number;
   headerContent: string;
   footerContent: string;
   showHeader: boolean;
@@ -97,7 +100,10 @@ export function saveEditorState(state: Partial<EditorState>): boolean {
     isPageLayout: state.isPageLayout ?? currentState?.isPageLayout ?? false,
     isMultiPageMode:
       state.isMultiPageMode ?? currentState?.isMultiPageMode ?? false,
-    pageMargin: state.pageMargin ?? currentState?.pageMargin ?? 64,
+    leftMargin: state.leftMargin ?? currentState?.leftMargin ?? 96,
+    rightMargin: state.rightMargin ?? currentState?.rightMargin ?? 96,
+    topMargin: state.topMargin ?? currentState?.topMargin ?? 96,
+    bottomMargin: state.bottomMargin ?? currentState?.bottomMargin ?? 96,
     headerContent: state.headerContent ?? currentState?.headerContent ?? "",
     footerContent: state.footerContent ?? currentState?.footerContent ?? "",
     showHeader: state.showHeader ?? currentState?.showHeader ?? false,

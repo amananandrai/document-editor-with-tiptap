@@ -55,6 +55,21 @@ export function RichEditor() {
   const [headerContent, setHeaderContent] = useState(() => loadEditorState()?.headerContent ?? "");
   const [footerContent, setFooterContent] = useState(() => loadEditorState()?.footerContent ?? "");
 
+  // Margin State
+  const [leftMargin, setLeftMargin] = useState(() => loadEditorState()?.leftMargin ?? 96);
+  const [rightMargin, setRightMargin] = useState(() => loadEditorState()?.rightMargin ?? 96);
+  const [topMargin] = useState(() => loadEditorState()?.topMargin ?? 96);
+  const [bottomMargin] = useState(() => loadEditorState()?.bottomMargin ?? 96);
+
+  const updateLeftMargin = (val: number) => {
+    setLeftMargin(val);
+    saveEditorState({ leftMargin: val });
+  };
+  const updateRightMargin = (val: number) => {
+    setRightMargin(val);
+    saveEditorState({ rightMargin: val });
+  };
+
   const toggleHeader = () => {
     setShowHeader((prev) => {
       saveEditorState({ showHeader: !prev });
@@ -192,7 +207,7 @@ export function RichEditor() {
             "prose prose-lg max-w-none prose-headings:font-bold",
             "prose-p:leading-relaxed prose-headings:leading-tight"
           ),
-        style: "padding: 96px;", // 1 inch A4 margins internally
+        style: `padding: ${topMargin}px ${rightMargin}px ${bottomMargin}px ${leftMargin}px;`,
       },
       // Preserve inline formatting styles (bold, italic, colors, font sizes, etc.)
       // when pasting from external sources like Google Docs, Word, or web pages.
@@ -289,9 +304,9 @@ export function RichEditor() {
         let diffAccumulator = 0;
         
         const pageHeight = 1124;
-        const topMargin = 96;
-        const bottomMargin = 96;
-        const usableHeight = pageHeight - topMargin - bottomMargin;
+        const currentTopMargin = topMargin;
+        const currentBottomMargin = bottomMargin;
+        const usableHeight = pageHeight - currentTopMargin - currentBottomMargin;
 
         // Ensure natural geometry is evaluated with precision.
         for (let i = 0; i < children.length; i++) {
@@ -306,11 +321,11 @@ export function RichEditor() {
           const contentBottom = contentTop + height;
 
           const pageIndex = Math.floor(contentTop / pageHeight);
-          const pageBoundary = (pageIndex + 1) * pageHeight - bottomMargin;
+          const pageBoundary = (pageIndex + 1) * pageHeight - currentBottomMargin;
 
           if (contentBottom > pageBoundary && height < usableHeight) {
             // Target the very beginning of the next page block
-            const targetTop = (pageIndex + 1) * pageHeight + topMargin;
+            const targetTop = (pageIndex + 1) * pageHeight + currentTopMargin;
             const requiredMargin = targetTop - contentTop;
             
             const delta = requiredMargin - existingMargin;
@@ -379,7 +394,6 @@ export function RichEditor() {
           onToggleFooter={toggleFooter}
           onTogglePageNumbers={togglePageNumbers}
         />
-        <MarginRuler />
       </div>
 
       <div className="flex flex-1 overflow-hidden relative">
@@ -418,7 +432,15 @@ export function RichEditor() {
 
         <main className="flex-1 overflow-y-auto relative" ref={viewRef}>
           {/* Scroll container logic centering the A4 page stack */}
-          <div className="min-h-full py-8 flex justify-center">
+          <div className="min-h-full py-8 flex items-center flex-col">
+            {/* The Ruler stays aligned with the page container */}
+            <MarginRuler 
+              leftMargin={leftMargin}
+              rightMargin={rightMargin}
+              onLeftMarginChange={updateLeftMargin}
+              onRightMarginChange={updateRightMargin}
+            />
+
             {/* The A4 Canvas System */}
             <div 
               className="relative w-[794px]"
