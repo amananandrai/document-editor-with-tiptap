@@ -7,6 +7,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
+  DropdownMenuPortal,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -75,9 +76,11 @@ type Props = {
   showHeader?: boolean;
   showFooter?: boolean;
   showPageNumbers?: boolean;
+  pageNumberPosition?: string;
   onToggleHeader?: () => void;
   onToggleFooter?: () => void;
   onTogglePageNumbers?: () => void;
+  onUpdatePageNumberPosition?: (pos: string) => void;
 };
 
 export function EditorToolbar({
@@ -86,9 +89,11 @@ export function EditorToolbar({
   showHeader = false,
   showFooter = false,
   showPageNumbers = false,
+  pageNumberPosition = "footer-right",
   onToggleHeader,
   onToggleFooter,
   onTogglePageNumbers,
+  onUpdatePageNumberPosition,
 }: Props) {
   const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
   const { isFocusMode, toggleFocusMode } = useFocusMode();
@@ -1628,11 +1633,50 @@ export function EditorToolbar({
               {showFooter && <Check className="h-3 w-3 mr-1 text-blue-500" />}
               <span className={showFooter ? "ml-1" : "ml-4"}>Footer</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onTogglePageNumbers}>
-              <Hash className="h-4 w-4 mr-2" />
-              {showPageNumbers && <Check className="h-3 w-3 mr-1 text-blue-500" />}
-              <span className={showPageNumbers ? "ml-1" : "ml-4"}>Page Numbers</span>
-            </DropdownMenuItem>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Hash className="h-4 w-4 mr-2" />
+                <span>Page Numbers</span>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuPortal>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem onClick={() => onUpdatePageNumberPosition?.('none')}>
+                    {pageNumberPosition === 'none' && <Check className="h-3 w-3 mr-1 text-blue-500" />}
+                    <span className={pageNumberPosition === 'none' ? "ml-1" : "ml-4"}>None</span>
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-[10px] text-gray-400 px-2 py-1 uppercase">Header</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => onUpdatePageNumberPosition?.('header-left')}>
+                    {pageNumberPosition === 'header-left' && <Check className="h-3 w-3 mr-1 text-blue-500" />}
+                    <span className={pageNumberPosition === 'header-left' ? "ml-1" : "ml-4"}>Top Left</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onUpdatePageNumberPosition?.('header-center')}>
+                    {pageNumberPosition === 'header-center' && <Check className="h-3 w-3 mr-1 text-blue-500" />}
+                    <span className={pageNumberPosition === 'header-center' ? "ml-1" : "ml-4"}>Top Center</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onUpdatePageNumberPosition?.('header-right')}>
+                    {pageNumberPosition === 'header-right' && <Check className="h-3 w-3 mr-1 text-blue-500" />}
+                    <span className={pageNumberPosition === 'header-right' ? "ml-1" : "ml-4"}>Top Right</span>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-[10px] text-gray-400 px-2 py-1 uppercase">Footer</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => onUpdatePageNumberPosition?.('footer-left')}>
+                    {pageNumberPosition === 'footer-left' && <Check className="h-3 w-3 mr-1 text-blue-500" />}
+                    <span className={pageNumberPosition === 'footer-left' ? "ml-1" : "ml-4"}>Bottom Left</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onUpdatePageNumberPosition?.('footer-center')}>
+                    {pageNumberPosition === 'footer-center' && <Check className="h-3 w-3 mr-1 text-blue-500" />}
+                    <span className={pageNumberPosition === 'footer-center' ? "ml-1" : "ml-4"}>Bottom Center</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onUpdatePageNumberPosition?.('footer-right')}>
+                    {pageNumberPosition === 'footer-right' && <Check className="h-3 w-3 mr-1 text-blue-500" />}
+                    <span className={pageNumberPosition === 'footer-right' ? "ml-1" : "ml-4"}>Bottom Right</span>
+                  </DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuPortal>
+            </DropdownMenuSub>
           </DropdownMenuContent>
         </DropdownMenu>
         {/* Tools */}

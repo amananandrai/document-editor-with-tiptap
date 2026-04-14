@@ -54,6 +54,7 @@ export function RichEditor() {
   const [showPageNumbers, setShowPageNumbers] = useState(() => loadEditorState()?.showPageNumbers ?? false);
   const [headerContent, setHeaderContent] = useState(() => loadEditorState()?.headerContent ?? "");
   const [footerContent, setFooterContent] = useState(() => loadEditorState()?.footerContent ?? "");
+  const [pageNumberPosition, setPageNumberPosition] = useState(() => loadEditorState()?.pageNumberPosition ?? 'footer-right');
 
   // Margin State
   const [leftMargin, setLeftMargin] = useState(() => loadEditorState()?.leftMargin ?? 96);
@@ -87,6 +88,30 @@ export function RichEditor() {
       saveEditorState({ showPageNumbers: !prev });
       return !prev;
     });
+  };
+
+  const updatePageNumberPosition = (pos: any) => {
+    setPageNumberPosition(pos);
+    const updates: any = { pageNumberPosition: pos };
+    
+    if (pos === 'none') {
+      setShowPageNumbers(false);
+      updates.showPageNumbers = false;
+    } else {
+      setShowPageNumbers(true);
+      updates.showPageNumbers = true;
+      
+      // Auto-enable header or footer if position is inside them
+      if (pos.startsWith('header') && !showHeader) {
+        setShowHeader(true);
+        updates.showHeader = true;
+      } else if (pos.startsWith('footer') && !showFooter) {
+        setShowFooter(true);
+        updates.showFooter = true;
+      }
+    }
+    
+    saveEditorState(updates);
   };
   const updateHeaderContent = useCallback(
     debounce((content: string) => {
@@ -390,9 +415,11 @@ export function RichEditor() {
           showHeader={showHeader}
           showFooter={showFooter}
           showPageNumbers={showPageNumbers}
+          pageNumberPosition={pageNumberPosition}
           onToggleHeader={toggleHeader}
           onToggleFooter={toggleFooter}
           onTogglePageNumbers={togglePageNumbers}
+          onUpdatePageNumberPosition={updatePageNumberPosition}
         />
       </div>
 
@@ -488,6 +515,7 @@ export function RichEditor() {
                           type="header"
                           showPageNumber={showPageNumbers}
                           pageNumber={i + 1}
+                          pageNumberPosition={pageNumberPosition}
                         />
                       </div>
                     )}
@@ -503,6 +531,7 @@ export function RichEditor() {
                           type="footer"
                           showPageNumber={showPageNumbers && !showHeader}
                           pageNumber={i + 1}
+                          pageNumberPosition={pageNumberPosition}
                         />
                       </div>
                     )}

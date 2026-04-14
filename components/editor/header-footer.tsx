@@ -23,6 +23,7 @@ interface HeaderFooterProps {
   onEditorReady?: (editor: Editor) => void;
   onFocus?: (editor: Editor) => void;
   onBlur?: (editor: Editor) => void;
+  pageNumberPosition?: string;
 }
 
 export function HeaderFooter({
@@ -36,6 +37,7 @@ export function HeaderFooter({
   onEditorReady,
   onFocus,
   onBlur,
+  pageNumberPosition = "footer-right",
 }: HeaderFooterProps) {
   const editor = useEditor({
     extensions: [
@@ -111,8 +113,8 @@ export function HeaderFooter({
         {type === "header" ? "Header" : "Footer"} - Use main toolbar to format
       </div>
 
-      <div className="flex items-center justify-between gap-2 min-h-[50px]">
-        <div className="flex-1 min-w-0 relative">
+      <div className="min-h-[50px] relative flex items-center">
+        <div className="flex-1 min-w-0">
           <EditorContent editor={editor} />
           {!content && editor && editor.isEmpty && (
             <div className="absolute top-2 left-2 pointer-events-none text-gray-400 text-sm italic">
@@ -120,9 +122,20 @@ export function HeaderFooter({
             </div>
           )}
         </div>
-        {showPageNumber && pageNumber !== undefined && (
-          <div className="flex-none text-xs text-gray-500 dark:text-gray-400 px-3 py-1 font-medium">
-            {pageNumber}
+
+        {/* Dynamic Page Number Slot */}
+        {showPageNumber && pageNumber !== undefined && pageNumberPosition?.startsWith(type) && (
+          <div 
+            className={cn(
+              "absolute inset-0 pointer-events-none flex items-center px-4",
+              pageNumberPosition.endsWith("left") && "justify-start",
+              pageNumberPosition.endsWith("center") && "justify-center",
+              pageNumberPosition.endsWith("right") && "justify-end"
+            )}
+          >
+            <div className="text-xs text-gray-400 dark:text-gray-500 font-medium bg-white/80 dark:bg-slate-900/80 px-1 py-0.5 rounded select-none">
+              {pageNumber}
+            </div>
           </div>
         )}
       </div>

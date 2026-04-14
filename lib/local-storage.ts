@@ -16,6 +16,7 @@ export interface EditorState {
   showHeader: boolean;
   showFooter: boolean;
   showPageNumbers: boolean;
+  pageNumberPosition: 'header-left' | 'header-center' | 'header-right' | 'footer-left' | 'footer-center' | 'footer-right' | 'none';
   lastSaved: string;
 }
 
@@ -109,6 +110,7 @@ export function saveEditorState(state: Partial<EditorState>): boolean {
     showHeader: state.showHeader ?? currentState?.showHeader ?? false,
     showFooter: state.showFooter ?? currentState?.showFooter ?? false,
     showPageNumbers: state.showPageNumbers ?? currentState?.showPageNumbers ?? false,
+    pageNumberPosition: state.pageNumberPosition ?? currentState?.pageNumberPosition ?? 'footer-right',
     lastSaved: new Date().toISOString(),
   };
   return setItem(STORAGE_KEYS.EDITOR_STATE, newState);
