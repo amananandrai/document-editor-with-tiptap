@@ -1,0 +1,4 @@
+<svg width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0 0h40v40H0z" fill="transparent"/>
+  <circle cx="2" cy="2" r="1.5" fill="currentColor" opacity="0.3"/>
+</svg>

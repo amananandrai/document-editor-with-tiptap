@@ -23,7 +23,7 @@ import {
 } from "@tiptap/extension-table-of-contents";
 import { TableRow } from "@tiptap/extension-table-row";
 import { TextAlign } from "@tiptap/extension-text-align";
-import { FontSize, TextStyle } from "@tiptap/extension-text-style";
+import { FontSize } from "@tiptap/extension-text-style";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -333,6 +333,9 @@ export function RichEditor() {
   const editor = useEditor({
     extensions: [
       // Base kit: paragraphs, headings, bold, italic, lists, etc.
+      // Tiptap v3 StarterKit now includes link, underline, blockquote, and code
+      // by default — disable those here to avoid duplicate extension warnings,
+      // since we register them below with custom configuration.
       StarterKit.configure({
         heading: { levels: [1, 2, 3, 4] },
         bulletList: {
@@ -354,16 +357,21 @@ export function RichEditor() {
             class: "ml-4",
           },
         },
-        codeBlock: false, // We'll use the standalone CodeBlock extension
+        codeBlock: false, // replaced by standalone CodeBlock extension below
+        blockquote: false, // registered below (no custom config needed here)
+        code: false,       // registered below (no custom config needed here)
+        link: false,       // registered below with custom HTMLAttributes
+        underline: false,  // registered below (standalone import)
       }),
       // Marks and styles
+      // Note: TextStyle is NOT listed separately — FontFamilyExtension already
+      // extends TextStyle (same extension name). Listing both would cause duplicates.
       Underline,
-      TextStyle,
       Color, // text color via TextStyle
       Highlight.configure({ multicolor: true }), // background color
       Superscript,
       Subscript,
-      // Custom attributes
+      // Custom attributes (FontFamilyExtension IS TextStyle with fontFamily added)
       IndentExtension,
       LineHeightExtension,
       FontFamilyExtension,
@@ -387,6 +395,7 @@ export function RichEditor() {
           class: "text-blue-600 underline cursor-pointer hover:text-blue-800",
         },
       }),
+
       // Tables
       Table.configure({
         resizable: true,
