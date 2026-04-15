@@ -56,106 +56,33 @@ function TocNodeViewComponent({ selected }: { selected?: boolean }) {
         contentEditable={false}
         data-type="toc-block"
         className={[
-          "toc-block-node my-6 rounded-xl overflow-hidden border shadow-md transition-all duration-150",
-          selected
-            ? "ring-2 ring-blue-400 border-blue-300 dark:border-blue-600"
-            : "border-slate-200 dark:border-slate-700",
+          "toc-block-node my-4 relative rounded outline-none transition-colors",
+          selected ? "bg-blue-50/30 dark:bg-blue-900/20 ring-1 ring-blue-500/40" : "",
         ].join(" ")}
       >
-        {/* ── Header bar ── */}
-        <div className="flex items-center justify-between px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-800">
-          <div className="flex items-center gap-2">
-            <svg
-              className="w-4 h-4 text-white/90 shrink-0"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4 6h16M4 10h12M4 14h8M4 18h6"
-              />
-            </svg>
-            <span className="text-white font-semibold text-sm tracking-wider uppercase select-none">
-              Table of Contents
-            </span>
+        {selected && (
+          <div className="absolute -top-[34px] left-0 bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded text-xs text-gray-600 dark:text-gray-300 flex items-center gap-2 select-none z-10 whitespace-nowrap">
+            <span className="font-semibold text-gray-700 dark:text-gray-200">Table of contents</span>
           </div>
-          <span className="text-white/50 text-[10px] select-none">
-            {items.length} heading{items.length !== 1 ? "s" : ""}
-          </span>
-        </div>
-
-        {/* ── Body ── */}
-        <div className="bg-white dark:bg-slate-900 px-5 py-4">
+        )}
+        
+        <div className="py-2 px-3 min-h-[40px]">
           {items.length === 0 ? (
-            <div className="flex flex-col items-center py-6 gap-2">
-              <svg
-                className="w-8 h-8 text-gray-300 dark:text-gray-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4 6h16M4 10h12M4 14h8M4 18h6"
-                />
-              </svg>
-              <p className="text-xs text-gray-400 dark:text-gray-500 italic text-center">
-                No headings found. Add H1–H4 headings to populate this table of
-                contents.
-              </p>
-            </div>
+            <p className="text-[14px] text-gray-400 dark:text-gray-500 italic">
+              Add headings (Format &gt; Paragraph styles) and they will appear in your table of contents.
+            </p>
           ) : (
-            <ul className="space-y-0.5">
+            <ul className="flex flex-col gap-1.5">
               {items.map((item) => {
-                const indent = (item.level - 1) * 20;
-                const isH1 = item.level === 1;
-                const isH2 = item.level === 2;
-
+                const indent = (item.level - 1) * 24;
                 return (
-                  <li key={item.id}>
+                  <li key={item.id} style={{ marginLeft: `${indent}px` }}>
                     <button
                       type="button"
                       onClick={() => onHeadingClick(item.id)}
-                      style={{ paddingLeft: `${indent + 8}px` }}
-                      className="group w-full text-left py-1.5 pr-2 rounded-lg transition-all duration-150 hover:bg-blue-50 dark:hover:bg-blue-900/30 flex items-center gap-2"
+                      className="text-left text-[15px] font-normal text-[#1155cc] dark:text-[#8ab4f8] hover:underline underline-offset-2 w-full truncate cursor-pointer"
                     >
-                      {/* Level bullet */}
-                      <span
-                        className={[
-                          "shrink-0 w-3.5 text-center select-none leading-none",
-                          isH1
-                            ? "text-blue-600 dark:text-blue-400 text-[9px]"
-                            : isH2
-                            ? "text-indigo-400 dark:text-indigo-400 text-[9px]"
-                            : "text-gray-400 text-[11px]",
-                        ].join(" ")}
-                      >
-                        {isH1 ? "●" : isH2 ? "◆" : "–"}
-                      </span>
-
-                      {/* Heading text */}
-                      <span
-                        className={[
-                          "flex-1 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors leading-snug",
-                          isH1
-                            ? "font-semibold text-gray-900 dark:text-gray-100 text-sm"
-                            : isH2
-                            ? "font-medium text-gray-800 dark:text-gray-200 text-[13px]"
-                            : "text-gray-600 dark:text-gray-300 text-xs",
-                        ].join(" ")}
-                      >
-                        {item.textContent}
-                      </span>
-
-                      {/* Hover arrow */}
-                      <span className="ml-auto text-blue-400 dark:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity text-xs shrink-0">
-                        ↗
-                      </span>
+                      {item.textContent}
                     </button>
                   </li>
                 );
@@ -186,8 +113,7 @@ export const TableOfContentsNode = Node.create({
       mergeAttributes(HTMLAttributes, {
         "data-type": "toc-block",
         class: "toc-placeholder",
-        style:
-          "border:1px solid #c7d5e8; padding:12px; border-radius:8px; page-break-inside:avoid; background:#f0f4ff;",
+        style: "page-break-inside:avoid;",
       }),
       "[ Table of Contents ]",
     ];

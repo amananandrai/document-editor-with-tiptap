@@ -401,7 +401,7 @@ export function RichEditor() {
   const scrollToHeading = useCallback(
     (id: string) => {
       if (!editor) return;
-      const el = editor.view.dom.querySelector(`[data-id="${id}"]`);
+      const el = editor.view.dom.querySelector(`[data-toc-id="${id}"]`);
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     },
     [editor]
@@ -435,14 +435,14 @@ export function RichEditor() {
     const mainEl = viewRef.current;
     const updateActive = () => {
       const headingEls = Array.from(
-        editor.view.dom.querySelectorAll("[data-id]")
+        editor.view.dom.querySelectorAll("[data-toc-id]")
       ) as HTMLElement[];
       const mainRect = mainEl.getBoundingClientRect();
       let current = "";
       for (const el of headingEls) {
         const rect = el.getBoundingClientRect();
         if (rect.top <= mainRect.top + mainRect.height * 0.35) {
-          current = el.getAttribute("data-id") || "";
+          current = el.getAttribute("data-toc-id") || "";
         } else break;
       }
       setActiveHeadingId(current);
