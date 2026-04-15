@@ -31,6 +31,7 @@ import { HeaderFooter } from "./header-footer";
 import { ImageResize } from "./image-extension";
 import { PageBreak } from "./page-break-extension";
 import { MarginRuler } from "./margin-ruler";
+import { tocStore, TableOfContentsNode } from "./toc-extension";
 import { StatusBar } from "./status-bar";
 import {
   FontFamilyExtension,
@@ -43,6 +44,7 @@ import React, { useCallback, useEffect, useState, useRef } from "react";
 
 export function RichEditor() {
   const [items, setItems] = useState<TableOfContentDataItem[]>([]);
+  const [activeHeadingId, setActiveHeadingId] = useState<string>("");
   const [editorHeight, setEditorHeight] = useState(1124);
   const viewRef = useRef<HTMLDivElement>(null);
 
@@ -221,6 +223,8 @@ export function RichEditor() {
           setItems(content);
         },
       }),
+      // Inline insertable Table of Contents block
+      TableOfContentsNode,
     ],
     // Prevent immediate DOM rendering on initial (server) render to avoid hydration mismatch
     immediatelyRender: false,
@@ -394,18 +398,59 @@ export function RichEditor() {
   // Derive how many visual pages we need (padding height included)
   const numberOfPages = Math.max(1, Math.ceil(editorHeight / 1124));
 
+  const scrollToHeading = useCallback(
+    (id: string) => {
+      if (!editor) return;
+      const el = editor.view.dom.querySelector(`[data-id="${id}"]`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    },
+    [editor]
+  );
+
+  const insertTableOfContents = useCallback(() => {
+    if (!editor) return;
+    (editor.chain().focus() as any).insertTableOfContents().run();
+  }, [editor]);
+
   const handleItemClick = (
     e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
     id: string
   ) => {
     e.preventDefault();
-    if (editor) {
-      const element = editor.view.dom.querySelector(`[data-id="${id}"]`);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    }
+    scrollToHeading(id);
   };
+
+  // Sync TOC items to global store so the inline TOC NodeView stays up-to-date
+  useEffect(() => {
+    tocStore.setItems(items);
+  }, [items]);
+
+  useEffect(() => {
+    tocStore.setOnHeadingClick(scrollToHeading);
+  }, [scrollToHeading]);
+
+  // Track which heading is currently visible to highlight it in the sidebar
+  useEffect(() => {
+    if (!viewRef.current || !editor) return;
+    const mainEl = viewRef.current;
+    const updateActive = () => {
+      const headingEls = Array.from(
+        editor.view.dom.querySelectorAll("[data-id]")
+      ) as HTMLElement[];
+      const mainRect = mainEl.getBoundingClientRect();
+      let current = "";
+      for (const el of headingEls) {
+        const rect = el.getBoundingClientRect();
+        if (rect.top <= mainRect.top + mainRect.height * 0.35) {
+          current = el.getAttribute("data-id") || "";
+        } else break;
+      }
+      setActiveHeadingId(current);
+    };
+    mainEl.addEventListener("scroll", updateActive, { passive: true });
+    updateActive();
+    return () => mainEl.removeEventListener("scroll", updateActive);
+  }, [editor]);
 
   return (
     <div className="flex flex-col h-full bg-gray-100 dark:bg-gray-800">
@@ -420,40 +465,92 @@ export function RichEditor() {
           onToggleFooter={toggleFooter}
           onTogglePageNumbers={togglePageNumbers}
           onUpdatePageNumberPosition={updatePageNumberPosition}
+          onInsertTableOfContents={insertTableOfContents}
         />
       </div>
 
       <div className="flex flex-1 overflow-hidden relative">
-        <aside className="w-64 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900 overflow-y-auto p-4 z-10 hidden md:block">
-          <h2 className="text-lg font-semibold mb-4 dark:text-gray-100">
-            Table of Contents
-          </h2>
-          <div>
-            <ul className="space-y-1">
-              {items.length > 0 ? (
-                items.map((item) => (
-                  <li key={item.id}>
-                    <a
-                      href={`#${item.id}`} // functional link
-                      onClick={(e) => handleItemClick(e, item.id)}
-                      style={{ paddingLeft: `${item.level * 1}rem` }}
-                      // highlight the current section
-                      className={`
-                        block w-full rounded-md px-2 py-2 text-sm
-                        hover:bg-gray-100 dark:hover:bg-gray-800
-                        dark:text-gray-300 dark:hover:text-white
-                      `}
-                    >
-                      {item.textContent}
-                    </a>
-                  </li>
-                ))
-              ) : (
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  No headings found.
+        <aside className="w-60 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900 z-10 hidden md:flex flex-col overflow-hidden">
+          {/* Sidebar header */}
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 dark:border-gray-700 shrink-0">
+            <svg
+              className="w-4 h-4 text-blue-500 shrink-0"
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h12M4 14h8M4 18h6" />
+            </svg>
+            <h2 className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+              Contents
+            </h2>
+            {items.length > 0 && (
+              <span className="ml-auto text-[10px] text-gray-400 dark:text-gray-500 font-mono">
+                {items.length}
+              </span>
+            )}
+          </div>
+
+          {/* Scrollable TOC list */}
+          <div className="flex-1 overflow-y-auto px-2 py-3">
+            {items.length > 0 ? (
+              <ul className="space-y-0.5">
+                {items.map((item) => {
+                  const isActive = item.id === activeHeadingId;
+                  return (
+                    <li key={item.id}>
+                      <a
+                        href={`#${item.id}`}
+                        onClick={(e) => handleItemClick(e, item.id)}
+                        style={{ paddingLeft: `${(item.level - 1) * 14 + 8}px` }}
+                        className={[
+                          "group flex items-center gap-2 py-1.5 pr-2 rounded-lg transition-all duration-150 no-underline",
+                          isActive
+                            ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                            : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-gray-100",
+                        ].join(" ")}
+                      >
+                        <span
+                          className={[
+                            "shrink-0 text-[9px] font-bold font-mono w-5 text-center leading-none",
+                            isActive
+                              ? "text-blue-500 dark:text-blue-400"
+                              : "text-gray-400 dark:text-gray-500",
+                          ].join(" ")}
+                        >
+                          H{item.level}
+                        </span>
+                        <span
+                          className={[
+                            "truncate text-[13px] leading-snug",
+                            item.level === 1
+                              ? "font-semibold"
+                              : item.level === 2
+                              ? "font-medium"
+                              : "font-normal",
+                          ].join(" ")}
+                        >
+                          {item.textContent}
+                        </span>
+                        {isActive && (
+                          <span className="ml-auto w-1 h-3.5 bg-blue-500 dark:bg-blue-400 rounded-full shrink-0" />
+                        )}
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-32 gap-3 px-3">
+                <svg
+                  className="w-8 h-8 text-gray-300 dark:text-gray-600"
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h12M4 14h8M4 18h6" />
+                </svg>
+                <p className="text-xs text-gray-400 dark:text-gray-500 text-center leading-relaxed">
+                  Add headings (H1–H4) to build your contents panel.
                 </p>
-              )}
-            </ul>
+              </div>
+            )}
           </div>
         </aside>
 
@@ -506,7 +603,10 @@ export function RichEditor() {
                   >
                     {/* Embedded Header Editor */}
                     {(showHeader || showPageNumbers) && (
-                      <div className="absolute top-0 left-0 right-0 px-16 pt-8 z-30 pointer-events-auto">
+                      <div 
+                        className="absolute top-0 left-0 right-0 z-30 pointer-events-auto"
+                        style={{ paddingLeft: `${leftMargin}px`, paddingRight: `${rightMargin}px`, paddingTop: `${topMargin / 2}px` }}
+                      >
                         <HeaderFooter
                           content={headerContent}
                           onChange={updateHeaderContent}
@@ -522,7 +622,10 @@ export function RichEditor() {
                     
                     {/* Embedded Footer Editor */}
                     {(showFooter || (showPageNumbers && !showHeader)) && (
-                      <div className="absolute bottom-0 left-0 right-0 px-16 pb-6 z-30 flex flex-col justify-end pointer-events-auto">
+                      <div 
+                        className="absolute bottom-0 left-0 right-0 z-30 flex flex-col justify-end pointer-events-auto"
+                        style={{ paddingLeft: `${leftMargin}px`, paddingRight: `${rightMargin}px`, paddingBottom: `${bottomMargin / 2}px` }}
+                      >
                         <HeaderFooter
                           content={footerContent}
                           onChange={updateFooterContent}

@@ -25,6 +25,7 @@ import {
   AlignRight,
   BetweenVerticalStart,
   BoldIcon,
+  BookOpen,
   Check,
   Code,
   CodeXml,
@@ -81,6 +82,7 @@ type Props = {
   onToggleFooter?: () => void;
   onTogglePageNumbers?: () => void;
   onUpdatePageNumberPosition?: (pos: string) => void;
+  onInsertTableOfContents?: () => void;
 };
 
 export function EditorToolbar({
@@ -94,6 +96,7 @@ export function EditorToolbar({
   onToggleFooter,
   onTogglePageNumbers,
   onUpdatePageNumberPosition,
+  onInsertTableOfContents,
 }: Props) {
   const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
   const { isFocusMode, toggleFocusMode } = useFocusMode();
@@ -1616,6 +1619,14 @@ export function EditorToolbar({
                   Image
                 </DropdownMenuItem>
               </>
+            )}
+
+            {/* Table of Contents - Disabled in header/footer mode */}
+            {!isHeaderFooterMode && (
+              <DropdownMenuItem onClick={onInsertTableOfContents}>
+                <BookOpen className="h-4 w-4 mr-2" />
+                Table of Contents
+              </DropdownMenuItem>
             )}
 
             {/* Page Elements */}
