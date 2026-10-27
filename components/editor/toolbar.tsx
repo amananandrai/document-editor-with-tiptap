@@ -100,6 +100,8 @@ type Props = {
   onInsertEquation?: () => void;
   /** Header/footer HTML (with page number fields) for Word export */
   getWordHeaderFooter?: () => WordHeaderFooter;
+  /** Clear header/footer text; returns a function that restores it */
+  onClearHeaderFooter?: () => () => void;
 };
 
 export function EditorToolbar({
@@ -117,6 +119,7 @@ export function EditorToolbar({
   onOpenPageSetup,
   onInsertEquation,
   getWordHeaderFooter,
+  onClearHeaderFooter,
 }: Props) {
   const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
   const { isFocusMode, toggleFocusMode } = useFocusMode();
@@ -1296,10 +1299,23 @@ export function EditorToolbar({
 
   const handleClear = () => {
     const confirmed = window.confirm(
-      "Clear all content from the document? You can undo with Ctrl+Z."
+      "Clear all content, including the header and footer?"
     );
     if (!confirmed) return;
+    const previousHtml = docEditor.getHTML();
     docEditor.chain().focus().clearContent().run();
+    // Header/footer text isn't in the document's undo history, so offer an
+    // explicit undo that restores everything that was cleared.
+    const restoreHeaderFooter = onClearHeaderFooter?.();
+    toast.success("Content cleared", {
+      action: {
+        label: "Undo",
+        onClick: () => {
+          docEditor.commands.setContent(previousHtml);
+          restoreHeaderFooter?.();
+        },
+      },
+    });
   };
 
   const insertPageBreak = () => {

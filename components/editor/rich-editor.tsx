@@ -507,6 +507,18 @@ export function RichEditor() {
     [editor]
   );
 
+  const clearHeaderFooter = useCallback(() => {
+    const previous = { header: headerContent, footer: footerContent };
+    // Close any live header/footer editor so it doesn't keep the old text
+    setActiveHeaderFooter(null);
+    updateHeaderContent("");
+    updateFooterContent("");
+    return () => {
+      updateHeaderContent(previous.header);
+      updateFooterContent(previous.footer);
+    };
+  }, [headerContent, footerContent, updateHeaderContent, updateFooterContent]);
+
   const exitHeaderFooter = useCallback(() => {
     setActiveHeaderFooter(null);
     editor?.commands.focus();
@@ -585,6 +597,7 @@ export function RichEditor() {
           onInsertTableOfContents={insertTableOfContents}
           onOpenPageSetup={() => setIsPageSetupOpen(true)}
           onInsertEquation={() => setEquationDraft({ latex: "", mode: "inline" })}
+          onClearHeaderFooter={clearHeaderFooter}
           getWordHeaderFooter={() => ({
             header: visibility.headerZone
               ? buildHeaderFooterHtml(visibility.headerText ? headerContent : "", visibility.headerPageNumber)
