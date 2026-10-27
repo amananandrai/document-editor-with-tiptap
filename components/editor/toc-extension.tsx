@@ -96,6 +96,14 @@ function TocNodeViewComponent({ selected }: { selected?: boolean }) {
 }
 
 // ─── TipTap Node Extension ────────────────────────────────────────────────────
+declare module "@tiptap/core" {
+  interface Commands<ReturnType> {
+    tableOfContentsNode: {
+      insertTableOfContents: () => ReturnType;
+    };
+  }
+}
+
 export const TableOfContentsNode = Node.create({
   name: "tableOfContentsNode",
   group: "block",
@@ -123,12 +131,11 @@ export const TableOfContentsNode = Node.create({
     return ReactNodeViewRenderer(TocNodeViewComponent);
   },
 
-  // @ts-ignore – addCommands generic typing differs across TipTap versions
   addCommands() {
     return {
       insertTableOfContents:
         () =>
-        ({ commands }: any) =>
+        ({ commands }) =>
           commands.insertContent({ type: this.name }),
     };
   },

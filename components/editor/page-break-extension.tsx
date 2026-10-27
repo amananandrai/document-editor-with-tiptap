@@ -1,10 +1,10 @@
 import { canInsertNode, isNodeSelection, mergeAttributes, Node } from '@tiptap/core';
-import { TextSelection } from '@tiptap/pm/state';
+import { NodeSelection, TextSelection } from '@tiptap/pm/state';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { PageBreakComponent } from './page-break-component';
 
 export interface PageBreakOptions {
-  HTMLAttributes: Record<string, any>;
+  HTMLAttributes: Record<string, unknown>;
 }
 
 declare module '@tiptap/core' {
@@ -76,18 +76,16 @@ export const PageBreak = Node.create<PageBreakOptions>({
           // if needed) so typing doesn't replace the selected break.
           return currentChain
             .command(({ tr, dispatch }) => {
-              if (dispatch) {
-                const { $to } = tr.selection;
-                const nodeAfter = tr.doc.nodeAt($to.pos);
-                if (nodeAfter?.isTextblock) {
-                  tr.setSelection(TextSelection.create(tr.doc, $to.pos + 1));
-                } else {
-                  const paragraph = state.schema.nodes.paragraph.create();
-                  tr.insert($to.pos, paragraph);
-                  tr.setSelection(TextSelection.create(tr.doc, $to.pos + 1));
+              // Splitting a paragraph already leaves the cursor in the second
+              // half; only a selected break (inserted at a block end) needs it.
+              if (dispatch && tr.selection instanceof NodeSelection) {
+                const after = tr.selection.to;
+                if (!tr.doc.nodeAt(after)?.isTextblock) {
+                  tr.insert(after, state.schema.nodes.paragraph.create());
                 }
-                tr.scrollIntoView();
+                tr.setSelection(TextSelection.create(tr.doc, after + 1));
               }
+              if (dispatch) tr.scrollIntoView();
               return true;
             })
             .run();

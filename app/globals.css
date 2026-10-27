@@ -537,3 +537,96 @@ html {
     page-break-after: always;
   }
 }
+
+/* ─── Lists: automatic markers by level and multilevel presets ─────────────── */
+/* Unlayered so they override the list-disc/list-decimal utilities. An explicit
+   style picked from the toolbar is an inline list-style-type and wins. */
+
+.ProseMirror ul { list-style-type: disc; }
+.ProseMirror ul ul { list-style-type: circle; }
+.ProseMirror ul ul ul { list-style-type: square; }
+.ProseMirror ul ul ul ul { list-style-type: disc; }
+
+.ProseMirror ol { list-style-type: decimal; }
+.ProseMirror ol ol { list-style-type: lower-alpha; }
+.ProseMirror ol ol ol { list-style-type: lower-roman; }
+.ProseMirror ol ol ol ol { list-style-type: decimal; }
+
+.ProseMirror li > p { margin: 0; }
+.ProseMirror li::marker { color: inherit; }
+
+/* Numbered: 1. a. i. */
+.ProseMirror ol[data-multilevel="numbered"] { list-style-type: decimal; }
+.ProseMirror ol[data-multilevel="numbered"] ol { list-style-type: lower-alpha; }
+.ProseMirror ol[data-multilevel="numbered"] ol ol { list-style-type: lower-roman; }
+.ProseMirror ol[data-multilevel="numbered"] ol ol ol { list-style-type: decimal; }
+
+/* Outline: I. A. 1. a. i. */
+.ProseMirror ol[data-multilevel="outline"] { list-style-type: upper-roman; }
+.ProseMirror ol[data-multilevel="outline"] ol { list-style-type: upper-alpha; }
+.ProseMirror ol[data-multilevel="outline"] ol ol { list-style-type: decimal; }
+.ProseMirror ol[data-multilevel="outline"] ol ol ol { list-style-type: lower-alpha; }
+.ProseMirror ol[data-multilevel="outline"] ol ol ol ol { list-style-type: lower-roman; }
+
+/* Legal: 1. 1.1. 1.1.1. */
+.ProseMirror ol[data-multilevel="legal"],
+.ProseMirror ol[data-multilevel="legal"] ol {
+  list-style-type: none;
+  counter-reset: legal-item;
+}
+.ProseMirror ol[data-multilevel="legal"] > li,
+.ProseMirror ol[data-multilevel="legal"] ol > li {
+  counter-increment: legal-item;
+}
+.ProseMirror ol[data-multilevel="legal"] > li > p:first-child::before,
+.ProseMirror ol[data-multilevel="legal"] ol > li > p:first-child::before {
+  content: counters(legal-item, ".") ". ";
+  font-variant-numeric: tabular-nums;
+  margin-right: 0.25em;
+}
+
+/* Bullets: ● ○ ■ */
+.ProseMirror ul[data-multilevel="bullets"] { list-style-type: disc; }
+.ProseMirror ul[data-multilevel="bullets"] ul { list-style-type: circle; }
+.ProseMirror ul[data-multilevel="bullets"] ul ul { list-style-type: square; }
+
+/* Arrows: ➢ ● ○ */
+.ProseMirror ul[data-multilevel="arrows"] { list-style-type: "➢  "; }
+.ProseMirror ul[data-multilevel="arrows"] ul { list-style-type: disc; }
+.ProseMirror ul[data-multilevel="arrows"] ul ul { list-style-type: circle; }
+
+/* ─── Equations ───────────────────────────────────────────────────────────── */
+
+.ProseMirror .tiptap-mathematics-render {
+  border-radius: 4px;
+  transition: background-color 0.15s;
+}
+.ProseMirror .tiptap-mathematics-render--editable {
+  cursor: pointer;
+}
+.ProseMirror .tiptap-mathematics-render--editable:hover {
+  background-color: rgba(59, 130, 246, 0.08);
+}
+.ProseMirror [data-type="inline-math"] {
+  display: inline-block;
+  padding: 0 2px;
+}
+.ProseMirror [data-type="block-math"] {
+  display: block;
+  margin: 0.75em 0;
+  padding: 0.25em 0;
+  text-align: center;
+  overflow-x: auto;
+}
+.ProseMirror .ProseMirror-selectednode.tiptap-mathematics-render {
+  outline: 2px solid #3b82f6;
+}
+.ProseMirror .inline-math-error,
+.ProseMirror .block-math-error {
+  color: #dc2626;
+  font-family: ui-monospace, monospace;
+  font-size: 0.875em;
+}
+.pdf-export .ProseMirror .tiptap-mathematics-render {
+  background: transparent !important;
+}

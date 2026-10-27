@@ -28,7 +28,13 @@ import Underline from "@tiptap/extension-underline";
 import type { EditorOptions } from "@tiptap/core";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { NodeSelection, TextSelection } from "@tiptap/pm/state";
+import "katex/dist/katex.min.css";
+import { EquationDialog, type EquationDraft } from "./equation-dialog";
+import { buildHeaderFooterHtml } from "./export-utils";
 import { HeaderFooter } from "./header-footer";
+import { ListStyleExtension } from "./list-style-extension";
+import { createMathExtensions, type EquationMode } from "./math-extension";
 import { ImageResize } from "./image-extension";
 import { PageBreak } from "./page-break-extension";
 import { MarginRuler } from "./margin-ruler";
@@ -110,6 +116,7 @@ export function RichEditor() {
     left: clampMargin(saved?.leftMargin ?? DEFAULT_MARGIN),
   }));
   const [isPageSetupOpen, setIsPageSetupOpen] = useState(false);
+  const [equationDraft, setEquationDraft] = useState<EquationDraft | null>(null);
 
   const persistMargins = useCallback((m: PageMargins) => {
     saveEditorState({
@@ -297,6 +304,14 @@ export function RichEditor() {
         },
       }),
 
+      // Bullet/numbering styles and multilevel list presets
+      ListStyleExtension,
+
+      // Inline and display equations (KaTeX); clicking one opens the editor
+      ...createMathExtensions((mode, latex, pos) =>
+        setEquationDraft({ mode, latex, pos })
+      ),
+
       // Page break
       PageBreak,
 
@@ -446,6 +461,52 @@ export function RichEditor() {
       ? headerFooterEditor
       : editor;
 
+  const insertOrUpdateEquation = useCallback(
+    (latex: string, mode: EquationMode, pos?: number) => {
+      if (!editor) return;
+      const type = mode === "inline" ? "inlineMath" : "blockMath";
+      const existing = pos !== undefined ? editor.state.doc.nodeAt(pos) : null;
+      if (existing && pos !== undefined && existing.type.name === type) {
+        editor.chain().focus().command(({ tr }) => {
+          tr.setNodeMarkup(pos, undefined, { ...existing.attrs, latex });
+          return true;
+        }).run();
+        return;
+      }
+      const chain = editor.chain().focus();
+      if (existing && pos !== undefined) {
+        // Switching inline <-> display: replace the old node
+        chain.deleteRange({ from: pos, to: pos + existing.nodeSize }).setTextSelection(pos);
+      }
+      chain
+        .insertContent({ type, attrs: { latex } })
+        .command(({ tr }) => {
+          // A selected block equation would be replaced by the next keystroke:
+          // move the cursor into the following paragraph instead.
+          if (tr.selection instanceof NodeSelection) {
+            const after = tr.selection.to;
+            if (!tr.doc.nodeAt(after)?.isTextblock) {
+              tr.insert(after, tr.doc.type.schema.nodes.paragraph.create());
+            }
+            tr.setSelection(TextSelection.create(tr.doc, after + 1));
+          }
+          return true;
+        })
+        .run();
+    },
+    [editor]
+  );
+
+  const deleteEquation = useCallback(
+    (_mode: EquationMode, pos: number) => {
+      if (!editor) return;
+      const node = editor.state.doc.nodeAt(pos);
+      if (!node) return;
+      editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).run();
+    },
+    [editor]
+  );
+
   const exitHeaderFooter = useCallback(() => {
     setActiveHeaderFooter(null);
     editor?.commands.focus();
@@ -463,7 +524,7 @@ export function RichEditor() {
 
   const insertTableOfContents = useCallback(() => {
     if (!editor) return;
-    (editor.chain().focus() as any).insertTableOfContents().run();
+    editor.chain().focus().insertTableOfContents().run();
   }, [editor]);
 
   const handleItemClick = (
@@ -522,6 +583,15 @@ export function RichEditor() {
           onUpdatePageNumberPosition={updatePageNumberPosition}
           onInsertTableOfContents={insertTableOfContents}
           onOpenPageSetup={() => setIsPageSetupOpen(true)}
+          onInsertEquation={() => setEquationDraft({ latex: "", mode: "inline" })}
+          getWordHeaderFooter={() => ({
+            header: visibility.headerZone
+              ? buildHeaderFooterHtml(visibility.headerText ? headerContent : "", visibility.headerPageNumber)
+              : "",
+            footer: visibility.footerZone
+              ? buildHeaderFooterHtml(visibility.footerText ? footerContent : "", visibility.footerPageNumber)
+              : "",
+          })}
         />
       </div>
 
@@ -713,6 +783,13 @@ export function RichEditor() {
           </div>
         </main>
       </div>
+
+      <EquationDialog
+        draft={equationDraft}
+        onClose={() => setEquationDraft(null)}
+        onSubmit={insertOrUpdateEquation}
+        onDelete={deleteEquation}
+      />
 
       <PageSetupDialog
         isOpen={isPageSetupOpen}
