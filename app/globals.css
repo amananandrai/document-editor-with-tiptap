@@ -680,3 +680,23 @@ html {
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
+
+/* Body copy on the Docs / Help / Contact pages */
+.site-prose {
+  display: grid;
+  gap: 1rem;
+  color: var(--ink-soft);
+  line-height: 1.7;
+}
+.site-prose strong { color: var(--ink); font-weight: 600; }
+.site-prose a:not(.action-card) { color: var(--ink); text-decoration: underline; text-decoration-color: var(--mark); text-decoration-thickness: 3px; text-underline-offset: 3px; }
+.site-prose a:not(.action-card):hover { background: var(--mark); color: var(--mark-ink); }
+.site-prose ul, .site-prose ol { display: grid; gap: 0.4rem; padding-left: 1.25rem; }
+.site-prose ul { list-style: disc; }
+.site-prose ol { list-style: decimal; }
+.site-prose code { font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 0.875em; background: var(--tile-stone); color: var(--ink); padding: 0.1em 0.35em; border-radius: 4px; }
+.site-prose pre { background: var(--tile-stone); color: var(--ink); border-radius: 12px; padding: 1rem 1.25rem; overflow-x: auto; font-size: 0.85rem; line-height: 1.6; }
+.site-prose pre code { background: none; padding: 0; font-size: inherit; }
+.site-prose table { width: 100%; border-collapse: collapse; font-size: 0.925rem; }
+.site-prose th { text-align: left; color: var(--ink); font-weight: 600; }
+.site-prose th, .site-prose td { border-bottom: 1px solid var(--rule); padding: 0.55rem 0.75rem 0.55rem 0; vertical-align: top; }

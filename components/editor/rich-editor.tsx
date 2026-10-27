@@ -816,11 +816,11 @@ export function RichEditor() {
       
       <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-8 py-4">
         <p className="text-sm text-gray-600 dark:text-gray-300 text-center">
-          💡 <strong>Pro Tips:</strong> Use Ctrl/Cmd + B/I/U for quick
-          formatting • Ctrl/Cmd + S to save • Ctrl/Cmd + Z/Y for undo/redo • 
-          Ctrl/Cmd + A to select all • Right-click for context menu • Use
-          Tab/Shift+Tab for indentation • Insert tables, blockquotes, code
-          blocks, and links.
+          💡 <strong>Pro Tips:</strong> Your work saves automatically in
+          this browser • Ctrl/Cmd + B/I/U for quick formatting • Ctrl/Cmd +
+          Z/Y for undo/redo • Tab/Shift+Tab to indent list items • Click a
+          header or footer to edit it, Esc to return • Export from the File
+          menu.
         </p>
       </div>
     </div>
