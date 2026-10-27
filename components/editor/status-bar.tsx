@@ -34,8 +34,6 @@ export function StatusBar({ editor }: StatusBarProps) {
       const fullTextWithoutSpaces = fullText.replace(/\s/g, "");
       setCharacterCountWhiteSpaces(fullTextWithoutSpaces.length);
 
-      editor.on("transaction", updateLineNumber);
-
       // Count words (split by whitespace and filter out empty strings)
       const words = fullText.split(/\s+/).filter((word) => word.length > 0);
       setWordCount(words.length);
@@ -62,11 +60,13 @@ export function StatusBar({ editor }: StatusBarProps) {
     };
 
     // Update counts on content change
+    editor.on("transaction", updateLineNumber);
     editor.on("update", updateCounts);
     editor.on("selectionUpdate", updateCounts);
 
     // Initial update
     updateCounts();
+    updateLineNumber();
 
     return () => {
       editor.off("update", updateCounts);

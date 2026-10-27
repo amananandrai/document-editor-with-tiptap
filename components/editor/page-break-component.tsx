@@ -1,19 +1,22 @@
 import React from 'react';
-import { NodeViewWrapper } from '@tiptap/react';
-import { Minus } from 'lucide-react';
+import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
 
-export function PageBreakComponent() {
+// Padding instead of margins so pagination can measure the block exactly.
+export function PageBreakComponent({ selected }: NodeViewProps) {
   return (
-    <NodeViewWrapper as="div" className="page-break-wrapper">
-      <div className="flex items-center justify-center py-4 my-4">
-        <div className="flex items-center gap-2 text-gray-400">
-          <div className="h-px bg-gray-300 flex-1 min-w-[100px]" />
-          <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs font-medium">
-            <Minus className="h-3 w-3" />
-            <span>Page Break</span>
-          </div>
-          <div className="h-px bg-gray-300 flex-1 min-w-[100px]" />
-        </div>
+    <NodeViewWrapper as="div" className="page-break-wrapper" data-page-break="">
+      <div
+        contentEditable={false}
+        className={[
+          'page-break-marker flex items-center gap-2 py-2 select-none text-gray-400',
+          selected ? 'text-blue-500' : '',
+        ].join(' ')}
+      >
+        <div className="h-px flex-1 border-t border-dashed border-current" />
+        <span className="px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-[11px] font-medium uppercase tracking-wide">
+          Page break
+        </span>
+        <div className="h-px flex-1 border-t border-dashed border-current" />
       </div>
     </NodeViewWrapper>
   );

@@ -25,12 +25,27 @@ import { TableRow } from "@tiptap/extension-table-row";
 import { TextAlign } from "@tiptap/extension-text-align";
 import { FontSize } from "@tiptap/extension-text-style";
 import Underline from "@tiptap/extension-underline";
+import type { EditorOptions } from "@tiptap/core";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { HeaderFooter } from "./header-footer";
 import { ImageResize } from "./image-extension";
 import { PageBreak } from "./page-break-extension";
 import { MarginRuler } from "./margin-ruler";
+import {
+  clampMargin,
+  DEFAULT_MARGIN,
+  getContentInsets,
+  getHeaderFooterVisibility,
+  headerFooterDistance,
+  PAGE_HEIGHT,
+  PAGE_WIDTH,
+  type PageMargins,
+  type PageNumberPosition,
+  type PaginationLayout,
+} from "./page-layout";
+import { PageSetupDialog } from "./page-setup-dialog";
+import { Pagination, type PaginationStorage } from "./pagination-extension";
 import { tocStore, TableOfContentsNode } from "./toc-extension";
 import { StatusBar } from "./status-bar";
 import {
@@ -40,99 +55,168 @@ import {
 } from "./tiptap-extensions";
 import { EditorToolbar } from "./toolbar";
 import { useImageUpload } from "./use-image-upload";
-import React, { useCallback, useEffect, useState, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
+
+const DEFAULT_CONTENT = `<h1>Welcome</h1><p>Start typing…</p>`;
+
+// Tracks an element's border-box height (0 while unmounted).
+function useElementHeight<T extends HTMLElement>() {
+  const [element, setElement] = useState<T | null>(null);
+  const [height, setHeight] = useState(0);
+  useEffect(() => {
+    if (!element) {
+      setHeight(0);
+      return;
+    }
+    const update = () => setHeight(element.getBoundingClientRect().height);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [element]);
+  return [setElement, height] as const;
+}
+
+type ActiveHeaderFooter = { type: "header" | "footer"; page: number } | null;
 
 export function RichEditor() {
   const [items, setItems] = useState<TableOfContentDataItem[]>([]);
   const [activeHeadingId, setActiveHeadingId] = useState<string>("");
-  const [editorHeight, setEditorHeight] = useState(1124);
+  const [editorHeight, setEditorHeight] = useState(PAGE_HEIGHT);
   const viewRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
 
-  const [focusedEditor, setFocusedEditor] = useState<Editor | null>(null);
+  // Read persisted state once on mount
+  const [saved] = useState(() => loadEditorState());
 
   // Header/Footer State
-  const [showHeader, setShowHeader] = useState(() => loadEditorState()?.showHeader ?? false);
-  const [showFooter, setShowFooter] = useState(() => loadEditorState()?.showFooter ?? false);
-  const [showPageNumbers, setShowPageNumbers] = useState(() => loadEditorState()?.showPageNumbers ?? false);
-  const [headerContent, setHeaderContent] = useState(() => loadEditorState()?.headerContent ?? "");
-  const [footerContent, setFooterContent] = useState(() => loadEditorState()?.footerContent ?? "");
-  const [pageNumberPosition, setPageNumberPosition] = useState(() => loadEditorState()?.pageNumberPosition ?? 'footer-right');
+  const [showHeader, setShowHeader] = useState(saved?.showHeader ?? false);
+  const [showFooter, setShowFooter] = useState(saved?.showFooter ?? false);
+  const [showPageNumbers, setShowPageNumbers] = useState(saved?.showPageNumbers ?? false);
+  const [headerContent, setHeaderContent] = useState(saved?.headerContent ?? "");
+  const [footerContent, setFooterContent] = useState(saved?.footerContent ?? "");
+  const [pageNumberPosition, setPageNumberPosition] = useState<PageNumberPosition>(
+    saved?.pageNumberPosition ?? "footer-right"
+  );
+  // The single header/footer currently being edited, and its editor instance
+  const [activeHeaderFooter, setActiveHeaderFooter] = useState<ActiveHeaderFooter>(null);
+  const [headerFooterEditor, setHeaderFooterEditor] = useState<Editor | null>(null);
 
   // Margin State
-  const [leftMargin, setLeftMargin] = useState(() => loadEditorState()?.leftMargin ?? 96);
-  const [rightMargin, setRightMargin] = useState(() => loadEditorState()?.rightMargin ?? 96);
-  const [topMargin] = useState(() => loadEditorState()?.topMargin ?? 96);
-  const [bottomMargin] = useState(() => loadEditorState()?.bottomMargin ?? 96);
+  const [margins, setMargins] = useState<PageMargins>(() => ({
+    top: clampMargin(saved?.topMargin ?? DEFAULT_MARGIN),
+    right: clampMargin(saved?.rightMargin ?? DEFAULT_MARGIN),
+    bottom: clampMargin(saved?.bottomMargin ?? DEFAULT_MARGIN),
+    left: clampMargin(saved?.leftMargin ?? DEFAULT_MARGIN),
+  }));
+  const [isPageSetupOpen, setIsPageSetupOpen] = useState(false);
 
-  const updateLeftMargin = (val: number) => {
-    setLeftMargin(val);
-    saveEditorState({ leftMargin: val });
-  };
-  const updateRightMargin = (val: number) => {
-    setRightMargin(val);
-    saveEditorState({ rightMargin: val });
-  };
+  const persistMargins = useCallback((m: PageMargins) => {
+    saveEditorState({
+      topMargin: m.top,
+      rightMargin: m.right,
+      bottomMargin: m.bottom,
+      leftMargin: m.left,
+    });
+  }, []);
+
+  const marginsRef = useRef(margins);
+  marginsRef.current = margins;
+
+  // Ruler drags update state live and persist once on release
+  const updateLeftMargin = useCallback((left: number) => {
+    setMargins((m) => ({ ...m, left }));
+  }, []);
+  const updateRightMargin = useCallback((right: number) => {
+    setMargins((m) => ({ ...m, right }));
+  }, []);
+  const commitMargins = useCallback(() => {
+    persistMargins(marginsRef.current);
+  }, [persistMargins]);
+  const applyPageSetup = useCallback(
+    (m: PageMargins) => {
+      setMargins(m);
+      persistMargins(m);
+    },
+    [persistMargins]
+  );
 
   const toggleHeader = () => {
-    setShowHeader((prev) => {
-      saveEditorState({ showHeader: !prev });
-      return !prev;
-    });
+    const next = !showHeader;
+    setShowHeader(next);
+    if (!next && activeHeaderFooter?.type === "header") setActiveHeaderFooter(null);
+    saveEditorState({ showHeader: next });
   };
   const toggleFooter = () => {
-    setShowFooter((prev) => {
-      saveEditorState({ showFooter: !prev });
-      return !prev;
-    });
-  };
-  const togglePageNumbers = () => {
-    setShowPageNumbers((prev) => {
-      saveEditorState({ showPageNumbers: !prev });
-      return !prev;
-    });
+    const next = !showFooter;
+    setShowFooter(next);
+    if (!next && activeHeaderFooter?.type === "footer") setActiveHeaderFooter(null);
+    saveEditorState({ showFooter: next });
   };
 
-  const updatePageNumberPosition = (pos: any) => {
-    setPageNumberPosition(pos);
-    const updates: any = { pageNumberPosition: pos };
-    
-    if (pos === 'none') {
-      setShowPageNumbers(false);
-      updates.showPageNumbers = false;
-    } else {
-      setShowPageNumbers(true);
-      updates.showPageNumbers = true;
-      
-      // Auto-enable header or footer if position is inside them
-      if (pos.startsWith('header') && !showHeader) {
-        setShowHeader(true);
-        updates.showHeader = true;
-      } else if (pos.startsWith('footer') && !showFooter) {
-        setShowFooter(true);
-        updates.showFooter = true;
-      }
-    }
-    
-    saveEditorState(updates);
+  const updatePageNumberPosition = (pos: string) => {
+    const position = pos as PageNumberPosition;
+    const enabled = position !== "none";
+    setShowPageNumbers(enabled);
+    if (enabled) setPageNumberPosition(position);
+    saveEditorState(
+      enabled
+        ? { showPageNumbers: true, pageNumberPosition: position }
+        : { showPageNumbers: false }
+    );
   };
+
+  // Header/footer text updates every page immediately; persisting is debounced
+  const saveHeaderContent = useMemo(
+    () => debounce((content: string) => saveEditorState({ headerContent: content }), 500),
+    []
+  );
+  const saveFooterContent = useMemo(
+    () => debounce((content: string) => saveEditorState({ footerContent: content }), 500),
+    []
+  );
   const updateHeaderContent = useCallback(
-    debounce((content: string) => {
+    (content: string) => {
       setHeaderContent(content);
-      saveEditorState({ headerContent: content });
-    }, 1000),
-    []
+      saveHeaderContent(content);
+    },
+    [saveHeaderContent]
   );
-
   const updateFooterContent = useCallback(
-    debounce((content: string) => {
+    (content: string) => {
       setFooterContent(content);
-      saveEditorState({ footerContent: content });
-    }, 1000),
-    []
+      saveFooterContent(content);
+    },
+    [saveFooterContent]
   );
 
-  const editor = useEditor({
-    extensions: [
+  // --- Page geometry ---
+  const visibility = getHeaderFooterVisibility(
+    showHeader,
+    showFooter,
+    showPageNumbers,
+    pageNumberPosition
+  );
+  const [headerMeasureRef, headerHeight] = useElementHeight<HTMLDivElement>();
+  const [footerMeasureRef, footerHeight] = useElementHeight<HTMLDivElement>();
+  const insets = getContentInsets(
+    margins,
+    visibility.headerZone ? headerHeight : 0,
+    visibility.footerZone ? footerHeight : 0
+  );
+  const layoutRef = useRef<PaginationLayout>({
+    pageHeight: PAGE_HEIGHT,
+    contentTop: insets.top,
+    contentBottom: insets.bottom,
+  });
+  layoutRef.current = {
+    pageHeight: PAGE_HEIGHT,
+    contentTop: insets.top,
+    contentBottom: insets.bottom,
+  };
+
+  const extensions = useMemo(
+    () => [
       // Base kit: paragraphs, headings, bold, italic, lists, etc.
       // Tiptap v3 StarterKit now includes link, underline, blockquote, and code
       // by default — disable those here to avoid duplicate extension warnings,
@@ -216,6 +300,11 @@ export function RichEditor() {
       // Page break
       PageBreak,
 
+      // Moves blocks onto the next page at page boundaries and page breaks
+      Pagination.configure({
+        getLayout: () => layoutRef.current,
+      }),
+
       // Table of Contents
       TableOfContents.configure({
         getIndex: getHierarchicalIndexes,
@@ -226,17 +315,22 @@ export function RichEditor() {
       // Inline insertable Table of Contents block
       TableOfContentsNode,
     ],
-    // Prevent immediate DOM rendering on initial (server) render to avoid hydration mismatch
-    immediatelyRender: false,
-    editorProps: {
+    []
+  );
+
+  const editorStyle = `padding: ${insets.top}px ${margins.right}px ${insets.bottom}px ${margins.left}px; min-height: ${PAGE_HEIGHT}px;`;
+
+  // Memoized so useEditor only re-applies options when the padding changes
+  const editorProps = useMemo<EditorOptions["editorProps"]>(
+    () => ({
       attributes: {
         class:
           cn(
-            "w-full min-h-[1124px] bg-transparent text-gray-900 focus:outline-none",
+            "w-full bg-transparent text-gray-900 focus:outline-none",
             "prose prose-lg max-w-none prose-headings:font-bold",
             "prose-p:leading-relaxed prose-headings:leading-tight"
           ),
-        style: `padding: ${topMargin}px ${rightMargin}px ${bottomMargin}px ${leftMargin}px;`,
+        style: editorStyle,
       },
       // Preserve inline formatting styles (bold, italic, colors, font sizes, etc.)
       // when pasting from external sources like Google Docs, Word, or web pages.
@@ -281,20 +375,28 @@ export function RichEditor() {
 
         return doc.body.innerHTML;
       },
-    },
-    onFocus: () => {
-      setFocusedEditor(null);
-    },
+    }),
+    [editorStyle]
+  );
 
-    content: `<h1>Welcome</h1><p>Start typing…</p>`,
-    onCreate: ({ editor }) => {
-      // Load saved content on editor creation
-      const saved = loadEditorState();
-      if (saved?.content) {
-        editor.commands.setContent(saved.content);
-      }
+  const editor = useEditor({
+    extensions,
+    // Prevent immediate DOM rendering on initial (server) render to avoid hydration mismatch
+    immediatelyRender: false,
+    editorProps,
+    onFocus: () => {
+      // Clicking back into the document ends header/footer editing
+      setActiveHeaderFooter(null);
     },
+    // Load saved content as the initial document (not as an undoable change)
+    content: saved?.content || DEFAULT_CONTENT,
   });
+
+  // Re-paginate when margins or header/footer sizes change
+  useEffect(() => {
+    if (!editor) return;
+    (editor.storage as unknown as { pagination?: PaginationStorage }).pagination?.refresh();
+  }, [editor, editorStyle]);
 
   // Auto-save editor content to localStorage with debouncing
   useEffect(() => {
@@ -316,87 +418,39 @@ export function RichEditor() {
   const { handleDrop, handleDragOver, handleDragLeave, handlePaste } =
     useImageUpload(editor);
 
-  // --- Dynamic Block Push Pagination Engine ---
+  // Track the document height to know how many page backgrounds to draw.
+  // Pagination itself is handled by the Pagination extension.
   useEffect(() => {
-    if (!editor || !viewRef.current) return;
-    const pmDom = viewRef.current.querySelector(".ProseMirror");
-    if (!pmDom) return;
-
-    let rafId: number;
-
-    const computePagination = () => {
-      cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => {
-        const children = Array.from(pmDom.children) as HTMLElement[];
-        
-        const pushes: { child: HTMLElement, amount: number | '' }[] = [];
-        let diffAccumulator = 0;
-        
-        const pageHeight = 1124;
-        const currentTopMargin = topMargin;
-        const currentBottomMargin = bottomMargin;
-        const usableHeight = pageHeight - currentTopMargin - currentBottomMargin;
-
-        // Ensure natural geometry is evaluated with precision.
-        for (let i = 0; i < children.length; i++) {
-          const child = children[i];
-          const existingMargin = parseFloat(child.style.marginTop || '0');
-          
-          // Current accumulated top tracking
-          const newTop = child.offsetTop + diffAccumulator;
-          const contentTop = newTop - existingMargin; // the raw visual top
-          
-          const height = child.offsetHeight;
-          const contentBottom = contentTop + height;
-
-          const pageIndex = Math.floor(contentTop / pageHeight);
-          const pageBoundary = (pageIndex + 1) * pageHeight - currentBottomMargin;
-
-          if (contentBottom > pageBoundary && height < usableHeight) {
-            // Target the very beginning of the next page block
-            const targetTop = (pageIndex + 1) * pageHeight + currentTopMargin;
-            const requiredMargin = targetTop - contentTop;
-            
-            const delta = requiredMargin - existingMargin;
-            
-            // Allow sub-pixel variations (1px threshold)
-            if (Math.abs(delta) > 1) {
-              pushes.push({ child, amount: requiredMargin });
-            }
-            diffAccumulator += delta;
-          } else {
-            // Remove margin if conditions are met
-            if (existingMargin > 0) {
-              pushes.push({ child, amount: '' });
-              diffAccumulator -= existingMargin;
-            }
-          }
-        }
-
-        // Apply visual updates in single batch
-        pushes.forEach(p => {
-          if (p.amount === '') p.child.style.marginTop = '';
-          else p.child.style.marginTop = `${p.amount}px`;
-        });
-        
-        // Also update standard height for calculating the number of backgrounds
-        setEditorHeight(pmDom.clientHeight || 1124);
-      });
-    };
-
-    const observer = new ResizeObserver(() => computePagination());
-    observer.observe(pmDom);
-    editor.on('update', computePagination);
-
-    return () => {
-      observer.disconnect();
-      editor.off('update', computePagination);
-      cancelAnimationFrame(rafId);
-    };
+    if (!editor) return;
+    const dom = editor.view.dom as HTMLElement;
+    const update = () => setEditorHeight(dom.getBoundingClientRect().height || PAGE_HEIGHT);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(dom);
+    return () => observer.disconnect();
   }, [editor]);
 
-  // Derive how many visual pages we need (padding height included)
-  const numberOfPages = Math.max(1, Math.ceil(editorHeight / 1124));
+  // Derive how many visual pages we need (sub-pixel tolerance)
+  const numberOfPages = Math.max(1, Math.ceil((editorHeight - 1) / PAGE_HEIGHT));
+
+  // Stop editing a header/footer whose page no longer exists
+  useEffect(() => {
+    if (activeHeaderFooter && activeHeaderFooter.page >= numberOfPages) {
+      setActiveHeaderFooter(null);
+    }
+  }, [activeHeaderFooter, numberOfPages]);
+
+  // The toolbar formats the header/footer being edited, otherwise the document
+  const toolbarEditor =
+    activeHeaderFooter && headerFooterEditor && !headerFooterEditor.isDestroyed
+      ? headerFooterEditor
+      : editor;
+
+  const exitHeaderFooter = useCallback(() => {
+    setActiveHeaderFooter(null);
+    editor?.commands.focus();
+  }, [editor]);
+
 
   const scrollToHeading = useCallback(
     (id: string) => {
@@ -455,17 +509,19 @@ export function RichEditor() {
   return (
     <div className="flex flex-col h-full bg-gray-100 dark:bg-gray-800">
       <div className="sticky top-0 z-40 bg-white dark:bg-gray-900 shadow-sm flex flex-col">
-        <EditorToolbar 
-          editor={focusedEditor || editor} 
+        <EditorToolbar
+          editor={toolbarEditor}
+          documentEditor={editor}
+          getPageCanvas={() => canvasRef.current}
+          margins={margins}
           showHeader={showHeader}
           showFooter={showFooter}
-          showPageNumbers={showPageNumbers}
-          pageNumberPosition={pageNumberPosition}
+          pageNumberPosition={showPageNumbers ? pageNumberPosition : "none"}
           onToggleHeader={toggleHeader}
           onToggleFooter={toggleFooter}
-          onTogglePageNumbers={togglePageNumbers}
           onUpdatePageNumberPosition={updatePageNumberPosition}
           onInsertTableOfContents={insertTableOfContents}
+          onOpenPageSetup={() => setIsPageSetupOpen(true)}
         />
       </div>
 
@@ -558,16 +614,19 @@ export function RichEditor() {
           {/* Scroll container logic centering the A4 page stack */}
           <div className="min-h-full py-8 flex items-center flex-col">
             {/* The Ruler stays aligned with the page container */}
-            <MarginRuler 
-              leftMargin={leftMargin}
-              rightMargin={rightMargin}
+            <MarginRuler
+              leftMargin={margins.left}
+              rightMargin={margins.right}
               onLeftMarginChange={updateLeftMargin}
               onRightMarginChange={updateRightMargin}
+              onCommit={commitMargins}
             />
 
             {/* The A4 Canvas System */}
-            <div 
-              className="relative w-[794px]"
+            <div
+              ref={canvasRef}
+              className="page-canvas relative"
+              style={{ width: PAGE_WIDTH }}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
@@ -576,67 +635,76 @@ export function RichEditor() {
               {/* 1. Stack of Visual Whitespace Pages (Backgrounds) */}
               <div className="absolute inset-0 z-0 pointer-events-none flex flex-col shadow-md border border-gray-200/60">
                 {Array.from({ length: numberOfPages }).map((_, i) => (
-                  <div 
-                    key={i} 
-                    className="w-full h-[1124px] shrink-0 bg-white border-b-2 border-dashed border-gray-200" 
+                  <div
+                    key={i}
+                    className="page-background w-full shrink-0 bg-white border-b-2 border-dashed border-gray-200 last:border-b-0"
+                    style={{ height: PAGE_HEIGHT }}
                   />
                 ))}
               </div>
 
               {/* 2. The Transparent Interactive Editor Canvas over the pages */}
-              <div 
+              <div
                 className="relative z-10 w-full"
                 style={{
                   // The container height stretches exactly as far as the contiguous backgrounds
-                  minHeight: `${numberOfPages * 1124}px`
+                  minHeight: `${numberOfPages * PAGE_HEIGHT}px`
                 }}
               >
                 <EditorContent editor={editor} />
               </div>
 
-              {/* 3. Headers and Footers Stack Overlay (z-20) */}
+              {/* 3. Headers and Footers, placed inside each page's top/bottom margin.
+                  The body text is inset below/above them (see getContentInsets). */}
               <div className="absolute inset-0 z-20 pointer-events-none flex flex-col">
                 {Array.from({ length: numberOfPages }).map((_, i) => (
-                  <div 
-                    key={i} 
-                    className="relative w-full h-[1124px] shrink-0 pointer-events-none" 
+                  <div
+                    key={i}
+                    className="relative w-full shrink-0 pointer-events-none"
+                    style={{ height: PAGE_HEIGHT }}
                   >
-                    {/* Embedded Header Editor */}
-                    {(showHeader || showPageNumbers) && (
-                      <div 
-                        className="absolute top-0 left-0 right-0 z-30 pointer-events-auto"
-                        style={{ paddingLeft: `${leftMargin}px`, paddingRight: `${rightMargin}px`, paddingTop: `${topMargin / 2}px` }}
-                      >
-                        <HeaderFooter
-                          content={headerContent}
-                          onChange={updateHeaderContent}
-                          onFocus={(e) => setFocusedEditor(e)}
-                          placeholder="Header (click to edit)"
-                          type="header"
-                          showPageNumber={showPageNumbers}
-                          pageNumber={i + 1}
-                          pageNumberPosition={pageNumberPosition}
-                        />
-                      </div>
+                    {visibility.headerZone && (
+                      <HeaderFooter
+                        ref={i === 0 ? headerMeasureRef : undefined}
+                        type="header"
+                        content={headerContent}
+                        showText={visibility.headerText}
+                        pageNumber={i + 1}
+                        pageNumberAlign={visibility.headerPageNumber}
+                        isActive={activeHeaderFooter?.type === "header" && activeHeaderFooter.page === i}
+                        onActivate={() => setActiveHeaderFooter({ type: "header", page: i })}
+                        onChange={updateHeaderContent}
+                        onEditorChange={setHeaderFooterEditor}
+                        onExit={exitHeaderFooter}
+                        style={{
+                          top: headerFooterDistance(margins.top),
+                          left: margins.left,
+                          right: margins.right,
+                          pointerEvents: "auto",
+                        }}
+                      />
                     )}
-                    
-                    {/* Embedded Footer Editor */}
-                    {(showFooter || (showPageNumbers && !showHeader)) && (
-                      <div 
-                        className="absolute bottom-0 left-0 right-0 z-30 flex flex-col justify-end pointer-events-auto"
-                        style={{ paddingLeft: `${leftMargin}px`, paddingRight: `${rightMargin}px`, paddingBottom: `${bottomMargin / 2}px` }}
-                      >
-                        <HeaderFooter
-                          content={footerContent}
-                          onChange={updateFooterContent}
-                          onFocus={(e) => setFocusedEditor(e)}
-                          placeholder="Footer (click to edit)"
-                          type="footer"
-                          showPageNumber={showPageNumbers && !showHeader}
-                          pageNumber={i + 1}
-                          pageNumberPosition={pageNumberPosition}
-                        />
-                      </div>
+
+                    {visibility.footerZone && (
+                      <HeaderFooter
+                        ref={i === 0 ? footerMeasureRef : undefined}
+                        type="footer"
+                        content={footerContent}
+                        showText={visibility.footerText}
+                        pageNumber={i + 1}
+                        pageNumberAlign={visibility.footerPageNumber}
+                        isActive={activeHeaderFooter?.type === "footer" && activeHeaderFooter.page === i}
+                        onActivate={() => setActiveHeaderFooter({ type: "footer", page: i })}
+                        onChange={updateFooterContent}
+                        onEditorChange={setHeaderFooterEditor}
+                        onExit={exitHeaderFooter}
+                        style={{
+                          bottom: headerFooterDistance(margins.bottom),
+                          left: margins.left,
+                          right: margins.right,
+                          pointerEvents: "auto",
+                        }}
+                      />
                     )}
                   </div>
                 ))}
@@ -645,6 +713,13 @@ export function RichEditor() {
           </div>
         </main>
       </div>
+
+      <PageSetupDialog
+        isOpen={isPageSetupOpen}
+        onClose={() => setIsPageSetupOpen(false)}
+        margins={margins}
+        onApply={applyPageSetup}
+      />
 
       <StatusBar editor={editor} />
       

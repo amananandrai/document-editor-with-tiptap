@@ -492,3 +492,48 @@ html {
     display: none; /* Chrome, Safari, Opera */
   }
 }
+/* ─── Pagination & page layout ─────────────────────────────────────────────── */
+
+/* Spacers inserted by the pagination extension to push blocks to the next page */
+.ProseMirror .pagination-spacer {
+  display: block;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Header/footer text keeps tight paragraph spacing so its height is predictable */
+.header-footer-content p {
+  margin: 0;
+}
+
+/* PDF export: hide editing-only chrome in the rendered pages */
+.pdf-export .page-break-marker,
+.pdf-export .hf-placeholder,
+.pdf-export .hf-label,
+.pdf-export .column-resize-handle {
+  visibility: hidden !important;
+}
+.pdf-export .page-background {
+  border-color: transparent !important;
+}
+.pdf-export .header-footer {
+  border-color: transparent !important;
+  background: transparent !important;
+}
+.pdf-export .ProseMirror-selectednode {
+  outline: none !important;
+}
+
+@media print {
+  .ProseMirror .pagination-spacer,
+  .page-break-marker {
+    display: none !important;
+  }
+  .ProseMirror [data-page-break],
+  .ProseMirror .node-pageBreak {
+    break-after: page;
+    page-break-after: always;
+  }
+}
