@@ -78,8 +78,49 @@ html {
   --sidebar-ring: oklch(0.439 0 0);
 }
 
+/* ─── Site (marketing pages) palette: ink on paper with a highlighter accent ─── */
+:root {
+  --paper: #ffffff;
+  --ink: #0b0b0c;
+  --ink-soft: #55575c;
+  --rule: #e4e4e2;
+  --mark: #ffe24a;
+  --mark-ink: #0b0b0c;
+  --tile-sky: #dbe7f3;
+  --tile-sage: #dfe8d8;
+  --tile-sand: #efe4cf;
+  --tile-rose: #f1dddd;
+  --tile-stone: #ededea;
+}
+
+.dark {
+  --paper: #0e0e10;
+  --ink: #f3f3f1;
+  --ink-soft: #a4a7ae;
+  --rule: #2a2b2f;
+  --mark: #ffe24a;
+  --mark-ink: #0b0b0c;
+  --tile-sky: #1a2531;
+  --tile-sage: #1c261b;
+  --tile-sand: #2b251a;
+  --tile-rose: #2e1e21;
+  --tile-stone: #1b1c1f;
+}
+
 @theme inline {
   --font-sans: var(--font-geist-sans);
+  --font-display: var(--font-archivo), var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-rule: var(--rule);
+  --color-mark: var(--mark);
+  --color-mark-ink: var(--mark-ink);
+  --color-tile-sky: var(--tile-sky);
+  --color-tile-sage: var(--tile-sage);
+  --color-tile-sand: var(--tile-sand);
+  --color-tile-rose: var(--tile-rose);
+  --color-tile-stone: var(--tile-stone);
   --font-mono: var(--font-geist-mono);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -629,4 +670,13 @@ html {
 }
 .pdf-export .ProseMirror .tiptap-mathematics-render {
   background: transparent !important;
+}
+
+/* Highlighter-pen mark used on marketing headlines */
+.marker {
+  color: var(--mark-ink);
+  background: linear-gradient(transparent 10%, var(--mark) 10%, var(--mark) 90%, transparent 90%);
+  padding: 0 0.06em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
