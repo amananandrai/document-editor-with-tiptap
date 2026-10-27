@@ -7,7 +7,6 @@ import React, {
   ReactNode,
   useEffect,
 } from "react";
-import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -62,14 +61,14 @@ export const FocusModeProvider = ({ children }: { children: ReactNode }) => {
             transition={{ duration: 0.3 }}
             className="fixed top-6 right-6 z-[9999]"
           >
-            <Button
+            <button
               onClick={toggleFocusMode}
-              variant="default"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium shadow-lg hover:shadow-xl transition-shadow"
+              title="Exit focus mode (Ctrl+Shift+F)"
+              className="inline-flex cursor-pointer items-center gap-2 bg-ink px-4 py-3 font-display text-xs font-extrabold uppercase tracking-[0.05em] text-paper shadow-lg [font-stretch:110%] transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mark"
             >
-              <Eye size={18} />
-              Exit Focus
-            </Button>
+              <Eye size={16} aria-hidden="true" />
+              Exit focus
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

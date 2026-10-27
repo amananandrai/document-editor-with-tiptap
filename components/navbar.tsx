@@ -1,18 +1,41 @@
 "use client";
 
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { FileText, Menu, X, Home, Star, BookOpen } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useFocusMode } from "@/components/focus-mode-context"; // ✅ added
 
+// Section links scroll on the home page; page links navigate
 const navLinks = [
-  { name: "Home", href: "#home-section", icon: <Home size={20} /> },
-  { name: "About", href: "#about-section", icon: <BookOpen size={20} /> },
-  { name: "Features", href: "#features-section", icon: <Star size={20} /> },
+  { name: "Features", href: "/#features" },
+  { name: "How it works", href: "/#how-it-works" },
+  { name: "Docs", href: "/documentation" },
+  { name: "Help", href: "/help-center" },
 ];
+
+export function Logo() {
+  return (
+    <Link
+      href="/"
+      className="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
+    >
+      {/* A page with a highlighted line */}
+      <span
+        className="relative grid h-8 w-6 content-start gap-[3px] border-2 border-ink bg-paper px-[3px] pt-[5px]"
+        aria-hidden="true"
+      >
+        <span className="h-[3px] bg-mark" />
+        <span className="h-[2px] bg-ink" />
+        <span className="h-[2px] w-2/3 bg-ink" />
+      </span>
+      <span className="font-display text-lg font-black uppercase tracking-[-0.01em] [font-stretch:112%]">
+        DocuEdit Pro
+      </span>
+    </Link>
+  );
+}
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -31,92 +54,97 @@ export function Navbar() {
   // ✅ Hide navbar completely if in Focus Mode (only works inside editor)
   if (isFocusMode) return null;
 
-  const handleNavClick = (href: string) => {
-    const [, hash] = href.split("#");
+  const onEditor = pathname.startsWith("/editor");
 
-    if (pathname === "/") {
-      const element = document.getElementById(hash);
-      if (element) element.scrollIntoView({ behavior: "smooth" });
-    } else {
-      router.push(`/${hash ? `#${hash}` : ""}`);
+  const handleNavClick = (e: React.MouseEvent, href: string) => {
+    const [path, hash] = href.split("#");
+    if (hash && pathname === (path || "/")) {
+      e.preventDefault();
+      document.getElementById(hash)?.scrollIntoView({ behavior: "smooth" });
+      history.replaceState(null, "", `#${hash}`);
+    } else if (hash) {
+      e.preventDefault();
+      router.push(href);
     }
-
     setIsMenuOpen(false);
   };
 
+  const linkClass =
+    "font-display text-sm font-bold uppercase tracking-[0.03em] [font-stretch:105%] text-ink-soft hover:text-ink transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink";
+
   return (
-    <nav className="sticky top-0 z-50 w-full bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 shadow-lg">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-1">
-        <div className="flex h-16 items-center justify-between">
-          {/* Logo and Brand */}
-          <div className="flex items-center space-x-4">
-            <Link href="/">
-              <div className="flex items-center space-x-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">
-                  <FileText className="h-6 w-6 text-white" />
-                </div>
-                <div className="flex flex-col">
-                  <h1 className="text-xl font-bold text-white font-serif">
-                    DocuEdit Pro
-                  </h1>
-                  <p className="hidden sm:block text-xs text-white/80 font-mono">
-                    Professional Document Editor
-                  </p>
-                </div>
-              </div>
-            </Link>
-          </div>
+    <nav className="sticky top-0 z-50 w-full border-b-2 border-ink bg-paper/95 text-ink backdrop-blur supports-[backdrop-filter]:bg-paper/85">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <Logo />
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-4">
-            {navLinks.map((link, i) => (
-              <button
-                key={i}
-                onClick={() => handleNavClick(link.href)}
-                className="group cursor-pointer flex gap-2 items-center text-white text-base md:text-lg px-4 py-2 
-                  rounded-lg transition duration-300 hover:scale-105 hover:bg-purple-800 hover:shadow outline-none"
-              >
-                <span className="group-hover:animate-bounce">{link.icon}</span>
-                <span>{link.name}</span>
-              </button>
-            ))}
-
-            <div className="ml-4 pl-4 border-l border-white/30">
-              <ThemeToggle className="text-white hover:bg-white/20" />
-            </div>
-          </div>
-
-          {/* Mobile */}
-          <div className="flex md:hidden items-center space-x-2">
-            <ThemeToggle className="text-white hover:bg-white/20" />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white hover:bg-white/20"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
+        {/* Desktop Nav */}
+        <div className="hidden items-center gap-7 md:flex">
+          {navLinks.map((link) => (
+            <Link
+              key={link.name}
+              href={link.href}
+              onClick={(e) => handleNavClick(e, link.href)}
+              className={linkClass}
             >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </Button>
-          </div>
+              {link.name}
+            </Link>
+          ))}
+          <ThemeToggle className="text-ink hover:bg-tile-stone" />
+          {!onEditor && (
+            <Link
+              href="/editor"
+              className="bg-ink px-4 py-2.5 font-display text-xs font-extrabold uppercase tracking-[0.05em] text-paper [font-stretch:110%] transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
+            >
+              Open editor
+            </Link>
+          )}
         </div>
 
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden pb-4 space-y-2">
-            {navLinks.map((link, i) => (
-              <button
-                key={i}
-                onClick={() => handleNavClick(link.href)}
-                className="group cursor-pointer flex gap-2 items-center text-white text-base md:text-lg px-4 py-2 
-                  rounded-lg hover:bg-purple-800 hover:scale-105 hover:shadow outline-none"
-              >
-                <span className="group-hover:animate-bounce">{link.icon}</span>
-                <span>{link.name}</span>
-              </button>
-            ))}
-          </div>
-        )}
+        {/* Mobile */}
+        <div className="flex items-center gap-1 md:hidden">
+          <ThemeToggle className="text-ink hover:bg-tile-stone" />
+          <button
+            type="button"
+            className="grid h-10 w-10 place-items-center text-ink"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isMenuOpen}
+          >
+            {isMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
+          </button>
+        </div>
       </div>
+
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="border-t border-rule px-4 pb-5 pt-3 md:hidden">
+          <div className="grid gap-4">
+            {navLinks.map((link) => (
+              <Link
+                key={link.name}
+                href={link.href}
+                onClick={(e) => handleNavClick(e, link.href)}
+                className={linkClass}
+              >
+                {link.name}
+              </Link>
+            ))}
+            {!onEditor && (
+              <Link
+                href="/editor"
+                onClick={() => setIsMenuOpen(false)}
+                className="justify-self-start bg-ink px-4 py-2.5 font-display text-xs font-extrabold uppercase tracking-[0.05em] text-paper [font-stretch:110%]"
+              >
+                Open editor
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

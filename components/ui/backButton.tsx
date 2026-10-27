@@ -3,22 +3,25 @@
 import { useRouter } from "next/navigation";
 import React from "react";
 import { ArrowLeft } from "lucide-react";
+import { hasInAppHistory } from "@/lib/navigation-history";
 
 export default function BackButton() {
   const router = useRouter();
 
   const handleBack = () => {
-    router.back(); // Navigate to previous page
+    // Go back only to a page of this site; otherwise (opened directly or
+    // from another site) go to the home page instead of leaving.
+    if (hasInAppHistory()) router.back();
+    else router.push("/");
   };
 
   return (
     <button
       onClick={handleBack}
-      className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-blue-600 to-purple-600 text-white rounded-lg cursor-pointer
-                 hover:opacity-90 transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+      className="inline-flex cursor-pointer items-center gap-2 border-2 border-ink px-4 py-2.5 font-display text-xs font-extrabold uppercase tracking-[0.05em] text-ink transition-colors [font-stretch:110%] hover:bg-ink hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
     >
-      <ArrowLeft size={20} />
-      <span className="font-medium">Back</span>
+      <ArrowLeft size={16} aria-hidden="true" />
+      Back
     </button>
   );
 }

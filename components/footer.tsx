@@ -1,7 +1,38 @@
 "use client";
 import React from "react";
-import { FileText, Github, Twitter, Linkedin, Heart } from "lucide-react";
+import Link from "next/link";
+import { Github } from "lucide-react";
 import { useFocusMode } from "@/components/focus-mode-context";
+import { Logo } from "@/components/navbar";
+
+const REPO = "https://github.com/amananandrai/document-editor-with-tiptap";
+
+const columns = [
+  {
+    title: "Product",
+    links: [
+      { label: "Open the editor", href: "/editor" },
+      { label: "Features", href: "/#features" },
+      { label: "How it works", href: "/#how-it-works" },
+    ],
+  },
+  {
+    title: "Support",
+    links: [
+      { label: "Documentation", href: "/documentation" },
+      { label: "Help Center", href: "/help-center" },
+      { label: "Contact Us", href: "/contact-us" },
+    ],
+  },
+  {
+    title: "Project",
+    links: [
+      { label: "Source code", href: REPO },
+      { label: "Report a bug", href: `${REPO}/issues` },
+      { label: "Request a feature", href: `${REPO}/issues` },
+    ],
+  },
+];
 
 export function Footer() {
   let isFocusMode = false;
@@ -18,135 +49,51 @@ export function Footer() {
   if (isFocusMode) return null;
 
   return (
-    <footer className="bg-linear-to-r from-slate-900 via-gray-900 to-slate-900 text-white">
+    <footer className="border-t-2 border-ink bg-paper text-ink">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Brand Section */}
-          <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-r from-blue-500 to-purple-600">
-                <FileText className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold font-serif">DocuEdit Pro</h3>
-                <p className="text-sm text-gray-400 font-mono">
-                  Professional Document Editor
-                </p>
-              </div>
-            </div>
-            <p className="text-gray-300 mb-6 max-w-md">
-              A powerful, feature-rich document editor built with modern web
-              technologies. Create, edit, and format documents with
-              professional-grade tools.
+        <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+          <div className="grid content-start gap-4">
+            <Logo />
+            <p className="max-w-[36ch] text-sm text-ink-soft">
+              A free, browser-based document editor with real pages, equations and PDF and Word
+              export. Built with Next.js and Tiptap.
             </p>
-            <div className="flex space-x-4">
-              <a
-                href="https://github.com/amananandrai/document-editor-with-tiptap"
-                className="text-gray-400 hover:text-white transition-colors"
-                aria-label="GitHub"
-              >
-                <Github className="h-5 w-5" />
-              </a>
-              <a
-                href="#"
-                className="text-gray-400 hover:text-white transition-colors"
-                aria-label="Twitter"
-              >
-                <Twitter className="h-5 w-5" />
-              </a>
-              <a
-                href="#"
-                className="text-gray-400 hover:text-white transition-colors"
-                aria-label="LinkedIn"
-              >
-                <Linkedin className="h-5 w-5" />
-              </a>
+            <a
+              href={REPO}
+              className="inline-flex items-center gap-2 justify-self-start text-sm font-medium text-ink-soft hover:text-ink"
+            >
+              <Github className="h-4 w-4" aria-hidden="true" />
+              Star on GitHub
+            </a>
+          </div>
+
+          {columns.map((column) => (
+            <div key={column.title}>
+              <h4 className="font-display text-xs font-extrabold uppercase tracking-[0.08em] [font-stretch:110%]">
+                {column.title}
+              </h4>
+              <ul className="mt-4 grid gap-2 text-sm text-ink-soft">
+                {column.links.map((link) => (
+                  <li key={link.label}>
+                    {link.href.startsWith("http") ? (
+                      <a href={link.href} className="hover:text-ink">
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link href={link.href} className="hover:text-ink">
+                        {link.label}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
-
-          {/* Features */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Features</h4>
-            <ul className="space-y-2 text-gray-300">
-              <li>Rich Text Editing</li>
-              <li>Fast & Intuitive</li>
-              <li>Seamless Export</li>
-              <li>Light & Dark Themes</li>
-              <li>Modern Tech Stack</li>
-            </ul>
-          </div>
-
-          {/* Support */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Support</h4>
-            <ul className="space-y-2 text-gray-300">
-              <li>
-                <a
-                  href="/documentation"
-                  className="hover:text-white transition-colors"
-                >
-                  Documentation
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/help-center"
-                  className="hover:text-white transition-colors"
-                >
-                  Help Center
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/contact-us"
-                  className="hover:text-white transition-colors"
-                >
-                  Contact Us
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com/amananandrai/document-editor-with-tiptap/issues"
-                  className="hover:text-white transition-colors"
-                >
-                  Bug Reports
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com/amananandrai/document-editor-with-tiptap/issues"
-                  className="hover:text-white transition-colors"
-                >
-                  Feature Requests
-                </a>
-              </li>
-            </ul>
-          </div>
+          ))}
         </div>
 
-        {/* Bottom Section */}
-        <div className="border-t border-gray-700 mt-8 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-2 text-gray-400 mb-4 md:mb-0">
-              <span>Made with</span>
-              <Heart className="h-4 w-4 text-red-500" />
-              <span>using Next.js & TipTap</span>
-            </div>
-            <div className="flex space-x-6 text-sm text-gray-400">
-              <a href="#" className="hover:text-white transition-colors">
-                Privacy Policy
-              </a>
-              <a href="#" className="hover:text-white transition-colors">
-                Terms of Service
-              </a>
-              <a href="#" className="hover:text-white transition-colors">
-                Cookie Policy
-              </a>
-            </div>
-          </div>
-          <div className="text-center text-gray-500 text-sm mt-4">
-            © {new Date().getFullYear()} DocuEdit Pro. All rights reserved.
-          </div>
+        <div className="mt-12 flex flex-wrap justify-between gap-2 border-t border-rule pt-6 text-xs text-ink-soft">
+          <span>© {new Date().getFullYear()} DocuEdit Pro</span>
+          <span>Documents are saved in your browser, not on a server.</span>
         </div>
       </div>
     </footer>
