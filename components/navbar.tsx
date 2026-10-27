@@ -17,9 +17,15 @@ const navLinks = [
 
 export function Logo() {
   return (
-    <Link href="/" className="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink">
+    <Link
+      href="/"
+      className="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
+    >
       {/* A page with a highlighted line */}
-      <span className="relative grid h-8 w-6 content-start gap-[3px] border-2 border-ink bg-paper px-[3px] pt-[5px]" aria-hidden="true">
+      <span
+        className="relative grid h-8 w-6 content-start gap-[3px] border-2 border-ink bg-paper px-[3px] pt-[5px]"
+        aria-hidden="true"
+      >
         <span className="h-[3px] bg-mark" />
         <span className="h-[2px] bg-ink" />
         <span className="h-[2px] w-2/3 bg-ink" />
@@ -47,6 +53,8 @@ export function Navbar() {
 
   // ✅ Hide navbar completely if in Focus Mode (only works inside editor)
   if (isFocusMode) return null;
+
+  const onEditor = pathname.startsWith("/editor");
 
   const handleNavClick = (e: React.MouseEvent, href: string) => {
     const [path, hash] = href.split("#");
@@ -82,12 +90,14 @@ export function Navbar() {
             </Link>
           ))}
           <ThemeToggle className="text-ink hover:bg-tile-stone" />
-          <Link
-            href="/editor"
-            className="bg-ink px-4 py-2.5 font-display text-xs font-extrabold uppercase tracking-[0.05em] text-paper [font-stretch:110%] transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
-          >
-            Open editor
-          </Link>
+          {!onEditor && (
+            <Link
+              href="/editor"
+              className="bg-ink px-4 py-2.5 font-display text-xs font-extrabold uppercase tracking-[0.05em] text-paper [font-stretch:110%] transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
+            >
+              Open editor
+            </Link>
+          )}
         </div>
 
         {/* Mobile */}
@@ -100,7 +110,11 @@ export function Navbar() {
             aria-label={isMenuOpen ? "Close menu" : "Open menu"}
             aria-expanded={isMenuOpen}
           >
-            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {isMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
           </button>
         </div>
       </div>
@@ -119,13 +133,15 @@ export function Navbar() {
                 {link.name}
               </Link>
             ))}
-            <Link
-              href="/editor"
-              onClick={() => setIsMenuOpen(false)}
-              className="justify-self-start bg-ink px-4 py-2.5 font-display text-xs font-extrabold uppercase tracking-[0.05em] text-paper [font-stretch:110%]"
-            >
-              Open editor
-            </Link>
+            {!onEditor && (
+              <Link
+                href="/editor"
+                onClick={() => setIsMenuOpen(false)}
+                className="justify-self-start bg-ink px-4 py-2.5 font-display text-xs font-extrabold uppercase tracking-[0.05em] text-paper [font-stretch:110%]"
+              >
+                Open editor
+              </Link>
+            )}
           </div>
         </div>
       )}

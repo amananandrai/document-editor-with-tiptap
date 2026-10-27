@@ -1,6 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
+import { recordPageView } from "@/lib/navigation-history";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Toaster } from "sonner";
@@ -12,6 +14,9 @@ export default function RootLayoutClient({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  useEffect(() => {
+    recordPageView();
+  }, [pathname]);
   const isEditor = pathname.startsWith("/editor");
 
   return (

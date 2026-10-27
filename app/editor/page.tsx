@@ -11,37 +11,36 @@ function EditorContent() {
     <section
       className={`transition-all duration-300 ${isFocusMode
         ? "bg-gray-200 dark:bg-slate-900 min-h-screen flex flex-col items-center justify-start p-0"
-        : "bg-gray-50 dark:bg-slate-800 pt-4 md:pt-16 pb-20"
+        : "bg-paper text-ink pt-6 md:pt-10 pb-16"
         }`}
     >
       <div
         className={`transition-all duration-300 mx-auto ${isFocusMode ? "w-full h-full" : "w-[95%] md:w-[88%]"
           }`}
       >
-        {/* ✅ Only show BackButton & Title in normal mode */}
+        {/* Header row: back, title, focus mode (hidden in focus mode) */}
         {!isFocusMode && (
-          <div className="flex flex-col items-start md:flex-row md:justify-between md:items-center gap-8 md:gap-4 mb-4 md:mb-8">
-            <div className="w-full md:w-auto flex justify-between md:justify-start items-center gap-4 px-1 md:px-0">
+          <div className="mb-6 flex flex-wrap items-end justify-between gap-4 md:mb-8">
+            <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
               <BackButton />
-
-              {/* ✅ Show "Enter Focus Mode" only when not in focus mode */}
-              {!isFocusMode && (
-                <div className="flex justify-end">
-                  <button
-                    onClick={toggleFocusMode}
-                    className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-blue-600 to-purple-600 text-white rounded-lg cursor-pointer
-                                hover:opacity-90 transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    <EyeOff size={18} />
-                    Focus
-                  </button>
-                </div>
-              )}
+              <div>
+                <p className="font-mono text-xs uppercase tracking-[0.14em] text-ink-soft">
+                  Saves automatically in this browser
+                </p>
+                <h2 className="mt-1 font-display text-[clamp(2rem,4.5vw,3.25rem)] font-black uppercase leading-[0.9] tracking-[-0.02em] [font-stretch:112%]">
+                  Document <span className="marker">editor</span>
+                </h2>
+              </div>
             </div>
 
-            <h2 className="text-4xl md:text-5xl font-semibold text-center bg-linear-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-              Document Editor
-            </h2>
+            <button
+              onClick={toggleFocusMode}
+              title="Focus mode (Ctrl+Shift+F)"
+              className="inline-flex cursor-pointer items-center gap-2 bg-mark px-4 py-3 font-display text-xs font-extrabold uppercase tracking-[0.05em] text-mark-ink transition-transform [font-stretch:110%] hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
+            >
+              <EyeOff size={16} aria-hidden="true" />
+              Focus mode
+            </button>
           </div>
         )}
 
@@ -49,7 +48,7 @@ function EditorContent() {
         <div
           className={`transition-all duration-300 ${isFocusMode
             ? "bg-transparent border-none shadow-none rounded-none w-full h-full"
-            : "bg-white rounded-xl shadow-2xl shadow-blue-500 border border-gray-200 dark:border-gray-700 overflow-hidden"
+            : "bg-white rounded-xl border-2 border-ink overflow-hidden"
             }`}
         >
           <EditorClient />

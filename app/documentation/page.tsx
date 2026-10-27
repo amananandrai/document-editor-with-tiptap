@@ -199,6 +199,7 @@ x^{2}  x_{i}     superscript, subscript
               [["Tab"], "Indent a list item"],
               [["Shift", "Tab"], "Outdent a list item"],
               [["Esc"], "Leave the header or footer"],
+              [["Ctrl", "Shift", "F"], "Turn focus mode on or off"],
             ].map(([keys, action]) => (
               <tr key={String(action)}>
                 <td className="whitespace-nowrap">
