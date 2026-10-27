@@ -569,7 +569,8 @@ export function RichEditor() {
 
   return (
     <div className="flex flex-col h-full bg-gray-100 dark:bg-gray-800">
-      <div className="sticky top-0 z-40 bg-white dark:bg-gray-900 shadow-sm flex flex-col">
+      {/* z-50: above the sticky margin ruler (z-40) so toolbar popovers aren't covered */}
+      <div className="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow-sm flex flex-col">
         <EditorToolbar
           editor={toolbarEditor}
           documentEditor={editor}

@@ -128,6 +128,17 @@ export function EditorToolbar({
   const [showBGColorPicker, setShowBGColorPicker] = useState(false);
   const [activeBGColor, setActiveBGColor] = useState("#FFFFFF"); // default color on the picker
   const bgColorRef = useRef<HTMLDivElement>(null);
+  // Open the color picker leftwards when it would overflow the toolbar's right edge
+  const [colorPickerAlign, setColorPickerAlign] = useState<"left" | "right">("left");
+  const alignColorPicker = (button: HTMLElement) => {
+    const PICKER_WIDTH = 300;
+    const limit =
+      button.closest('[aria-label="Editor toolbar"]')?.getBoundingClientRect().right ??
+      window.innerWidth;
+    setColorPickerAlign(
+      button.getBoundingClientRect().left + PICKER_WIDTH > limit ? "right" : "left"
+    );
+  };
 
   // Copy Format state
   const [copiedFormat, setCopiedFormat] = useState<any>(null);
@@ -2269,9 +2280,14 @@ export function EditorToolbar({
         </label>
         <div className="relative" ref={textColorRef}>
           <button
-            onClick={() => setShowTextColorPicker((prev) => !prev)}
+            onClick={(e) => {
+              alignColorPicker(e.currentTarget);
+              setShowTextColorPicker((prev) => !prev);
+            }}
             className="h-8 w-8 rounded border p-1 flex items-center justify-center cursor-pointer relative"
             title="Text color"
+            aria-label="Text color"
+            aria-expanded={showTextColorPicker}
           >
             <span
               className="absolute inset-[4px] rounded-sm"
@@ -2279,7 +2295,9 @@ export function EditorToolbar({
             ></span>
           </button>
           {showTextColorPicker && (
-            <div className="absolute top-10 left-0 z-10">
+            <div
+              className={`absolute top-10 z-10 ${colorPickerAlign === "right" ? "right-0" : "left-0"}`}
+            >
               <CustomColorPicker
                 value={activeTextColor}
                 onChange={(newColor) => {
@@ -2300,9 +2318,14 @@ export function EditorToolbar({
         </label>
         <div className="relative" ref={bgColorRef}>
           <button
-            onClick={() => setShowBGColorPicker((prev) => !prev)}
+            onClick={(e) => {
+              alignColorPicker(e.currentTarget);
+              setShowBGColorPicker((prev) => !prev);
+            }}
             className="h-8 w-8 rounded border p-1 flex items-center justify-center cursor-pointer relative"
-            title="Text color"
+            title="Background color"
+            aria-label="Background color"
+            aria-expanded={showBGColorPicker}
           >
             <span
               className="absolute inset-[4px] rounded-sm"
@@ -2310,7 +2333,9 @@ export function EditorToolbar({
             ></span>
           </button>
           {showBGColorPicker && (
-            <div className="absolute top-10 left-0 z-10">
+            <div
+              className={`absolute top-10 z-10 ${colorPickerAlign === "right" ? "right-0" : "left-0"}`}
+            >
               <CustomColorPicker
                 value={activeBGColor}
                 onChange={(newColor) => {
