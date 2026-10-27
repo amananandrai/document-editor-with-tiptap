@@ -56,6 +56,7 @@ import {
   RotateCcw,
   Search,
   SeparatorHorizontal,
+  Settings2,
   SmilePlus,
   Square,
   SubscriptIcon,
@@ -70,33 +71,39 @@ import { useFocusMode } from "../focus-mode-context";
 import CustomColorPicker from "../ui/colorpicker";
 import { FindReplaceModal } from "./find-replace-modal";
 import { LinkModal } from "./link-modal";
+import { PAGE_HEIGHT, type PageMargins } from "./page-layout";
 
 type Props = {
+  /** Editor the formatting controls act on (the document, or a header/footer being edited) */
   editor: Editor | null;
-  pageMargin?: number;
+  /** The main document editor, used for exports, find/replace and clearing */
+  documentEditor?: Editor | null;
+  /** The A4 page stack (pages, headers, footers) used for PDF export */
+  getPageCanvas?: () => HTMLElement | null;
+  margins?: PageMargins;
   showHeader?: boolean;
   showFooter?: boolean;
-  showPageNumbers?: boolean;
   pageNumberPosition?: string;
   onToggleHeader?: () => void;
   onToggleFooter?: () => void;
-  onTogglePageNumbers?: () => void;
   onUpdatePageNumberPosition?: (pos: string) => void;
   onInsertTableOfContents?: () => void;
+  onOpenPageSetup?: () => void;
 };
 
 export function EditorToolbar({
   editor,
-  pageMargin = 96,
+  documentEditor,
+  getPageCanvas,
+  margins = { top: 96, right: 96, bottom: 96, left: 96 },
   showHeader = false,
   showFooter = false,
-  showPageNumbers = false,
-  pageNumberPosition = "footer-right",
+  pageNumberPosition = "none",
   onToggleHeader,
   onToggleFooter,
-  onTogglePageNumbers,
   onUpdatePageNumberPosition,
   onInsertTableOfContents,
+  onOpenPageSetup,
 }: Props) {
   const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
   const { isFocusMode, toggleFocusMode } = useFocusMode();
@@ -292,8 +299,10 @@ export function EditorToolbar({
 
   if (!editor) return null;
 
-  // Header/Footer mode is deprecated, disable header/footer checks
-  const isHeaderFooterMode = false;
+  // Document-level actions always target the main document
+  const docEditor = documentEditor ?? editor;
+  // Editing a header/footer: block-level insertions and styles are unavailable
+  const isHeaderFooterMode = editor !== docEditor;
 
   const addEmoji = (emoji: any) => {
     editor.chain().focus().insertContent(emoji.native).run();
@@ -606,8 +615,8 @@ export function EditorToolbar({
 
   const handleExportPDF = async () => {
     // Get the HTML content
-    const htmlContent = editor.getHTML();
-    const textContent = editor.getText().trim();
+    const htmlContent = docEditor.getHTML();
+    const textContent = docEditor.getText().trim();
 
     // Check if it's the default initial content
     const isDefaultContent =
@@ -617,7 +626,7 @@ export function EditorToolbar({
       textContent === "WelcomeStart typing..." ||
       textContent.length < 5;
 
-    if (editor.isEmpty || isDefaultContent) {
+    if (docEditor.isEmpty || isDefaultContent) {
       toast.error("Document is empty", {
         description:
           "Please add some content to the document before exporting to PDF.",
@@ -625,30 +634,76 @@ export function EditorToolbar({
       return;
     }
 
+    const canvasEl = getPageCanvas?.();
+    if (!canvasEl) {
+      toast.error("Export failed", {
+        description: "The page layout is not ready yet. Please try again.",
+      });
+      return;
+    }
+
+    // html2canvas re-lays out a cloned document and doesn't apply every
+    // stylesheet rule (e.g. cascade layers), so pin the live box metrics on
+    // the clone; otherwise the pagination spacers no longer line up.
+    const copyLayoutStyles = (source: HTMLElement, target: HTMLElement) => {
+      const props = [
+        "margin-top", "margin-right", "margin-bottom", "margin-left",
+        "padding-top", "padding-right", "padding-bottom", "padding-left",
+        "line-height", "font-size", "font-family", "font-weight", "letter-spacing",
+      ];
+      const sources = [source, ...Array.from(source.querySelectorAll<HTMLElement>("*"))];
+      const targets = [target, ...Array.from(target.querySelectorAll<HTMLElement>("*"))];
+      if (sources.length !== targets.length) return;
+      sources.forEach((src, i) => {
+        if (src instanceof SVGElement) return;
+        const computed = window.getComputedStyle(src);
+        props.forEach((prop) =>
+          targets[i].style.setProperty(prop, computed.getPropertyValue(prop))
+        );
+      });
+    };
+
+    canvasEl.setAttribute("data-pdf-root", "");
     try {
-      const element = editor.view.dom as HTMLElement;
-      const opt = {
-        output: "document.pdf",
-        imageType: "image/jpeg",
-        imageQuality: 0.98,
-        margin: {
-          top: 0.5,
-          right: 0.5,
-          bottom: 0.5,
-          left: 0.5,
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import("html2canvas-pro"),
+        import("jspdf"),
+      ]);
+      // Render the whole page stack (body, headers, footers, page numbers)
+      // exactly as laid out, then cut it into A4 pages.
+      const canvas = await html2canvas(canvasEl, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        onclone: (clonedDoc: Document) => {
+          clonedDoc.documentElement.classList.add("pdf-export");
+          const clonedRoot = clonedDoc.querySelector<HTMLElement>("[data-pdf-root]");
+          if (clonedRoot) copyLayoutStyles(canvasEl, clonedRoot);
         },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-        },
-        jsPDF: {
-          unit: "in" as const,
-          format: "letter" as const,
-          orientation: "portrait" as const,
-        },
-      };
-      const { default: html2PDF } = await import("jspdf-html2canvas-pro");
-      await html2PDF(element, opt);
+      });
+      const ratio = canvas.width / canvasEl.offsetWidth;
+      const sliceHeight = Math.round(PAGE_HEIGHT * ratio);
+      const pageCount = Math.max(1, Math.round(canvasEl.offsetHeight / PAGE_HEIGHT));
+
+      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      const pageCanvas = document.createElement("canvas");
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = sliceHeight;
+      const ctx = pageCanvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas 2D context unavailable");
+
+      for (let i = 0; i < pageCount; i++) {
+        const sourceY = i * sliceHeight;
+        const height = Math.min(sliceHeight, canvas.height - sourceY);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+        if (height > 0) {
+          ctx.drawImage(canvas, 0, sourceY, canvas.width, height, 0, 0, canvas.width, height);
+        }
+        if (i > 0) pdf.addPage();
+        pdf.addImage(pageCanvas.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, 210, 297);
+      }
+      pdf.save("document.pdf");
       toast.success("PDF exported successfully", {
         description: "Your document has been downloaded as PDF.",
       });
@@ -657,6 +712,8 @@ export function EditorToolbar({
       toast.error("Export failed", {
         description: "An error occurred while exporting to PDF.",
       });
+    } finally {
+      canvasEl.removeAttribute("data-pdf-root");
     }
   };
 
@@ -718,8 +775,8 @@ export function EditorToolbar({
 
   const handleExportWord = async () => {
     // Get the HTML content
-    const htmlContent = editor.getHTML();
-    const textContent = editor.getText().trim();
+    const htmlContent = docEditor.getHTML();
+    const textContent = docEditor.getText().trim();
 
     // Check if it's the default initial content
     const isDefaultContent =
@@ -729,7 +786,7 @@ export function EditorToolbar({
       textContent === "WelcomeStart typing..." ||
       textContent.length < 5;
 
-    if (editor.isEmpty || isDefaultContent) {
+    if (docEditor.isEmpty || isDefaultContent) {
       toast.error("Document is empty", {
         description:
           "Please add some content to the document before exporting to Word.",
@@ -738,8 +795,19 @@ export function EditorToolbar({
     }
 
     try {
-      const liveDom = editor.view.dom as HTMLElement;
+      const liveDom = docEditor.view.dom as HTMLElement;
       const cloned = liveDom.cloneNode(true) as HTMLElement;
+      // Drop on-screen pagination spacing; Word paginates by itself
+      cloned.querySelectorAll(".pagination-spacer").forEach((el) => el.remove());
+      // Page break node views -> Word page breaks
+      cloned.querySelectorAll("[data-page-break]").forEach((el) => {
+        const target = el.closest(".node-pageBreak") ?? el;
+        if (!target.parentNode) return;
+        const br = document.createElement("br");
+        br.setAttribute("clear", "all");
+        br.setAttribute("style", "page-break-before: always; mso-break-type: page-break;");
+        target.parentNode.replaceChild(br, target);
+      });
       inlineComputedColors(cloned);
       let html = cloned.innerHTML;
       // Process HTML for better Word compatibility
@@ -881,8 +949,8 @@ export function EditorToolbar({
         
         /* Page setup */
         @page WordSection1 {
-          size: 8.5in 11.0in;
-          margin: 1.0in;
+          size: 8.27in 11.69in;
+          margin: ${(margins.top / 96).toFixed(2)}in ${(margins.right / 96).toFixed(2)}in ${(margins.bottom / 96).toFixed(2)}in ${(margins.left / 96).toFixed(2)}in;
         }
         
         div.WordSection1 { page: WordSection1; }
@@ -1116,8 +1184,8 @@ export function EditorToolbar({
   };
 
   const handleExportMarkdown = async () => {
-    const htmlContent = editor.getHTML();
-    const textContent = editor.getText().trim();
+    const htmlContent = docEditor.getHTML();
+    const textContent = docEditor.getText().trim();
     const isDefaultContent =
       htmlContent === "<h1>Welcome</h1><p>Start typing…</p>" ||
       htmlContent === "<h1>Welcome</h1><p>Start typing...</p>" ||
@@ -1125,7 +1193,7 @@ export function EditorToolbar({
       textContent === "WelcomeStart typing..." ||
       textContent.length < 5;
 
-    if (editor.isEmpty || isDefaultContent) {
+    if (docEditor.isEmpty || isDefaultContent) {
       toast.error("Document is empty", {
         description:
           "Please add some content to the document before exporting to Markdown.",
@@ -1148,7 +1216,7 @@ export function EditorToolbar({
   };
 
   const handleExportText = async () => {
-    const textContent = editor.getText().trim();
+    const textContent = docEditor.getText().trim();
     if (!textContent || textContent.length < 1) {
       toast.error("Document is empty", {
         description:
@@ -1178,7 +1246,7 @@ export function EditorToolbar({
       "Clear all content from the document? You can undo with Ctrl+Z."
     );
     if (!confirmed) return;
-    editor.chain().focus().clearContent().run();
+    docEditor.chain().focus().clearContent().run();
   };
 
   const insertPageBreak = () => {
@@ -1314,6 +1382,10 @@ export function EditorToolbar({
               Save as Text
             </DropdownMenuItem>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onOpenPageSetup}>
+              <Settings2 className="h-4 w-4 mr-2" />
+              Page Setup (margins)
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={toggleFocusMode}>
               <Eye className="h-4 w-4 mr-2" />
               {isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}
@@ -2250,7 +2322,7 @@ export function EditorToolbar({
 
       {/* Find & Replace Modal */}
       <FindReplaceModal
-        editor={editor}
+        editor={docEditor}
         isOpen={isFindReplaceOpen}
         onClose={() => setIsFindReplaceOpen(false)}
       />
