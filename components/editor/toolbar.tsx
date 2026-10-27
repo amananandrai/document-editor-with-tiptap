@@ -1,4 +1,5 @@
 "use client";
+import { getTextBetween, getTextSerializersFromSchema } from "@tiptap/core";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -45,8 +46,6 @@ import {
   ItalicIcon,
   Layout,
   Link,
-  ListIcon,
-  ListOrderedIcon,
   Minus,
   Monitor,
   PaintRoller,
@@ -57,6 +56,7 @@ import {
   Search,
   SeparatorHorizontal,
   Settings2,
+  Sigma,
   SmilePlus,
   Square,
   SubscriptIcon,
@@ -71,6 +71,14 @@ import { useFocusMode } from "../focus-mode-context";
 import CustomColorPicker from "../ui/colorpicker";
 import { FindReplaceModal } from "./find-replace-modal";
 import { LinkModal } from "./link-modal";
+import {
+  equationsToMathML,
+  listsAndMathToMarkdown,
+  materializeListMarkers,
+  wordHeaderFooterParts,
+  type WordHeaderFooter,
+} from "./export-utils";
+import { ListStyleMenu } from "./list-style-menu";
 import { PAGE_HEIGHT, type PageMargins } from "./page-layout";
 
 type Props = {
@@ -89,6 +97,11 @@ type Props = {
   onUpdatePageNumberPosition?: (pos: string) => void;
   onInsertTableOfContents?: () => void;
   onOpenPageSetup?: () => void;
+  onInsertEquation?: () => void;
+  /** Header/footer HTML (with page number fields) for Word export */
+  getWordHeaderFooter?: () => WordHeaderFooter;
+  /** Clear header/footer text; returns a function that restores it */
+  onClearHeaderFooter?: () => () => void;
 };
 
 export function EditorToolbar({
@@ -104,6 +117,9 @@ export function EditorToolbar({
   onUpdatePageNumberPosition,
   onInsertTableOfContents,
   onOpenPageSetup,
+  onInsertEquation,
+  getWordHeaderFooter,
+  onClearHeaderFooter,
 }: Props) {
   const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
   const { isFocusMode, toggleFocusMode } = useFocusMode();
@@ -115,6 +131,17 @@ export function EditorToolbar({
   const [showBGColorPicker, setShowBGColorPicker] = useState(false);
   const [activeBGColor, setActiveBGColor] = useState("#FFFFFF"); // default color on the picker
   const bgColorRef = useRef<HTMLDivElement>(null);
+  // Open the color picker leftwards when it would overflow the toolbar's right edge
+  const [colorPickerAlign, setColorPickerAlign] = useState<"left" | "right">("left");
+  const alignColorPicker = (button: HTMLElement) => {
+    const PICKER_WIDTH = 300;
+    const limit =
+      button.closest('[aria-label="Editor toolbar"]')?.getBoundingClientRect().right ??
+      window.innerWidth;
+    setColorPickerAlign(
+      button.getBoundingClientRect().left + PICKER_WIDTH > limit ? "right" : "left"
+    );
+  };
 
   // Copy Format state
   const [copiedFormat, setCopiedFormat] = useState<any>(null);
@@ -652,8 +679,15 @@ export function EditorToolbar({
         "line-height", "font-size", "font-family", "font-weight", "letter-spacing",
       ];
       const sources = [source, ...Array.from(source.querySelectorAll<HTMLElement>("*"))];
-      const targets = [target, ...Array.from(target.querySelectorAll<HTMLElement>("*"))];
-      if (sources.length !== targets.length) return;
+      // html2canvas adds its own elements for ::before/::after; skip them
+      const targets = [target, ...Array.from(target.querySelectorAll<HTMLElement>("*"))].filter(
+        (el) => !el.tagName.startsWith("HTML2CANVAS")
+      );
+      if (sources.length !== targets.length) {
+        console.warn("PDF export: cloned DOM differs from the page; layout may not match");
+        return;
+      }
+      materializeListMarkers(sources, targets);
       sources.forEach((src, i) => {
         if (src instanceof SVGElement) return;
         const computed = window.getComputedStyle(src);
@@ -677,6 +711,7 @@ export function EditorToolbar({
         backgroundColor: "#ffffff",
         onclone: (clonedDoc: Document) => {
           clonedDoc.documentElement.classList.add("pdf-export");
+          const style = clonedDoc.createElement("style");
           const clonedRoot = clonedDoc.querySelector<HTMLElement>("[data-pdf-root]");
           if (clonedRoot) copyLayoutStyles(canvasEl, clonedRoot);
         },
@@ -808,6 +843,8 @@ export function EditorToolbar({
         br.setAttribute("style", "page-break-before: always; mso-break-type: page-break;");
         target.parentNode.replaceChild(br, target);
       });
+      // KaTeX markup needs its stylesheet; Word converts MathML to equations
+      equationsToMathML(cloned);
       inlineComputedColors(cloned);
       let html = cloned.innerHTML;
       // Process HTML for better Word compatibility
@@ -917,6 +954,9 @@ export function EditorToolbar({
       }
       // Get processed HTML
       html = doc.body.innerHTML;
+      const headerFooter = wordHeaderFooterParts(
+        getWordHeaderFooter?.() ?? { header: "", footer: "" }
+      );
       // Enhanced Word-compatible HTML
       const docHtml = `
   <!DOCTYPE html>
@@ -951,6 +991,7 @@ export function EditorToolbar({
         @page WordSection1 {
           size: 8.27in 11.69in;
           margin: ${(margins.top / 96).toFixed(2)}in ${(margins.right / 96).toFixed(2)}in ${(margins.bottom / 96).toFixed(2)}in ${(margins.left / 96).toFixed(2)}in;
+          ${headerFooter.pageRules}
         }
         
         div.WordSection1 { page: WordSection1; }
@@ -1069,6 +1110,7 @@ export function EditorToolbar({
     <body>
       <div class="WordSection1">
         ${replaceRgbWithHex(html)}
+        ${headerFooter.sections}
       </div>
     </body>
   </html>`;
@@ -1202,7 +1244,7 @@ export function EditorToolbar({
     }
 
     try {
-      const md = convertHtmlToMarkdown(htmlContent);
+      const md = convertHtmlToMarkdown(listsAndMathToMarkdown(htmlContent));
       downloadBlob(md, "document.md", "text/markdown;charset=utf-8");
       toast.success("Markdown exported successfully", {
         description: "Your document has been downloaded as .md.",
@@ -1216,7 +1258,21 @@ export function EditorToolbar({
   };
 
   const handleExportText = async () => {
-    const textContent = docEditor.getText().trim();
+    // One line per block inside lists/tables, a blank line between top-level blocks
+    const serializers = getTextSerializersFromSchema(docEditor.schema);
+    const blocks: string[] = [];
+    const doc = docEditor.state.doc;
+    doc.forEach((node, offset) => {
+      const text = getTextBetween(
+        doc,
+        { from: offset, to: offset + node.nodeSize },
+        { blockSeparator: "\n", textSerializers: serializers }
+      )
+        .replace(/\n{2,}/g, "\n")
+        .trim();
+      if (text) blocks.push(text);
+    });
+    const textContent = blocks.join("\n\n");
     if (!textContent || textContent.length < 1) {
       toast.error("Document is empty", {
         description:
@@ -1243,10 +1299,23 @@ export function EditorToolbar({
 
   const handleClear = () => {
     const confirmed = window.confirm(
-      "Clear all content from the document? You can undo with Ctrl+Z."
+      "Clear all content, including the header and footer?"
     );
     if (!confirmed) return;
+    const previousHtml = docEditor.getHTML();
     docEditor.chain().focus().clearContent().run();
+    // Header/footer text isn't in the document's undo history, so offer an
+    // explicit undo that restores everything that was cleared.
+    const restoreHeaderFooter = onClearHeaderFooter?.();
+    toast.success("Content cleared", {
+      action: {
+        label: "Undo",
+        onClick: () => {
+          docEditor.commands.setContent(previousHtml);
+          restoreHeaderFooter?.();
+        },
+      },
+    });
   };
 
   const insertPageBreak = () => {
@@ -1691,6 +1760,14 @@ export function EditorToolbar({
                   Image
                 </DropdownMenuItem>
               </>
+            )}
+
+            {/* Equation - Disabled in header/footer mode */}
+            {!isHeaderFooterMode && (
+              <DropdownMenuItem onClick={onInsertEquation}>
+                <Sigma className="h-4 w-4 mr-2" />
+                Equation
+              </DropdownMenuItem>
             )}
 
             {/* Table of Contents - Disabled in header/footer mode */}
@@ -2167,30 +2244,20 @@ export function EditorToolbar({
         </div>
       )}
 
-      {/* Lists - Disabled in header/footer mode */}
+      {/* Lists, bullet/numbering styles and multilevel lists - Disabled in header/footer mode */}
+      {!isHeaderFooterMode && <ListStyleMenu editor={editor} />}
+
+      {/* Equation - Disabled in header/footer mode */}
       {!isHeaderFooterMode && (
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant={editor.isActive("bulletList") ? "default" : "secondary"}
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
-            aria-pressed={editor.isActive("bulletList")}
-            aria-label="Bullet list"
-            title="Bullet list"
-          >
-            <ListIcon className="h-4 w-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant={editor.isActive("orderedList") ? "default" : "secondary"}
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            aria-pressed={editor.isActive("orderedList")}
-            aria-label="Ordered list"
-            title="Ordered list"
-          >
-            <ListOrderedIcon className="h-4 w-4" />
-          </Button>
-        </div>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={onInsertEquation}
+          aria-label="Insert equation"
+          title="Insert equation"
+        >
+          <Sigma className="h-4 w-4" />
+        </Button>
       )}
 
       {/* Indentation - Disabled in header/footer mode */}
@@ -2229,9 +2296,14 @@ export function EditorToolbar({
         </label>
         <div className="relative" ref={textColorRef}>
           <button
-            onClick={() => setShowTextColorPicker((prev) => !prev)}
+            onClick={(e) => {
+              alignColorPicker(e.currentTarget);
+              setShowTextColorPicker((prev) => !prev);
+            }}
             className="h-8 w-8 rounded border p-1 flex items-center justify-center cursor-pointer relative"
             title="Text color"
+            aria-label="Text color"
+            aria-expanded={showTextColorPicker}
           >
             <span
               className="absolute inset-[4px] rounded-sm"
@@ -2239,7 +2311,9 @@ export function EditorToolbar({
             ></span>
           </button>
           {showTextColorPicker && (
-            <div className="absolute top-10 left-0 z-10">
+            <div
+              className={`absolute top-10 z-10 ${colorPickerAlign === "right" ? "right-0" : "left-0"}`}
+            >
               <CustomColorPicker
                 value={activeTextColor}
                 onChange={(newColor) => {
@@ -2260,9 +2334,14 @@ export function EditorToolbar({
         </label>
         <div className="relative" ref={bgColorRef}>
           <button
-            onClick={() => setShowBGColorPicker((prev) => !prev)}
+            onClick={(e) => {
+              alignColorPicker(e.currentTarget);
+              setShowBGColorPicker((prev) => !prev);
+            }}
             className="h-8 w-8 rounded border p-1 flex items-center justify-center cursor-pointer relative"
-            title="Text color"
+            title="Background color"
+            aria-label="Background color"
+            aria-expanded={showBGColorPicker}
           >
             <span
               className="absolute inset-[4px] rounded-sm"
@@ -2270,7 +2349,9 @@ export function EditorToolbar({
             ></span>
           </button>
           {showBGColorPicker && (
-            <div className="absolute top-10 left-0 z-10">
+            <div
+              className={`absolute top-10 z-10 ${colorPickerAlign === "right" ? "right-0" : "left-0"}`}
+            >
               <CustomColorPicker
                 value={activeBGColor}
                 onChange={(newColor) => {

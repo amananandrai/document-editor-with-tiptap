@@ -3,6 +3,10 @@
 import React, { useCallback } from 'react'
 import type { Editor } from '@tiptap/react'
 
+function isInHeaderFooter(target: EventTarget | null) {
+  return target instanceof Element && target.closest('[data-header-footer]') !== null
+}
+
 export function useImageUpload(editor: Editor | null) {
   const handleImageUpload = useCallback((file: File) => {
     if (!editor) return
@@ -47,6 +51,8 @@ export function useImageUpload(editor: Editor | null) {
     if (editorElement) {
       editorElement.classList.remove('drag-over')
     }
+    // Headers/footers don't support images; don't redirect them into the document
+    if (isInHeaderFooter(event.target)) return
 
     const files = event.dataTransfer?.files
     if (!files || files.length === 0) return
@@ -94,6 +100,8 @@ export function useImageUpload(editor: Editor | null) {
     if (imageFiles.length === 0) return
 
     event.preventDefault()
+    // Headers/footers don't support images; don't redirect them into the document
+    if (isInHeaderFooter(event.target)) return
     imageFiles.forEach(file => handleImageUpload(file))
   }, [handleImageUpload])
 
